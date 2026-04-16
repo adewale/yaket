@@ -8,4 +8,3 @@ Deferred items tracked here intentionally remain outside the current implementat
 2. Expand multilingual support and multilingual parity validation beyond the current smoke and regression coverage.
 3. Tighten `seqm` parity with upstream YAKE's optimized similarity path, especially around threshold behavior, early rejection, and near-tie dedup ordering.
 4. Continue reducing tokenizer and sentence-splitting drift from Python YAKE's `segtok`-based behavior, especially for Unicode punctuation, contractions, abbreviations, and multilingual texts.
-5. Add and document npm publishing so Yaket can be released to the npm registry.

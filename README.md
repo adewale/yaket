@@ -15,21 +15,14 @@ It is designed for teams that want upstream-like YAKE behavior, deterministic re
 
 > Requires Node.js 20+
 
-`Yaket` is not published to npm yet.
-
-For now, clone the repo and build it locally:
+Install from npm:
 
 ```bash
-git clone https://github.com/adewale/yaket.git
-cd yaket
-npm install
-npm run build
+npm install @ade_oshineye/yaket
 ```
 
-The import examples below assume Yaket is then consumed as a linked/local package or via a packed tarball.
-
 ```ts
-import { extractKeywords } from "yaket";
+import { extractKeywords } from "@ade_oshineye/yaket";
 
 const keywords = extractKeywords(
   "Google is acquiring data science community Kaggle.",
@@ -50,29 +43,24 @@ Expected shape:
 
 ## Installation
 
-Package publishing to npm is still pending and tracked in `TODO.md`.
-
-Current local-development install flow:
+Install from npm:
 
 ```bash
-git clone https://github.com/adewale/yaket.git
-cd yaket
-npm install
-npm run build
+npm install @ade_oshineye/yaket
 ```
 
 The package ships ESM output and exposes Worker/browser-safe entry points:
 
-- `yaket`
-- `yaket/browser`
-- `yaket/worker`
+- `@ade_oshineye/yaket`
+- `@ade_oshineye/yaket/browser`
+- `@ade_oshineye/yaket/worker`
 
 ## Usage
 
 ### Reusable extractor
 
 ```ts
-import { KeywordExtractor } from "yaket";
+import { KeywordExtractor } from "@ade_oshineye/yaket";
 
 const extractor = new KeywordExtractor({
   lan: "en",
@@ -88,7 +76,7 @@ const keywords = extractor.extractKeywords(
 ### Detailed keyword results
 
 ```ts
-import { extractKeywordDetails } from "yaket";
+import { extractKeywordDetails } from "@ade_oshineye/yaket";
 
 const details = extractKeywordDetails("Machine learning improves software delivery.", {
   lan: "en",
@@ -113,7 +101,7 @@ type KeywordResult = {
 ### Document-oriented pipelines
 
 ```ts
-import { extractFromDocument } from "yaket";
+import { extractFromDocument } from "@ade_oshineye/yaket";
 
 const result = extractFromDocument({
   id: "doc-1",
@@ -126,7 +114,7 @@ const result = extractFromDocument({
 ### [Bobbin](https://github.com/adewale/bobbin)-compatible adapter
 
 ```ts
-import { extractYakeKeywords } from "yaket";
+import { extractYakeKeywords } from "@ade_oshineye/yaket";
 
 const keywords = extractYakeKeywords(
   "Platform ecosystems reward integration.",
@@ -147,7 +135,7 @@ type BobbinYakeResult = {
 ### Custom hooks
 
 ```ts
-import { extractKeywordDetails } from "yaket";
+import { extractKeywordDetails } from "@ade_oshineye/yaket";
 
 const details = extractKeywordDetails("models model models", {
   n: 1,
@@ -177,7 +165,7 @@ Available extension points:
 ### Stopwords and languages
 
 ```ts
-import { getStopwordText, supportedLanguages } from "yaket";
+import { getStopwordText, supportedLanguages } from "@ade_oshineye/yaket";
 
 console.log(supportedLanguages.includes("en"));
 console.log(getStopwordText("en").split("\n").length > 0);
@@ -189,7 +177,7 @@ If a specific stopword list is unavailable, Yaket currently resolves to an empty
 ### Highlighting
 
 ```ts
-import { TextHighlighter, extractKeywords } from "yaket";
+import { TextHighlighter, extractKeywords } from "@ade_oshineye/yaket";
 
 const keywords = extractKeywords("Machine learning improves software delivery.");
 const highlighted = new TextHighlighter().highlight(

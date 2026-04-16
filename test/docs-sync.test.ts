@@ -41,7 +41,7 @@ describe("documentation-code sync", () => {
     const cliSource = readFileSync(join(process.cwd(), "src/cli.ts"), "utf8");
 
     expect(Object.keys(packageJson.exports)).toEqual(expect.arrayContaining([".", "./browser", "./worker"]));
-    expect(packageJson.bin.yaket).toBe("./dist/cli.js");
+    expect(packageJson.bin.yaket).toBe("dist/cli.js");
 
     for (const flag of ["--text-input", "--input-file", "--language", "--ngram-size", "--dedup-func", "--dedup-lim", "--window-size", "--top", "--verbose", "--help"]) {
       expect(cliSource).toContain(flag);

@@ -20,7 +20,7 @@ Keep these layers separate:
 Yaket exports a Bobbin-compatible wrapper:
 
 ```ts
-import { extractYakeKeywords } from "yaket";
+import { extractYakeKeywords } from "@ade_oshineye/yaket";
 
 const keywords = extractYakeKeywords(text, 5, 3);
 ```
@@ -60,7 +60,7 @@ The full Bobbin repo integration test pass is intentionally deferred and tracked
 Bobbin's `extractTopics()` flow can stay structurally the same:
 
 ```ts
-import { extractYakeKeywords } from "yaket";
+import { extractYakeKeywords } from "@ade_oshineye/yaket";
 
 const yakeResults = extractYakeKeywords(cleanText, maxTopics * 2, 3);
 

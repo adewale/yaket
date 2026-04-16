@@ -15,7 +15,7 @@ Examples:
 Treat Yaket as a document-to-keywords transform.
 
 ```ts
-import { extractKeywords } from "yaket";
+import { extractKeywords } from "@ade_oshineye/yaket";
 
 const keywords = extractKeywords(document.body, {
   lan: document.language ?? "en",
@@ -29,7 +29,7 @@ const keywords = extractKeywords(document.body, {
 In a pipeline, it is usually better to wrap Yaket in a small adapter that preserves your own document model.
 
 ```ts
-import { extractKeywords } from "yaket";
+import { extractKeywords } from "@ade_oshineye/yaket";
 
 type InputDocument = {
   id: string;
@@ -62,7 +62,7 @@ To keep Yaket reusable:
 ### Example: search enrichment pipeline
 
 ```ts
-import { extractFromDocument } from "yaket";
+import { extractFromDocument } from "@ade_oshineye/yaket";
 
 const enriched = extractFromDocument({
   id: chunk.id,
