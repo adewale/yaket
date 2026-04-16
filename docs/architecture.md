@@ -95,6 +95,8 @@ These remain optional and separate:
 
 The default behavior remains YAKE-like. Extensions are for integration and experimentation, not for replacing the full core pipeline casually.
 
+Package consumers install Yaket from npm as `@ade_oshineye/yaket`.
+
 ## Testing Layers
 
 The current architecture is verified through multiple test layers:

@@ -15,8 +15,6 @@ It is designed for teams that want upstream-like YAKE behavior, deterministic re
 
 > Requires Node.js 20+
 
-Install from npm:
-
 ```bash
 npm install @ade_oshineye/yaket
 ```
