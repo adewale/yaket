@@ -258,6 +258,7 @@ npm run benchmark
 - Architecture overview: `docs/architecture.md`
 - [Bobbin](https://github.com/adewale/bobbin) integration guide: `docs/integrations/bobbin.md`
 - Generic pipeline guide: `docs/integrations/pipelines.md`
+- Releasing guide: `docs/releasing.md`
 - Roadmap: `docs/roadmap.md`
 - Deferred work: `TODO.md`
 - Audit notes: `docs/audits/implementation-audit-2026-04-16.md`
