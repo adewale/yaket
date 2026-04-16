@@ -15,9 +15,18 @@ It is designed for teams that want upstream-like YAKE behavior, deterministic re
 
 > Requires Node.js 20+
 
+`Yaket` is not published to npm yet.
+
+For now, clone the repo and build it locally:
+
 ```bash
-npm install yaket
+git clone https://github.com/adewale/yaket.git
+cd yaket
+npm install
+npm run build
 ```
+
+The import examples below assume Yaket is then consumed as a linked/local package or via a packed tarball.
 
 ```ts
 import { extractKeywords } from "yaket";
@@ -41,8 +50,15 @@ Expected shape:
 
 ## Installation
 
+Package publishing to npm is still pending and tracked in `TODO.md`.
+
+Current local-development install flow:
+
 ```bash
-npm install yaket
+git clone https://github.com/adewale/yaket.git
+cd yaket
+npm install
+npm run build
 ```
 
 The package ships ESM output and exposes Worker/browser-safe entry points:
