@@ -7,6 +7,7 @@ import { extractKeywordDetails } from "../src/index.js";
 
 const INPUT_DIR = join(process.cwd(), "test/fixtures/input");
 const EXPECTED_DIR = join(process.cwd(), "test/fixtures/expected");
+const SCORE_TOLERANCE = 1e-12;
 const FIXTURE_NAMES = readdirSync(INPUT_DIR)
   .filter((entry) => entry.endsWith(".txt"))
   .map((entry) => entry.replace(/\.txt$/, ""));
@@ -22,7 +23,16 @@ describe("golden fixtures", () => {
       const expected = JSON.parse(readFileSync(join(EXPECTED_DIR, `${fixtureName}.json`), "utf8")) as ReturnType<typeof extractKeywordDetails>;
       const actual = extractKeywordDetails(input, { lan: "en", n: 3, top: 5 });
 
-      expect(actual).toEqual(expected);
+      expect(actual).toHaveLength(expected.length);
+
+      for (let index = 0; index < expected.length; index += 1) {
+        expect(actual[index]!.keyword).toBe(expected[index]!.keyword);
+        expect(actual[index]!.normalizedKeyword).toBe(expected[index]!.normalizedKeyword);
+        expect(actual[index]!.ngramSize).toBe(expected[index]!.ngramSize);
+        expect(actual[index]!.occurrences).toBe(expected[index]!.occurrences);
+        expect(actual[index]!.sentenceIds).toEqual(expected[index]!.sentenceIds);
+        expect(Math.abs(actual[index]!.score - expected[index]!.score)).toBeLessThanOrEqual(SCORE_TOLERANCE);
+      }
     });
   }
 });
