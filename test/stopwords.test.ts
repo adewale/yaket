@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { getStopwordText, loadStopwords, supportedLanguages } from "../src/index.js";
+import { STOPWORDS, bundledStopwordTexts, createStaticStopwordProvider, createStopwordSet, getStopwordText, loadStopwords, supportedLanguages } from "../src/index.js";
 
 describe("stopword exports", () => {
   it("does not expose the fallback sentinel as a language", () => {
@@ -24,5 +24,31 @@ describe("stopword exports", () => {
     expect(unknown).toBe(unknownRegional);
     expect(unknown).toBe("");
     expect(loaded).toEqual(new Set());
+  });
+
+  it("exposes bundled stopword text for extension use cases", () => {
+    expect(bundledStopwordTexts.en).toContain("the");
+    expect(STOPWORDS.en).toBe(bundledStopwordTexts.en);
+    expect(Object.isFrozen(bundledStopwordTexts)).toBe(true);
+  });
+
+  it("creates derived stopword sets with add/remove/replace options", () => {
+    const extended = createStopwordSet("en", { add: ["yaket"], remove: ["the"] });
+    const replaced = createStopwordSet("en", { replace: ["alpha", "beta"] });
+
+    expect(extended.has("yaket")).toBe(true);
+    expect(extended.has("the")).toBe(false);
+    expect(replaced).toEqual(new Set(["alpha", "beta"]));
+  });
+
+  it("creates static stopword providers from user-supplied maps", () => {
+    const provider = createStaticStopwordProvider({
+      en: ["alpha", "beta"],
+      pt: "um\numa",
+    });
+
+    expect(provider.load("en")).toEqual(new Set(["alpha", "beta"]));
+    expect(provider.load("pt-BR")).toEqual(new Set(["um", "uma"]));
+    expect(provider.load("zz")).toEqual(new Set());
   });
 });

@@ -6,6 +6,9 @@ import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity 
 
 type DedupFunction = (cand1: string, cand2: string) => number;
 
+/**
+ * Public configuration for Yaket extraction.
+ */
 export interface KeywordExtractorOptions {
   lan?: string;
   language?: string;
@@ -29,6 +32,9 @@ export interface KeywordExtractorOptions {
   candidateFilter?: (candidate: CandidateFilterInput) => boolean;
 }
 
+/**
+ * Tuple form of the simplified YAKE output.
+ */
 export type KeywordScore = [keyword: string, score: number];
 
 interface NormalizedConfig {
@@ -51,6 +57,9 @@ export class KeywordExtractor {
   readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
   private readonly dedupFunction: DedupFunction;
 
+  /**
+   * Creates a reusable keyword extractor with normalized options.
+   */
   constructor(options: KeywordExtractorOptions = {}) {
     this.config = {
       lan: options.lan ?? options.language ?? "en",
@@ -75,22 +84,37 @@ export class KeywordExtractor {
       : getStrategyFunction(options.dedupStrategy);
   }
 
+  /**
+   * Levenshtein-based dedup similarity.
+   */
   levs(cand1: string, cand2: string): number {
     return levenshteinSimilarity(cand1, cand2);
   }
 
+  /**
+   * Sequence-style dedup similarity that approximates upstream YAKE's optimized path.
+   */
   seqm(cand1: string, cand2: string): number {
     return sequenceSimilarity(cand1, cand2);
   }
 
+  /**
+   * Jaro-based dedup similarity.
+   */
   jaro(cand1: string, cand2: string): number {
     return jaroSimilarity(cand1, cand2);
   }
 
+  /**
+   * Extracts simplified keyword-score tuples.
+   */
   extractKeywords(text: string | null | undefined): KeywordScore[] {
     return this.extractKeywordDetails(text).map((item) => [item.keyword, item.score]);
   }
 
+  /**
+   * Extracts richer keyword records with normalized forms and metadata.
+   */
   extractKeywordDetails(text: string | null | undefined): KeywordResult[] {
     if (!text) {
       return [];
@@ -144,6 +168,9 @@ export class KeywordExtractor {
     return resultSet;
   }
 
+  /**
+   * Python-style alias for `extractKeywords()`.
+   */
   extract_keywords(text: string | null | undefined): KeywordScore[] {
     return this.extractKeywords(text);
   }
@@ -164,14 +191,30 @@ export class KeywordExtractor {
   }
 }
 
+/**
+ * One-shot helper for tuple-style extraction.
+ */
 export function extractKeywords(text: string, options: KeywordExtractorOptions = {}): KeywordScore[] {
   return new KeywordExtractor(options).extractKeywords(text);
 }
 
+/**
+ * Short alias for `extractKeywords()`.
+ */
+export function extract(text: string, options: KeywordExtractorOptions = {}): KeywordScore[] {
+  return extractKeywords(text, options);
+}
+
+/**
+ * One-shot helper for detailed extraction.
+ */
 export function extractKeywordDetails(text: string, options: KeywordExtractorOptions = {}): KeywordResult[] {
   return new KeywordExtractor(options).extractKeywordDetails(text);
 }
 
+/**
+ * Factory helper for reusable extractors.
+ */
 export function createKeywordExtractor(options: KeywordExtractorOptions = {}): KeywordExtractor {
   return new KeywordExtractor(options);
 }

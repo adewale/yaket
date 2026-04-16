@@ -10,6 +10,9 @@ export interface SimilarityCacheStats {
 }
 
 export class Levenshtein {
+  /**
+   * Returns a normalized Levenshtein similarity ratio.
+   */
   static ratio(seq1: string, seq2: string): number {
     const key = cacheKey(seq1, seq2);
     const cached = ratioCache.get(key);
@@ -25,6 +28,9 @@ export class Levenshtein {
     return ratio;
   }
 
+  /**
+   * Returns the exact Levenshtein edit distance.
+   */
   static distance(seq1: string, seq2: string): number {
     const key = cacheKey(seq1, seq2);
     const cached = distanceCache.get(key);
@@ -56,6 +62,9 @@ export class Levenshtein {
   }
 }
 
+/**
+ * Normalized Levenshtein similarity helper for deduplication.
+ */
 export function levenshteinSimilarity(cand1: string, cand2: string): number {
   const maxLength = Math.max(cand1.length, cand2.length);
   if (maxLength === 0) {
@@ -65,6 +74,9 @@ export function levenshteinSimilarity(cand1: string, cand2: string): number {
   return 1 - (Levenshtein.distance(cand1, cand2) / maxLength);
 }
 
+/**
+ * Sequence-style similarity used to approximate upstream YAKE's `seqm` dedup behavior.
+ */
 export function sequenceSimilarity(cand1: string, cand2: string): number {
   const key = cacheKey(cand1, cand2);
   const cached = sequenceCache.get(key);
@@ -137,6 +149,9 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
   return result;
 }
 
+/**
+ * Jaro similarity helper.
+ */
 export function jaroSimilarity(first: string, second: string): number {
   if (first === second) {
     return 1;
@@ -296,6 +311,9 @@ function setBoundedCache(cache: Map<string, number>, key: string, value: number)
   cache.set(key, value);
 }
 
+/**
+ * Returns current sizes of the bounded similarity caches.
+ */
 export function getSimilarityCacheStats(): SimilarityCacheStats {
   return {
     distance: distanceCache.size,
@@ -304,6 +322,9 @@ export function getSimilarityCacheStats(): SimilarityCacheStats {
   };
 }
 
+/**
+ * Clears all bounded similarity caches.
+ */
 export function clearSimilarityCaches(): void {
   distanceCache.clear();
   ratioCache.clear();

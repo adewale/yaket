@@ -1,6 +1,9 @@
 import { KeywordExtractor, type KeywordExtractorOptions } from "./KeywordExtractor.js";
 import type { KeywordResult } from "./strategies.js";
 
+/**
+ * Minimal document shape for pipeline-oriented extraction.
+ */
 export interface InputDocument<TMetadata = Record<string, unknown>> {
   id: string;
   body: string;
@@ -9,6 +12,9 @@ export interface InputDocument<TMetadata = Record<string, unknown>> {
   metadata?: TMetadata;
 }
 
+/**
+ * Extraction result paired with the original document identity and metadata.
+ */
 export interface DocumentKeywordResult<TMetadata = Record<string, unknown>> {
   id: string;
   language: string;
@@ -17,10 +23,16 @@ export interface DocumentKeywordResult<TMetadata = Record<string, unknown>> {
   keywords: KeywordResult[];
 }
 
+/**
+ * Extraction options for document helpers.
+ */
 export interface DocumentExtractionOptions extends KeywordExtractorOptions {
   includeTitleInText?: boolean;
 }
 
+/**
+ * Extracts keyword details from a single document.
+ */
 export function extractFromDocument<TMetadata = Record<string, unknown>>(
   document: InputDocument<TMetadata>,
   options: DocumentExtractionOptions = {},
@@ -40,6 +52,9 @@ export function extractFromDocument<TMetadata = Record<string, unknown>>(
   };
 }
 
+/**
+ * Extracts keyword details for an iterable of documents.
+ */
 export function extractFromDocuments<TMetadata = Record<string, unknown>>(
   documents: Iterable<InputDocument<TMetadata>>,
   options: DocumentExtractionOptions = {},
@@ -60,6 +75,9 @@ export function extractFromDocuments<TMetadata = Record<string, unknown>>(
   });
 }
 
+/**
+ * Extracts keyword details for an async stream of documents.
+ */
 export async function* extractFromDocumentStream<TMetadata = Record<string, unknown>>(
   documents: AsyncIterable<InputDocument<TMetadata>>,
   options: DocumentExtractionOptions = {},

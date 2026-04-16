@@ -38,6 +38,9 @@ export class DataCore {
 
   private candidateOrder = 0;
 
+  /**
+   * Builds document state used by the YAKE scoring pipeline.
+   */
   constructor(text: string, stopwordSet: Set<string>, config: DataCoreConfig = {}) {
     const n = config.n ?? 3;
     this.exclude = config.exclude ?? DEFAULT_EXCLUDE;
@@ -55,10 +58,16 @@ export class DataCore {
     this.build(text, config.windowsSize ?? 2, n);
   }
 
+  /**
+   * Returns the YAKE tag for a token at a given position.
+   */
   getTag(word: string, index: number): string {
     return getTag(word, index, this.exclude);
   }
 
+  /**
+   * Builds a composed-word candidate from raw text.
+   */
   buildCandidate(candidateString: string): ComposedWord {
     const tokenizedWords = this.textProcessor.tokenizeWords(candidateString)
       .filter((token) => !((token.startsWith("'") || token.startsWith("’")) && token.length > 1) && token.length > 0);
@@ -83,6 +92,9 @@ export class DataCore {
     return new ComposedWord(candidateTerms);
   }
 
+  /**
+   * Computes single-word YAKE features.
+   */
   buildSingleTermsFeatures(features?: string[] | null): void {
     const validTerms = [...this.terms.values()].filter((term) => !term.stopword);
     if (validTerms.length === 0) {
@@ -99,6 +111,9 @@ export class DataCore {
     }
   }
 
+  /**
+   * Computes multi-word YAKE features.
+   */
   buildMultTermsFeatures(features?: string[] | null): void {
     for (const candidate of this.candidates.values()) {
       if (candidate.isValid()) {
@@ -107,6 +122,9 @@ export class DataCore {
     }
   }
 
+  /**
+   * Retrieves or creates the internal term representation for a token.
+   */
   getTerm(strWord: string, saveNonSeen = true, normalized = false): SingleWord {
     let uniqueTerm = normalized ? strWord.toLowerCase() : this.normalizeTerm(strWord);
     const simpleStopword = this.stopwordSet.has(uniqueTerm);

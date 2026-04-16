@@ -2,6 +2,9 @@ import type { BobbinYakeResult } from "./bobbin.js";
 import type { KeywordScore } from "./KeywordExtractor.js";
 import type { KeywordResult } from "./strategies.js";
 
+/**
+ * Configuration for the text highlighter utility.
+ */
 export interface TextHighlighterOptions {
   maxNgramSize?: number;
   highlightPre?: string;
@@ -15,12 +18,18 @@ export class TextHighlighter {
   readonly highlightPre: string;
   readonly highlightPost: string;
 
+  /**
+   * Creates a highlighter that wraps matched keywords in HTML markers.
+   */
   constructor(options: TextHighlighterOptions = {}) {
     this.maxNgramSize = options.maxNgramSize ?? 3;
     this.highlightPre = options.highlightPre ?? "<mark>";
     this.highlightPost = options.highlightPost ?? "</mark>";
   }
 
+  /**
+   * Highlights keywords in the provided text.
+   */
   highlight(text: string, keywords: Iterable<HighlightInput>): string {
     const matches: Array<{ start: number; end: number }> = [];
 

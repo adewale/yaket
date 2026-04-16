@@ -1,3 +1,6 @@
+/**
+ * Lightweight directed graph used for YAKE co-occurrence tracking.
+ */
 export class DirectedGraph {
   private readonly outgoing = new Map<number, Map<number, number>>();
   private readonly incoming = new Map<number, Map<number, number>>();

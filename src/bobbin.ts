@@ -1,5 +1,8 @@
 import { extractKeywordDetails } from "./KeywordExtractor.js";
 
+/**
+ * Result shape expected by Bobbin's YAKE-compatible adapter layer.
+ */
 export interface BobbinYakeResult {
   keyword: string;
   score: number;
@@ -7,10 +10,6 @@ export interface BobbinYakeResult {
 
 /**
  * Compatibility wrapper for Bobbin's existing YAKE-like service API.
- *
- * - `n` maps to result count (`top`)
- * - `maxNgram` maps to YAKE maximum candidate size (`n`)
- * - keywords are normalized to lowercase to match Bobbin's current shape
  */
 export function extractYakeKeywords(
   text: string,

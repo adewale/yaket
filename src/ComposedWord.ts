@@ -17,6 +17,9 @@ export class ComposedWord {
   integrity = 1;
   h = 1;
 
+  /**
+   * Creates a composed-word candidate from token-tag-term tuples.
+   */
   constructor(terms: NormalizedCandidateTerm[] | null) {
     if (terms == null) {
       this.kw = "";
@@ -35,12 +38,18 @@ export class ComposedWord {
     this.startOrEndStopwords = this.terms.length === 0 || this.terms[0]!.stopword || this.terms[this.terms.length - 1]!.stopword;
   }
 
+  /**
+   * Merges tag information from another occurrence of the same candidate.
+   */
   updateCand(candidate: ComposedWord): void {
     for (const tag of candidate.tags) {
       this.tags.add(tag);
     }
   }
 
+  /**
+   * Checks whether the candidate is valid for ranking.
+   */
   isValid(): boolean {
     let validTag = false;
 
@@ -51,6 +60,9 @@ export class ComposedWord {
     return validTag && !this.startOrEndStopwords;
   }
 
+  /**
+   * Computes the final YAKE multi-word score.
+   */
   updateH(features?: string[] | null, isVirtual = false): void {
     let sumH = 0;
     let prodH = 1;

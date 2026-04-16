@@ -37,16 +37,25 @@ export class SingleWord {
 
   private graphMetricsCache: GraphMetrics | null = null;
 
+  /**
+   * Creates the single-word state holder used during YAKE scoring.
+   */
   constructor(unique: string, id: number, graph: DirectedGraph) {
     this.uniqueTerm = unique;
     this.id = id;
     this.g = graph;
   }
 
+  /**
+   * Clears cached graph-derived metrics after co-occurrence changes.
+   */
   invalidateGraphCache(): void {
     this.graphMetricsCache = null;
   }
 
+  /**
+   * Records an occurrence of this term.
+   */
   addOccur(tag: string, sentenceId: number, posSent: number, posText: number): void {
     if (!this.occurs.has(sentenceId)) {
       this.occurs.set(sentenceId, []);
@@ -64,6 +73,9 @@ export class SingleWord {
     }
   }
 
+  /**
+   * Computes the final YAKE single-word score.
+   */
   updateH(stats: WordStats, features?: string[] | null): void {
     const graphMetrics = this.getGraphMetrics();
 

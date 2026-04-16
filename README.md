@@ -26,6 +26,17 @@ Yaket aims to preserve the core YAKE behavior where practical, while adapting th
 - **Pipeline-friendly API**: one-shot extraction, reusable extractor instances, [Bobbin](https://github.com/adewale/bobbin)-compatible adapter output, and document-oriented helpers are all available.
 - **Verification-heavy**: regression fixtures, Python parity checks, property-based tests, Cloudflare runtime tests, and a benchmark harness are checked in.
 
+## 30-Second Summary
+
+Yaket extracts weighted keywords from a single document using a YAKE-style local-feature pipeline.
+
+It is designed for cases where you want:
+
+1. a deterministic keyword extractor
+2. no LLM dependency
+3. browser/edge compatibility
+4. a practical JavaScript alternative to the Python YAKE package
+
 ## Quick Start
 
 > Requires Node.js 20+
@@ -35,9 +46,9 @@ npm install @ade_oshineye/yaket
 ```
 
 ```ts
-import { extractKeywords } from "@ade_oshineye/yaket";
+import { extract } from "@ade_oshineye/yaket";
 
-const keywords = extractKeywords(
+const keywords = extract(
   "Google is acquiring data science community Kaggle.",
   { lan: "en", n: 3, top: 5 },
 );
@@ -69,6 +80,36 @@ The package ships ESM output and exposes Worker/browser-safe entry points:
 - `@ade_oshineye/yaket/worker`
 
 ## Usage
+
+## Algorithm Summary
+
+At a high level, Yaket:
+
+1. preprocesses text into sentences and tokens
+2. generates single-word and multi-word candidates up to `n`
+3. scores single words using local YAKE-style features such as frequency, spread, position, casing, and co-occurrence-derived relations
+4. scores composed phrases from those single-word scores
+5. deduplicates the ranked list with `seqm`, `levs`, or `jaro`
+
+See `docs/architecture.md` for the pipeline structure and `docs/algorithm-drift.md` for known deviations from upstream YAKE.
+
+## Options Reference
+
+Common options:
+
+| Option | Meaning | Default |
+|---|---|---|
+| `lan` / `language` | language code | `en` |
+| `n` | maximum n-gram size | `3` |
+| `top` | number of results to return | `20` |
+| `dedupFunc` | dedup function (`seqm`, `levs`, `jaro`) | `seqm` |
+| `dedupLim` | dedup threshold | `0.9` |
+| `windowSize` | co-occurrence window | `1` |
+| `stopwords` | explicit stopword iterable override | bundled set for `lan` |
+
+For the complete public API, see `docs/api-reference.md`.
+
+If you prefer the most concise one-shot API, `extract()` is an alias for `extractKeywords()`.
 
 ### Reusable extractor
 
@@ -175,17 +216,38 @@ Available extension points:
 - `KeywordScorer`
 - `candidateFilter`
 
+Yaket also exports:
+
+- `YakeResult`
+- `YakeOptions`
+
 ### Stopwords and languages
 
 ```ts
-import { getStopwordText, supportedLanguages } from "@ade_oshineye/yaket";
+import { STOPWORDS, getStopwordText, supportedLanguages } from "@ade_oshineye/yaket";
 
 console.log(supportedLanguages.includes("en"));
 console.log(getStopwordText("en").split("\n").length > 0);
+console.log(STOPWORDS.en.includes("the"));
 ```
 
 Language lookup uses the first two letters of the requested language code.
 If a specific stopword list is unavailable, Yaket currently resolves to an empty stopword list.
+
+To extend or replace stopwords without mutating global state:
+
+```ts
+import { createStaticStopwordProvider, createStopwordSet } from "@ade_oshineye/yaket";
+
+const stopwords = createStopwordSet("en", { add: ["yaket"], remove: ["the"] });
+
+const provider = createStaticStopwordProvider({
+  en: stopwords,
+  pt: ["um", "uma"],
+});
+```
+
+`STOPWORDS` is exported as a frozen map of bundled raw stopword text for users who want direct access to the packaged lists.
 
 ### Highlighting
 
@@ -247,6 +309,12 @@ Current checked-in report:
 
 - `docs/benchmarks/komoroske-2026-04-06.md`
 
+Additional dataset-oriented benchmark support is available for Inspec and SemEval-style evaluation via `scripts/benchmark-datasets.ts`.
+
+```bash
+npm run benchmark:datasets
+```
+
 Run it with:
 
 ```bash
@@ -256,9 +324,14 @@ npm run benchmark
 ## Architecture
 
 - Architecture overview: `docs/architecture.md`
+- API reference: `docs/api-reference.md`
+- Use cases: `docs/use-cases.md`
+- Algorithm drift: `docs/algorithm-drift.md`
+- Dataset benchmarks: `docs/benchmarks/inspec-semeval.md`
 - [Bobbin](https://github.com/adewale/bobbin) integration guide: `docs/integrations/bobbin.md`
 - Generic pipeline guide: `docs/integrations/pipelines.md`
 - Releasing guide: `docs/releasing.md`
+- Contributing: `CONTRIBUTING.md`
 - Roadmap: `docs/roadmap.md`
 - Deferred work: `TODO.md`
 - Audit notes: `docs/audits/implementation-audit-2026-04-16.md`
@@ -269,6 +342,38 @@ npm run benchmark
 - Dedup `seqm` behavior is still approximate rather than a byte-for-byte Python clone.
 - Multilingual support exists through bundled stopwords, but broad multilingual parity coverage is deferred.
 - [Bobbin's](https://github.com/adewale/bobbin) full topic-layer integration test suite is deferred and tracked in `TODO.md`.
+
+## Comparison To Alternatives
+
+| Tool | Strength | Tradeoff vs Yaket |
+|---|---|---|
+| TF-IDF | simple, cheap, corpus-aware | less phrase-aware and less YAKE-like on single documents |
+| RAKE | simple phrase extraction | weaker local-feature scoring and usually cruder ranking |
+| KeyBERT | embedding-based semantic relevance | larger dependency/runtime cost and often slower |
+| Yaket | deterministic YAKE-style local-feature extraction in JS | still has some drift from upstream Python YAKE |
+
+For a concrete checked-in comparison, see the Komoroske benchmark report.
+
+## Main Use Cases
+
+Yaket is especially well-suited for:
+
+1. blog/CMS/knowledge-base tagging
+2. newsletter and article topic extraction
+3. search indexing and hybrid retrieval metadata
+4. RAG chunk enrichment without an LLM call
+5. browser extensions and client-side page analysis
+6. chat and Slack bot topic tagging
+
+See `docs/use-cases.md` for more detail.
+
+## Live Demo
+
+An interactive demo page lives in `demo/index.html` and is intended to be served through GitHub Pages.
+
+GitHub Pages URL:
+
+- `https://adewale.github.io/yaket/`
 
 ## Development
 

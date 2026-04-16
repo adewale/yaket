@@ -26,6 +26,9 @@ const SENTENCE_CLOSERS = new Set([`"`, `'`, ")", "]", "}", "»", "”", "’"]);
 export const STOPWORD_WEIGHT = "bi" as const;
 export const DEFAULT_EXCLUDE = new Set(ASCII_PUNCTUATION.split(""));
 
+/**
+ * Applies YAKE-style prefiltering before sentence/token processing.
+ */
 export function preFilter(text: string): string {
   const parts = text.split("\n");
   let buffer = "";
@@ -38,12 +41,18 @@ export function preFilter(text: string): string {
   return buffer;
 }
 
+/**
+ * Splits text into tokenized sentences.
+ */
 export function tokenizeSentences(text: string): string[][] {
   return splitSentences(text)
     .map((sentence) => tokenizeWords(sentence).filter((token) => !(startsWithApostrophe(token) && token.length > 1) && token.length > 0))
     .filter((sentence) => sentence.length > 0);
 }
 
+/**
+ * Splits text into YAKE-style tokens.
+ */
 export function tokenizeWords(text: string): string[] {
   const tokens = text.match(TOKEN_PATTERN) ?? [];
   const expanded: string[] = [];
@@ -55,6 +64,9 @@ export function tokenizeWords(text: string): string[] {
   return expanded;
 }
 
+/**
+ * Splits text into sentence strings.
+ */
 export function splitSentences(text: string): string[] {
   const sentences: string[] = [];
   let start = 0;
@@ -205,6 +217,9 @@ function pushSentence(sentences: string[], sentence: string): void {
   }
 }
 
+/**
+ * Returns the YAKE tag used for candidate generation and scoring.
+ */
 export function getTag(word: string, index: number, exclude: ReadonlySet<string>): string {
   const withoutCommas = word.replaceAll(",", "");
   if (isNumeric(withoutCommas) || isNumeric(withoutCommas.replace(".", ""))) {
