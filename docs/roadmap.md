@@ -24,6 +24,13 @@ Yaket already includes the core YAKE pipeline:
 - dedup helpers and deterministic ordering
 - bundled stopwords
 - regression fixtures plus Python differential tests on frozen samples
+- pluggable hooks for text processing, normalization, similarity, scoring, and filtering
+- Bobbin-compatible adapter output
+- document-oriented extraction helpers for ingestion pipelines
+- CLI support
+- text highlighting support
+- optional lemmatization hooks
+- Cloudflare Worker runtime verification, package checks, and benchmark tooling
 
 The current implementation is materially closer to upstream Python YAKE than the original `bobbin` implementation and intentionally does not follow the modified ranking behavior in `quesurifn/yake-wasm`.
 
@@ -63,12 +70,12 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
 5. Expand multilingual validation beyond the current smoke/regression cases.
    Status: deferred to `TODO.md`.
 
-### Tier 2: Missing upstream features
+### Tier 2: Remaining upstream-facing feature gaps
 
-1. Add CLI support.
-2. Port text highlighting.
-3. Add optional lemmatization hooks.
-4. Add cache statistics and related diagnostics if they remain useful in the TS API.
+1. Evaluate whether the current CLI needs closer parity with upstream ergonomics or richer publishing examples.
+2. Compare the current `TextHighlighter` behavior against upstream and extend it only if concrete gaps matter to adopters.
+3. Move lemmatization from a hook-only extension point to a real optional implementation if a concrete consumer needs it.
+4. Keep cache statistics and related diagnostics aligned with actual API needs.
 5. Port any remaining public utility APIs that downstream users would reasonably expect from YAKE.
 
 ### Tier 3: Packaging and runtime completeness
@@ -438,21 +445,17 @@ Yaket should:
 3. keep runtime within a practical ingestion-pipeline budget
 4. not materially degrade Bobbin-style downstream topic quality
 
-## Delivery Sequence
+## Remaining Sequence
 
-Recommended implementation order:
+Recommended next implementation order:
 
-1. add Cloudflare Worker compatibility tests and make them pass
-2. expand fixture corpus and Python differential testing
-3. refactor tokenizer and similarity strategies behind interfaces
-4. add Bobbin compatibility wrapper and Bobbin integration tests
-5. add `fast-check` property tests
-6. add mutation-based fuzz tests
-7. add packaging and docs sync tests
-8. add Bobbin and generic ingestion-pipeline integration documentation
-9. add benchmark harness for Komoroske plus Bobbin current implementation and TF-IDF comparison
-10. add CLI and highlighter
-11. evaluate optional lemmatization hooks
+1. expand fixture corpus and Python differential testing
+2. tighten `seqm` parity with upstream optimized similarity behavior
+3. deepen mutation-survival in scoring and dedup modules
+4. run the deferred Bobbin repo integration test pass
+5. expand multilingual parity and tokenizer coverage
+6. evaluate whether a fuller optional lemmatization implementation is justified
+7. add any remaining package/runtime hardening that real adopters need
 
 ## Suggested Deliverables
 
@@ -463,3 +466,4 @@ Recommended implementation order:
 5. `scripts/benchmark.ts` for Yaket vs TF-IDF vs Python YAKE vs current Bobbin implementation
 6. CI jobs for unit, fixture, differential, Worker compatibility, and packaging tests
 7. benchmark report checked into `docs/benchmarks/`
+8. mutation-testing score tracking for scoring and dedup modules

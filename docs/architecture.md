@@ -103,10 +103,13 @@ The current architecture is verified through multiple test layers:
 - Python parity checks
 - property-based tests
 - mutation-style fuzz tests
+- dedicated CLI coverage checks
 - Cloudflare Worker runtime tests
+- package-surface smoke tests
 - docs-sync tests
 - Bobbin-style regression tests
 - benchmark comparisons against Bobbin, TF-IDF, and Python YAKE
+- mutation testing on scoring and dedup modules
 
 ## Non-Goals
 

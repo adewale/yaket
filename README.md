@@ -2,13 +2,13 @@
 
 `Yaket` is a TypeScript keyword extraction library that ports the core YAKE pipeline into a form that works in Node, browser-style bundles, and Cloudflare Workers.
 
-It is designed for teams that want upstream-like YAKE behavior, deterministic results, and a typed API that can plug into ingestion pipelines such as Bobbin or future consumers such as `flux-search`.
+It is designed for teams that want upstream-like YAKE behavior, deterministic results, and a typed API that can plug into ingestion pipelines such as [Bobbin](https://github.com/adewale/bobbin) or future consumers such as `flux-search`.
 
 ## Why use it
 
 - **Upstream-shaped YAKE core**: `KeywordExtractor`, `DataCore`, `SingleWord`, `ComposedWord`, and the core scoring/dedup flow are implemented in TypeScript.
 - **Edge-safe extraction path**: stopwords are bundled, and the extraction core avoids Node-only runtime dependencies.
-- **Pipeline-friendly API**: one-shot extraction, reusable extractor instances, Bobbin-compatible adapter output, and document-oriented helpers are all available.
+- **Pipeline-friendly API**: one-shot extraction, reusable extractor instances, [Bobbin](https://github.com/adewale/bobbin)-compatible adapter output, and document-oriented helpers are all available.
 - **Verification-heavy**: regression fixtures, Python parity checks, property-based tests, Cloudflare runtime tests, and a benchmark harness are checked in.
 
 ## Quick Start
@@ -107,7 +107,7 @@ const result = extractFromDocument({
 });
 ```
 
-### Bobbin-compatible adapter
+### [Bobbin](https://github.com/adewale/bobbin)-compatible adapter
 
 ```ts
 import { extractYakeKeywords } from "yaket";
@@ -119,7 +119,7 @@ const keywords = extractYakeKeywords(
 );
 ```
 
-This preserves Bobbin's current output shape:
+This preserves [Bobbin's](https://github.com/adewale/bobbin) current output shape:
 
 ```ts
 type BobbinYakeResult = {
@@ -168,7 +168,7 @@ console.log(getStopwordText("en").split("\n").length > 0);
 ```
 
 Language lookup uses the first two letters of the requested language code.
-If a specific stopword list is unavailable, Yaket falls back to the bundled language-agnostic list.
+If a specific stopword list is unavailable, Yaket currently resolves to an empty stopword list.
 
 ### Highlighting
 
@@ -223,7 +223,7 @@ The repository includes a benchmark harness that compares:
 
 - Yaket
 - upstream Python YAKE
-- the original Bobbin YAKE-like implementation
+- the original [Bobbin](https://github.com/adewale/bobbin) YAKE-like implementation
 - a simple TF-IDF baseline
 
 Current checked-in report:
@@ -239,7 +239,7 @@ npm run benchmark
 ## Architecture
 
 - Architecture overview: `docs/architecture.md`
-- Bobbin integration guide: `docs/integrations/bobbin.md`
+- [Bobbin](https://github.com/adewale/bobbin) integration guide: `docs/integrations/bobbin.md`
 - Generic pipeline guide: `docs/integrations/pipelines.md`
 - Roadmap: `docs/roadmap.md`
 - Deferred work: `TODO.md`
@@ -250,19 +250,29 @@ npm run benchmark
 - The tokenizer is close to YAKE, but still not a literal `segtok` port.
 - Dedup `seqm` behavior is still approximate rather than a byte-for-byte Python clone.
 - Multilingual support exists through bundled stopwords, but broad multilingual parity coverage is deferred.
-- Bobbin's full topic-layer integration test suite is deferred and tracked in `TODO.md`.
+- [Bobbin's](https://github.com/adewale/bobbin) full topic-layer integration test suite is deferred and tracked in `TODO.md`.
 
 ## Development
 
 ```bash
 npm install
+npm run typecheck
 npm test
+npm run test:cli:coverage
 npm run test:cloudflare
 npm run build
+npm run check:package
 npm run benchmark
+npm run verify
 ```
 
 `test/python-parity.test.ts` performs a live comparison against upstream Python YAKE when `PYTHONPATH` points at a YAKE checkout. The default path used during local development is `/tmp/yake`.
+
+Mutation testing is configured via `Stryker` and can be run separately when you want a slower audit-focused pass:
+
+```bash
+npm run test:mutation
+```
 
 ## When Not To Use Yaket
 
