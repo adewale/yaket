@@ -96,8 +96,7 @@ export class KeywordExtractor {
       return [];
     }
 
-    const normalizedText = text.replaceAll("\n", " ");
-    const core = new DataCore(normalizedText, this.stopwordSet, {
+    const core = new DataCore(text, this.stopwordSet, {
       windowsSize: this.config.windowSize,
       n: this.config.n,
       textProcessor: this.textProcessor,

@@ -1,11 +1,11 @@
-import { ComposedWord, type CandidateTerm } from "./ComposedWord.js";
+import { ComposedWord, type CandidateTerm, type NormalizedCandidateTerm } from "./ComposedWord.js";
 import { DirectedGraph } from "./graph.js";
 import { SingleWord } from "./SingleWord.js";
 import type { CandidateNormalizer, Lemmatizer, TextProcessor } from "./strategies.js";
 import { defaultTextProcessor } from "./strategies.js";
 import { DEFAULT_EXCLUDE, getTag, preFilter } from "./utils.js";
 
-type BlockWord = [tag: string, word: string, term: SingleWord];
+type BlockWord = [tag: string, word: string, term: SingleWord, normalizedWord: string];
 
 interface DataCoreConfig {
   windowsSize?: number;
@@ -60,20 +60,20 @@ export class DataCore {
   }
 
   buildCandidate(candidateString: string): ComposedWord {
-    const tokenizedWords = this.textProcessor.tokenizeWords(candidateString.toLowerCase())
+    const tokenizedWords = this.textProcessor.tokenizeWords(candidateString)
       .filter((token) => !((token.startsWith("'") || token.startsWith("’")) && token.length > 1) && token.length > 0);
 
-    const candidateTerms: CandidateTerm[] = [];
+    const candidateTerms: NormalizedCandidateTerm[] = [];
     for (const [index, word] of tokenizedWords.entries()) {
-      const candidateWord = this.lemmatizer == null ? word : this.normalizeTerm(word);
-      const tag = this.getTag(candidateWord, index);
-      let termObj: SingleWord | null = this.getTerm(candidateWord, false);
+      const normalizedWord = this.normalizeTerm(word);
+      const tag = this.getTag(word, index);
+      let termObj: SingleWord | null = this.getTerm(normalizedWord, false, true);
 
       if (termObj.tf === 0) {
         termObj = null;
       }
 
-      candidateTerms.push([tag, candidateWord, termObj]);
+      candidateTerms.push([tag, word, termObj, normalizedWord]);
     }
 
     if (!candidateTerms.some(([, , term]) => term != null)) {
@@ -107,8 +107,8 @@ export class DataCore {
     }
   }
 
-  getTerm(strWord: string, saveNonSeen = true): SingleWord {
-    let uniqueTerm = this.normalizeTerm(strWord);
+  getTerm(strWord: string, saveNonSeen = true, normalized = false): SingleWord {
+    let uniqueTerm = normalized ? strWord.toLowerCase() : this.normalizeTerm(strWord);
     const simpleStopword = this.stopwordSet.has(uniqueTerm);
 
     if (uniqueTerm.endsWith("s") && uniqueTerm.length > 3) {
@@ -203,9 +203,9 @@ export class DataCore {
   }
 
   private processWord(word: string, posText: number, sentenceId: number, posSent: number, blockOfWordObj: BlockWord[], windowsSize: number, n: number): number {
-    const candidateWord = this.lemmatizer == null ? word : this.normalizeTerm(word);
-    const tag = this.getTag(candidateWord, posSent);
-    const termObj = this.getTerm(candidateWord);
+    const normalizedWord = this.normalizeTerm(word);
+    const tag = this.getTag(word, posSent);
+    const termObj = this.getTerm(normalizedWord, true, true);
 
     termObj.addOccur(tag, sentenceId, posSent, posText);
     posText += 1;
@@ -214,8 +214,8 @@ export class DataCore {
       this.updateCooccurrence(blockOfWordObj, termObj, windowsSize);
     }
 
-    this.generateCandidates([tag, candidateWord], termObj, blockOfWordObj, n);
-    blockOfWordObj.push([tag, candidateWord, termObj]);
+    this.generateCandidates([tag, word], normalizedWord, termObj, blockOfWordObj, n);
+    blockOfWordObj.push([tag, word, termObj, normalizedWord]);
 
     return posText;
   }
@@ -231,8 +231,8 @@ export class DataCore {
     }
   }
 
-  private generateCandidates(term: [tag: string, word: string], termObj: SingleWord, blockOfWordObj: BlockWord[], n: number): void {
-    const candidate: CandidateTerm[] = [[term[0], term[1], termObj]];
+  private generateCandidates(term: [tag: string, word: string], normalizedWord: string, termObj: SingleWord, blockOfWordObj: BlockWord[], n: number): void {
+    const candidate: NormalizedCandidateTerm[] = [[term[0], term[1], termObj, normalizedWord]];
     this.addOrUpdateComposedWord(new ComposedWord(candidate));
 
     const start = Math.max(0, blockOfWordObj.length - (n - 1));

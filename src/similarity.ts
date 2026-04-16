@@ -45,12 +45,6 @@ export class Levenshtein {
       return len1;
     }
 
-    if (Math.abs(len1 - len2) > Math.max(len1, len2) * 0.7) {
-      const result = Math.max(len1, len2);
-      setBoundedCache(distanceCache, key, result);
-      return result;
-    }
-
     if (len1 > len2) {
       [seq1, seq2] = [seq2, seq1];
       [len1, len2] = [len2, len1];
@@ -110,14 +104,14 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
 
   const overlap = [...new Set(s1)].filter((char) => s2.includes(char)).length / charUnion.size;
   if (overlap < 0.2) {
-    sequenceCache.set(key, 0);
+    setBoundedCache(sequenceCache, key, 0);
     return 0;
   }
 
   if (maxLength <= 4) {
     const result = overlap * lengthRatio;
-      setBoundedCache(sequenceCache, key, result);
-      return result;
+    setBoundedCache(sequenceCache, key, result);
+    return result;
   }
 
   const words1 = s1.split(/\s+/).filter(Boolean);

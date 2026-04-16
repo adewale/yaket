@@ -1,6 +1,7 @@
 dist/
 node_modules/
 coverage/
+reports/
 vitest.config.d.ts
 vitest.config.d.ts.map
 vitest.config.js

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { createKeywordExtractor, extractKeywordDetails, type StopwordProvider, type TextProcessor } from "../src/index.js";
+import { createKeywordExtractor, extractKeywordDetails, type CandidateNormalizer, type StopwordProvider, type TextProcessor } from "../src/index.js";
 
 const pipeSeparatedProcessor: TextProcessor = {
   splitSentences(text) {
@@ -60,7 +60,7 @@ describe("pluggable strategies", () => {
   });
 
   it("supports candidate normalizers", () => {
-    const details = extractKeywordDetails("co-founder cofounder ecosystems", {
+    const details = extractKeywordDetails("co-founder ecosystems", {
       lan: "en",
       n: 1,
       top: 5,
@@ -72,6 +72,26 @@ describe("pluggable strategies", () => {
     });
 
     expect(details.some((item) => item.normalizedKeyword === "cofounder")).toBe(true);
+  });
+
+  it("applies candidate normalizers exactly once per raw token", () => {
+    const calls: string[] = [];
+    const normalizer: CandidateNormalizer = {
+      normalize(token, context) {
+        calls.push(`${context.original}:${token}`);
+        return token.replaceAll("-", "");
+      },
+    };
+
+    const details = extractKeywordDetails("co-founder", {
+      lan: "en",
+      n: 1,
+      top: 5,
+      candidateNormalizer: normalizer,
+    });
+
+    expect(details.some((item) => item.normalizedKeyword === "cofounder")).toBe(true);
+    expect(calls).toEqual(["co-founder:co-founder"]);
   });
 
   it("supports custom keyword scorers", () => {

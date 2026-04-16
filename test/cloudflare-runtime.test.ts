@@ -10,10 +10,20 @@ describe("cloudflare worker runtime", () => {
     const document = extractFromDocument({ id: "cf-doc", body: "Edge runtimes benefit from bundled assets.", language: "en" });
     const highlighted = new TextHighlighter().highlight("Machine learning improves software delivery.", [["machine learning", 0.1]]);
 
-    expect(tuples.length).toBeGreaterThan(0);
-    expect(details.length).toBeGreaterThan(0);
-    expect(bobbin.length).toBeGreaterThan(0);
+    expect(tuples[0]).toEqual(["Cloudflare Workers", 0.023458380875189654]);
+    expect(details[0]).toMatchObject({
+      keyword: "Agent swarms",
+      normalizedKeyword: "agent swarms",
+      ngramSize: 2,
+      occurrences: 1,
+      sentenceIds: [0],
+    });
+    expect(bobbin[0]).toEqual({ keyword: "search enrichment", score: 0.049403840020656155 });
     expect(document.id).toBe("cf-doc");
-    expect(highlighted).toContain("<mark>");
+    expect(document.keywords[0]).toMatchObject({
+      keyword: "Edge runtimes benefit",
+      normalizedKeyword: "edge runtimes benefit",
+    });
+    expect(highlighted).toBe("<mark>Machine learning</mark> improves software delivery.");
   });
 });

@@ -61,6 +61,7 @@ describe("similarity helpers", () => {
     expect(Levenshtein.distance("hello", "hello")).toBe(0);
     expect(Levenshtein.distance("hello", "helo")).toBe(1);
     expect(Levenshtein.distance("abc", "xyz")).toBeGreaterThan(0);
+    expect(Levenshtein.distance("a", "abcdefghij")).toBe(9);
   });
 
   it("matches upstream Levenshtein ratio examples", () => {

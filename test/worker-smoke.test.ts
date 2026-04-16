@@ -29,12 +29,14 @@ describe("worker smoke", () => {
     const code = result.outputFiles[0]!.text;
     expect(code).not.toContain("node:fs");
     expect(code).not.toContain("child_process");
+    expect(code).not.toContain("node:path");
 
     const moduleUrl = `data:text/javascript;base64,${Buffer.from(code).toString("base64")}`;
     const module = await import(moduleUrl);
 
-    expect(module.default.keywords.length).toBeGreaterThan(0);
-    expect(module.default.bobbin.length).toBeGreaterThan(0);
+    expect(module.default.keywords[0][0]).toBe("Cloudflare Workers");
+    expect(module.default.bobbin[0].keyword).toBe("keyword extraction");
     expect(module.default.document.id).toBe("edge-doc");
+    expect(module.default.document.keywords[0].normalizedKeyword).toBe("workers run code");
   });
 });

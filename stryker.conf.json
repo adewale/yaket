@@ -1,0 +1,21 @@
+{
+  "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
+  "testRunner": "vitest",
+  "checkers": ["typescript"],
+  "reporters": ["clear-text", "json"],
+  "mutate": [
+    "src/similarity.ts",
+    "src/SingleWord.ts",
+    "src/ComposedWord.ts",
+    "src/KeywordExtractor.ts"
+  ],
+  "coverageAnalysis": "off",
+  "thresholds": {
+    "high": 80,
+    "low": 65,
+    "break": 60
+  },
+  "vitest": {
+    "configFile": "vitest.config.ts"
+  }
+}

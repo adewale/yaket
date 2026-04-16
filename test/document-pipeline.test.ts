@@ -50,4 +50,27 @@ describe("document pipeline helpers", () => {
 
     expect(results).toEqual(["stream-1", "stream-2"]);
   });
+
+  it("does not create cross-boundary title-body phrases when including the title", () => {
+    const result = extractFromDocument({
+      id: "doc-boundary",
+      title: "Cloudflare Workers",
+      body: "Search indexing improves relevance.",
+      language: "en",
+    }, { top: 10, n: 2, includeTitleInText: true });
+
+    expect(result.keywords.some((item) => item.normalizedKeyword === "workers search")).toBe(false);
+  });
+
+  it("supports includeTitleInText=false and language option precedence", () => {
+    const result = extractFromDocument({
+      id: "doc-no-title",
+      title: "Cloudflare Workers",
+      body: "Search indexing improves relevance.",
+      language: "pt",
+    }, { includeTitleInText: false, lan: "en", top: 5, n: 2 });
+
+    expect(result.language).toBe("en");
+    expect(result.keywords.some((item) => item.keyword.includes("Cloudflare"))).toBe(false);
+  });
 });

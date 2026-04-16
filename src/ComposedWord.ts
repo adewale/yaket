@@ -2,6 +2,7 @@ import { SingleWord } from "./SingleWord.js";
 import { STOPWORD_WEIGHT } from "./utils.js";
 
 type CandidateTerm = [tag: string, word: string, term: SingleWord | null];
+type NormalizedCandidateTerm = [tag: string, word: string, term: SingleWord | null, normalizedWord?: string];
 
 export class ComposedWord {
   readonly tags = new Set<string>();
@@ -16,7 +17,7 @@ export class ComposedWord {
   integrity = 1;
   h = 1;
 
-  constructor(terms: CandidateTerm[] | null) {
+  constructor(terms: NormalizedCandidateTerm[] | null) {
     if (terms == null) {
       this.kw = "";
       this.uniqueKw = "";
@@ -28,7 +29,7 @@ export class ComposedWord {
 
     this.tags.add(terms.map(([tag]) => tag).join(""));
     this.kw = terms.map(([, word]) => word).join(" ");
-    this.uniqueKw = this.kw.toLowerCase();
+    this.uniqueKw = terms.map(([, word, , normalizedWord]) => normalizedWord ?? word.toLowerCase()).join(" ");
     this.size = terms.length;
     this.terms = terms.map(([, , term]) => term).filter((term): term is SingleWord => term != null);
     this.startOrEndStopwords = this.terms.length === 0 || this.terms[0]!.stopword || this.terms[this.terms.length - 1]!.stopword;
@@ -94,4 +95,4 @@ export class ComposedWord {
   }
 }
 
-export type { CandidateTerm };
+export type { CandidateTerm, NormalizedCandidateTerm };

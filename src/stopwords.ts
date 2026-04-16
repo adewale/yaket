@@ -16,4 +16,4 @@ export function loadStopwords(language = "en"): Set<string> {
   );
 }
 
-export const supportedLanguages = Object.keys(stopwordsByLanguage);
+export const supportedLanguages = Object.keys(stopwordsByLanguage).filter((language) => language !== "noLang");

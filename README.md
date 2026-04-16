@@ -158,6 +158,18 @@ Available extension points:
 - `KeywordScorer`
 - `candidateFilter`
 
+### Stopwords and languages
+
+```ts
+import { getStopwordText, supportedLanguages } from "yaket";
+
+console.log(supportedLanguages.includes("en"));
+console.log(getStopwordText("en").split("\n").length > 0);
+```
+
+Language lookup uses the first two letters of the requested language code.
+If a specific stopword list is unavailable, Yaket falls back to the bundled language-agnostic list.
+
 ### Highlighting
 
 ```ts
@@ -175,6 +187,19 @@ const highlighted = new TextHighlighter().highlight(
 ```bash
 yaket --text-input "Google is acquiring Kaggle" --language en --ngram-size 3 --top 5 --verbose
 ```
+
+Supported flags:
+
+- `--text-input`
+- `--input-file`
+- `--language`
+- `--ngram-size`
+- `--dedup-func`
+- `--dedup-lim`
+- `--window-size`
+- `--top`
+- `--verbose`
+- `--help`
 
 ## Cloudflare Compatibility
 

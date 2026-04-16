@@ -28,11 +28,16 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "benchmark": "tsx scripts/benchmark.ts",
+    "check:package": "npm pack --dry-run && publint",
     "prepack": "npm run build",
+    "test:cli:coverage": "vitest run --config vitest.cli-coverage.config.ts",
     "test": "vitest run",
     "test:cloudflare": "vitest run --config vitest.cloudflare.config.ts",
     "test:all": "npm test && npm run test:cloudflare",
-    "test:watch": "vitest"
+    "test:mutation": "stryker run",
+    "test:watch": "vitest",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "verify": "npm run typecheck && npm test && npm run test:cloudflare && npm run build && npm run check:package"
   },
   "keywords": [
     "yake",
@@ -42,11 +47,16 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@stryker-mutator/core": "^9.3.0",
+    "@stryker-mutator/typescript-checker": "^9.3.0",
+    "@stryker-mutator/vitest-runner": "^9.3.0",
     "@cloudflare/vitest-pool-workers": "^0.14.1",
     "@cloudflare/workers-types": "^4.20260405.1",
     "@types/node": "^24.5.2",
+    "@vitest/coverage-v8": "^4.1.4",
     "fast-check": "^4.3.0",
     "esbuild": "^0.25.9",
+    "publint": "^0.3.15",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
     "vitest": "^4.1.2",
