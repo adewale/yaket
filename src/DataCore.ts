@@ -1,7 +1,7 @@
 import { ComposedWord, type CandidateTerm, type NormalizedCandidateTerm } from "./ComposedWord.js";
 import { DirectedGraph } from "./graph.js";
 import { SingleWord } from "./SingleWord.js";
-import type { CandidateNormalizer, Lemmatizer, TextProcessor } from "./strategies.js";
+import type { CandidateNormalizer, Lemmatizer, MultiWordScorer, SingleWordScorer, TextProcessor } from "./strategies.js";
 import { defaultTextProcessor } from "./strategies.js";
 import { DEFAULT_EXCLUDE, getTag, preFilter } from "./utils.js";
 
@@ -15,6 +15,8 @@ interface DataCoreConfig {
   textProcessor?: TextProcessor;
   lemmatizer?: Lemmatizer | null;
   candidateNormalizer?: CandidateNormalizer | null;
+  singleWordScorer?: SingleWordScorer | null;
+  multiWordScorer?: MultiWordScorer | null;
   language?: string;
 }
 
@@ -31,6 +33,8 @@ export class DataCore {
   readonly textProcessor: TextProcessor;
   readonly lemmatizer: Lemmatizer | null;
   readonly candidateNormalizer: CandidateNormalizer | null;
+  readonly singleWordScorer: SingleWordScorer | null;
+  readonly multiWordScorer: MultiWordScorer | null;
   readonly language: string;
 
   numberOfSentences = 0;
@@ -49,6 +53,8 @@ export class DataCore {
     this.textProcessor = config.textProcessor ?? defaultTextProcessor;
     this.lemmatizer = config.lemmatizer ?? null;
     this.candidateNormalizer = config.candidateNormalizer ?? null;
+    this.singleWordScorer = config.singleWordScorer ?? null;
+    this.multiWordScorer = config.multiWordScorer ?? null;
     this.language = config.language ?? "en";
 
     for (let index = 1; index <= n; index += 1) {
@@ -106,8 +112,14 @@ export class DataCore {
     const stdTf = Math.sqrt(validTfs.reduce((sum, value) => sum + ((value - avgTf) ** 2), 0) / validTfs.length);
     const maxTf = Math.max(...[...this.terms.values()].map((term) => term.tf));
 
+    const context = { maxTf, avgTf, stdTf, numberOfSentences: this.numberOfSentences, features };
+
     for (const term of this.terms.values()) {
-      term.updateH({ maxTf, avgTf, stdTf, numberOfSentences: this.numberOfSentences }, features);
+      if (this.singleWordScorer == null) {
+        term.updateH(context, features);
+      } else {
+        term.h = this.singleWordScorer.score(term, context);
+      }
     }
   }
 
@@ -117,7 +129,11 @@ export class DataCore {
   buildMultTermsFeatures(features?: string[] | null): void {
     for (const candidate of this.candidates.values()) {
       if (candidate.isValid()) {
-        candidate.updateH(features);
+        if (this.multiWordScorer == null) {
+          candidate.updateH(features);
+        } else {
+          candidate.h = this.multiWordScorer.score(candidate, { features });
+        }
       }
     }
   }

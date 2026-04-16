@@ -50,7 +50,7 @@ import { extract } from "@ade_oshineye/yaket";
 
 const keywords = extract(
   "Google is acquiring data science community Kaggle.",
-  { lan: "en", n: 3, top: 5 },
+  { language: "en", n: 3, top: 5 },
 );
 
 console.log(keywords);
@@ -99,7 +99,7 @@ Common options:
 
 | Option | Meaning | Default |
 |---|---|---|
-| `lan` / `language` | language code | `en` |
+| `language` | language code | `en` |
 | `n` | maximum n-gram size | `3` |
 | `top` | number of results to return | `20` |
 | `dedupFunc` | dedup function (`seqm`, `levs`, `jaro`) | `seqm` |
@@ -109,6 +109,15 @@ Common options:
 
 For the complete public API, see `docs/api-reference.md`.
 
+Canonical option names are:
+
+- `language`
+- `dedupLim`
+- `dedupFunc`
+- `windowSize`
+
+Legacy aliases such as `lan`, `dedup_lim`, `windowsSize`, and `window_size` are still accepted for backward compatibility, but new code should prefer the canonical names.
+
 If you prefer the most concise one-shot API, `extract()` is an alias for `extractKeywords()`.
 
 ### Reusable extractor
@@ -117,7 +126,7 @@ If you prefer the most concise one-shot API, `extract()` is an alias for `extrac
 import { KeywordExtractor } from "@ade_oshineye/yaket";
 
 const extractor = new KeywordExtractor({
-  lan: "en",
+  language: "en",
   n: 3,
   top: 10,
 });
@@ -133,7 +142,7 @@ const keywords = extractor.extractKeywords(
 import { extractKeywordDetails } from "@ade_oshineye/yaket";
 
 const details = extractKeywordDetails("Machine learning improves software delivery.", {
-  lan: "en",
+  language: "en",
   n: 2,
   top: 5,
 });
@@ -213,6 +222,8 @@ Available extension points:
 - `SimilarityStrategy`
 - `CandidateNormalizer`
 - `Lemmatizer`
+- `SingleWordScorer`
+- `MultiWordScorer`
 - `KeywordScorer`
 - `candidateFilter`
 
@@ -220,6 +231,27 @@ Yaket also exports:
 
 - `YakeResult`
 - `YakeOptions`
+
+The two first-class internal scoring hooks are:
+
+1. `singleWordScorer` for replacing the internal YAKE single-word score formula
+2. `multiWordScorer` for replacing the internal YAKE multi-word score formula
+
+Example:
+
+```ts
+import { extractKeywordDetails } from "@ade_oshineye/yaket";
+
+const details = extractKeywordDetails("agent swarms coordinate teams", {
+  language: "en",
+  n: 2,
+  multiWordScorer: {
+    score(candidate) {
+      return candidate.size === 2 ? 0.001 : 10;
+    },
+  },
+});
+```
 
 ### Stopwords and languages
 
@@ -350,7 +382,7 @@ npm run benchmark
 | TF-IDF | simple, cheap, corpus-aware | less phrase-aware and less YAKE-like on single documents |
 | RAKE | simple phrase extraction | weaker local-feature scoring and usually cruder ranking |
 | KeyBERT | embedding-based semantic relevance | larger dependency/runtime cost and often slower |
-| Yaket | deterministic YAKE-style local-feature extraction in JS | still has some drift from upstream Python YAKE |
+| Yaket | deterministic YAKE-style local-feature extraction in JS | still has some drift from upstream Python YAKE in tokenization and some heuristic edge cases |
 
 For a concrete checked-in comparison, see the Komoroske benchmark report.
 

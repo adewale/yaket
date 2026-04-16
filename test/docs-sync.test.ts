@@ -59,7 +59,7 @@ describe("documentation-code sync", () => {
       expect(readme).toContain(flag);
     }
 
-    for (const token of ["TextProcessor", "StopwordProvider", "SimilarityStrategy", "CandidateNormalizer", "Lemmatizer", "KeywordScorer", "candidateFilter", "supportedLanguages", "STOPWORDS", "YakeResult", "YakeOptions", "extract(", "createStopwordSet", "createStaticStopwordProvider"]) {
+    for (const token of ["TextProcessor", "StopwordProvider", "SimilarityStrategy", "CandidateNormalizer", "Lemmatizer", "SingleWordScorer", "MultiWordScorer", "KeywordScorer", "candidateFilter", "supportedLanguages", "STOPWORDS", "YakeResult", "YakeOptions", "extract(", "createStopwordSet", "createStaticStopwordProvider"]) {
       expect(readme).toContain(token);
     }
   });

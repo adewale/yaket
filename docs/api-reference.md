@@ -47,7 +47,6 @@ Factory helper for codebases that prefer pure-construction helpers over `new`.
 
 ```ts
 type YakeOptions = {
-  lan?: string;
   language?: string;
   n?: number;
   top?: number;
@@ -60,6 +59,8 @@ type YakeOptions = {
   dedupStrategy?: SimilarityStrategy | ((a: string, b: string) => number);
   lemmatizer?: Lemmatizer;
   candidateNormalizer?: CandidateNormalizer;
+  singleWordScorer?: SingleWordScorer;
+  multiWordScorer?: MultiWordScorer;
   keywordScorer?: KeywordScorer | ((candidates: YakeResult[]) => YakeResult[]);
   candidateFilter?: (candidate: CandidateFilterInput) => boolean;
 }
@@ -69,12 +70,19 @@ Most commonly used fields:
 
 | Option | Meaning | Default |
 |---|---|---|
-| `lan` / `language` | two-letter language code | `en` |
+| `language` | two-letter language code | `en` |
 | `n` | maximum n-gram size | `3` |
 | `top` | number of keywords to return | `20` |
 | `dedupFunc` | `seqm`, `levs`, or `jaro`-style dedup | `seqm` |
 | `dedupLim` | dedup similarity threshold | `0.9` |
 | `windowSize` | co-occurrence window size | `1` |
+
+Deprecated but still accepted aliases exist on `KeywordExtractorOptions` for compatibility:
+
+- `lan`
+- `dedup_lim`
+- `windowsSize`
+- `window_size`
 
 ## Adapters
 
@@ -153,6 +161,8 @@ Yaket exports the main extension interfaces directly:
 - `SimilarityStrategy`
 - `CandidateNormalizer`
 - `Lemmatizer`
+- `SingleWordScorer`
+- `MultiWordScorer`
 - `KeywordScorer`
 - `CandidateFilterInput`
 

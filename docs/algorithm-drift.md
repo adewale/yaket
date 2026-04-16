@@ -10,12 +10,14 @@ This document makes the known drift points explicit.
 
 The upstream YAKE default dedup function is `seqm`.
 
-Yaket implements a JS-native approximation of the optimized upstream similarity path, but this is still the biggest dedup parity risk.
+Yaket now regression-tests representative `seqm` examples against the current upstream optimized similarity path.
+
+However, `seqm` is still the biggest dedup parity risk because it is heuristic rather than a simple canonical metric.
 
 Known consequences:
 
-1. near-threshold dedup decisions can differ
-2. result ordering can shift for near-tie candidates
+1. near-threshold dedup decisions can still differ in edge cases
+2. result ordering can still shift for near-tie candidates
 3. mutation testing shows this area is still more brittle than the core scoring path
 
 ### 2. `segtok` replacement

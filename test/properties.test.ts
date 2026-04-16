@@ -74,4 +74,21 @@ describe("property-based invariants", () => {
       { numRuns: 100 },
     );
   });
+
+  it("keeps canonical and legacy language options behaviorally equivalent when used separately", () => {
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 0, maxLength: 400 }),
+        fc.integer({ min: 1, max: 10 }),
+        fc.integer({ min: 1, max: 3 }),
+        (text, topK, maxNgram) => {
+          const canonical = extractKeywordDetails(text, { language: "en", top: topK, n: maxNgram });
+          const legacy = extractKeywordDetails(text, { lan: "en", top: topK, n: maxNgram });
+
+          expect(canonical).toEqual(legacy);
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 });

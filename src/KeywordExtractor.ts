@@ -1,25 +1,20 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { DataCore } from "./DataCore.js";
-import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, SimilarityStrategy, StopwordProvider, TextProcessor } from "./strategies.js";
+import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity } from "./similarity.js";
 
 type DedupFunction = (cand1: string, cand2: string) => number;
 
 /**
- * Public configuration for Yaket extraction.
+ * Canonical public configuration for Yaket extraction.
  */
-export interface KeywordExtractorOptions {
-  lan?: string;
+export interface YakeOptions {
   language?: string;
   n?: number;
   dedupLim?: number;
-  dedup_lim?: number;
   dedupFunc?: string;
-  dedup_func?: string;
   windowSize?: number;
-  windowsSize?: number;
-  window_size?: number;
   top?: number;
   features?: string[] | null;
   stopwords?: Iterable<string>;
@@ -28,8 +23,26 @@ export interface KeywordExtractorOptions {
   dedupStrategy?: SimilarityStrategy | DedupFunction;
   lemmatizer?: Lemmatizer;
   candidateNormalizer?: CandidateNormalizer;
+  singleWordScorer?: SingleWordScorer;
+  multiWordScorer?: MultiWordScorer;
   keywordScorer?: KeywordScorer | ((candidates: KeywordResult[]) => KeywordResult[]);
   candidateFilter?: (candidate: CandidateFilterInput) => boolean;
+}
+
+/**
+ * Backward-compatible option surface including deprecated alias keys.
+ */
+export interface KeywordExtractorOptions extends YakeOptions {
+  /** @deprecated Use `language`. */
+  lan?: string;
+  /** @deprecated Use `dedupLim`. */
+  dedup_lim?: number;
+  /** @deprecated Use `dedupFunc`. */
+  dedup_func?: string;
+  /** @deprecated Use `windowSize`. */
+  windowsSize?: number;
+  /** @deprecated Use `windowSize`. */
+  window_size?: number;
 }
 
 /**
@@ -53,6 +66,8 @@ export class KeywordExtractor {
   readonly textProcessor?: TextProcessor;
   readonly lemmatizer: Lemmatizer | null;
   readonly candidateNormalizer: CandidateNormalizer | null;
+  readonly singleWordScorer: SingleWordScorer | null;
+  readonly multiWordScorer: MultiWordScorer | null;
   readonly keywordScorer: ((candidates: KeywordResult[]) => KeywordResult[]) | null;
   readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
   private readonly dedupFunction: DedupFunction;
@@ -62,7 +77,7 @@ export class KeywordExtractor {
    */
   constructor(options: KeywordExtractorOptions = {}) {
     this.config = {
-      lan: options.lan ?? options.language ?? "en",
+      lan: options.language ?? options.lan ?? "en",
       n: options.n ?? 3,
       dedupLim: options.dedupLim ?? options.dedup_lim ?? 0.9,
       dedupFunc: options.dedupFunc ?? options.dedup_func ?? "seqm",
@@ -74,6 +89,8 @@ export class KeywordExtractor {
     this.textProcessor = options.textProcessor;
     this.lemmatizer = options.lemmatizer ?? null;
     this.candidateNormalizer = options.candidateNormalizer ?? null;
+    this.singleWordScorer = options.singleWordScorer ?? null;
+    this.multiWordScorer = options.multiWordScorer ?? null;
     this.keywordScorer = options.keywordScorer == null ? null : getKeywordScorer(options.keywordScorer);
     this.candidateFilter = options.candidateFilter;
     this.stopwordSet = options.stopwords == null
@@ -126,6 +143,8 @@ export class KeywordExtractor {
       textProcessor: this.textProcessor,
       lemmatizer: this.lemmatizer,
       candidateNormalizer: this.candidateNormalizer,
+      singleWordScorer: this.singleWordScorer,
+      multiWordScorer: this.multiWordScorer,
       language: this.config.lan,
     });
 
@@ -170,6 +189,7 @@ export class KeywordExtractor {
 
   /**
    * Python-style alias for `extractKeywords()`.
+   * @deprecated Prefer `extractKeywords()` or `extract()` in TypeScript code.
    */
   extract_keywords(text: string | null | undefined): KeywordScore[] {
     return this.extractKeywords(text);

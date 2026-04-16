@@ -14,8 +14,8 @@ python -m pip install numpy networkx segtok jellyfish
 - average top-10 overlap with Python YAKE: 4.20
 - Yaket precision@10 against gold keyphrases: 0.180
 - Python YAKE precision@10 against gold keyphrases: 0.240
-- average Yaket runtime per document (ms): 2.10
-- average Python YAKE runtime per document (ms): 204.68
+- average Yaket runtime per document (ms): 2.16
+- average Python YAKE runtime per document (ms): 168.85
 
 ### Sample document
 
@@ -30,8 +30,8 @@ python -m pip install numpy networkx segtok jellyfish
 - average top-10 overlap with Python YAKE: 8.40
 - Yaket precision@10 against gold keyphrases: 0.140
 - Python YAKE precision@10 against gold keyphrases: 0.080
-- average Yaket runtime per document (ms): 69.84
-- average Python YAKE runtime per document (ms): 270.70
+- average Yaket runtime per document (ms): 76.22
+- average Python YAKE runtime per document (ms): 303.95
 
 ### Sample document
 

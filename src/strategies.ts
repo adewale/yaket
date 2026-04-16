@@ -1,3 +1,5 @@
+import type { ComposedWord } from "./ComposedWord.js";
+import type { SingleWord } from "./SingleWord.js";
 import { loadStopwords } from "./stopwords.js";
 import { splitSentences, tokenizeWords } from "./utils.js";
 
@@ -76,6 +78,38 @@ export interface CandidateFilterInput {
  */
 export interface KeywordScorer {
   score(candidates: KeywordResult[]): KeywordResult[];
+}
+
+/**
+ * Context passed to single-word scorers.
+ */
+export interface SingleWordScoreContext {
+  readonly maxTf: number;
+  readonly avgTf: number;
+  readonly stdTf: number;
+  readonly numberOfSentences: number;
+  readonly features?: string[] | null;
+}
+
+/**
+ * Hook for replacing the internal YAKE single-word score formula.
+ */
+export interface SingleWordScorer {
+  score(term: SingleWord, context: SingleWordScoreContext): number;
+}
+
+/**
+ * Context passed to multi-word scorers.
+ */
+export interface MultiWordScoreContext {
+  readonly features?: string[] | null;
+}
+
+/**
+ * Hook for replacing the internal YAKE multi-word score formula.
+ */
+export interface MultiWordScorer {
+  score(candidate: ComposedWord, context: MultiWordScoreContext): number;
 }
 
 /**
