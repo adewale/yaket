@@ -1,4 +1,4 @@
-import { extractKeywords } from "./KeywordExtractor.js";
+import { extractKeywordDetails } from "./KeywordExtractor.js";
 
 export interface BobbinYakeResult {
   keyword: string;
@@ -17,11 +17,11 @@ export function extractYakeKeywords(
   n = 5,
   maxNgram = 3,
 ): BobbinYakeResult[] {
-  return extractKeywords(text, {
+  return extractKeywordDetails(text, {
     lan: "en",
     top: n,
     n: maxNgram,
-  }).map(([keyword, score]) => ({
+  }).map(({ keyword, score }) => ({
     keyword: keyword.toLowerCase(),
     score,
   }));

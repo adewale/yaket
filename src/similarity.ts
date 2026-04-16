@@ -3,6 +3,12 @@ const ratioCache = new Map<string, number>();
 const sequenceCache = new Map<string, number>();
 const MAX_CACHE_SIZE = 20_000;
 
+export interface SimilarityCacheStats {
+  distance: number;
+  ratio: number;
+  sequence: number;
+}
+
 export class Levenshtein {
   static ratio(seq1: string, seq2: string): number {
     const key = cacheKey(seq1, seq2);
@@ -294,4 +300,18 @@ function setBoundedCache(cache: Map<string, number>, key: string, value: number)
   }
 
   cache.set(key, value);
+}
+
+export function getSimilarityCacheStats(): SimilarityCacheStats {
+  return {
+    distance: distanceCache.size,
+    ratio: ratioCache.size,
+    sequence: sequenceCache.size,
+  };
+}
+
+export function clearSimilarityCaches(): void {
+  distanceCache.clear();
+  ratioCache.clear();
+  sequenceCache.clear();
 }

@@ -1,7 +1,8 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { DataCore } from "./DataCore.js";
+import type { CandidateFilterInput, KeywordResult, Lemmatizer, SimilarityStrategy, StopwordProvider, TextProcessor } from "./strategies.js";
+import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity } from "./similarity.js";
-import { loadStopwords } from "./stopwords.js";
 
 type DedupFunction = (cand1: string, cand2: string) => number;
 
@@ -19,6 +20,11 @@ export interface KeywordExtractorOptions {
   top?: number;
   features?: string[] | null;
   stopwords?: Iterable<string>;
+  textProcessor?: TextProcessor;
+  stopwordProvider?: StopwordProvider;
+  dedupStrategy?: SimilarityStrategy | DedupFunction;
+  lemmatizer?: Lemmatizer;
+  candidateFilter?: (candidate: CandidateFilterInput) => boolean;
 }
 
 export type KeywordScore = [keyword: string, score: number];
@@ -36,6 +42,9 @@ interface NormalizedConfig {
 export class KeywordExtractor {
   readonly config: NormalizedConfig;
   readonly stopwordSet: Set<string>;
+  readonly textProcessor?: TextProcessor;
+  readonly lemmatizer: Lemmatizer | null;
+  readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
   private readonly dedupFunction: DedupFunction;
 
   constructor(options: KeywordExtractorOptions = {}) {
@@ -49,10 +58,15 @@ export class KeywordExtractor {
       features: options.features ?? null,
     };
 
+    this.textProcessor = options.textProcessor;
+    this.lemmatizer = options.lemmatizer ?? null;
+    this.candidateFilter = options.candidateFilter;
     this.stopwordSet = options.stopwords == null
-      ? loadStopwords(this.config.lan)
+      ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.lan)
       : new Set([...options.stopwords].map((value) => value.toLowerCase()));
-    this.dedupFunction = this.getDedupFunction(this.config.dedupFunc);
+    this.dedupFunction = options.dedupStrategy == null
+      ? this.getDedupFunction(this.config.dedupFunc)
+      : getStrategyFunction(options.dedupStrategy);
   }
 
   levs(cand1: string, cand2: string): number {
@@ -68,6 +82,10 @@ export class KeywordExtractor {
   }
 
   extractKeywords(text: string | null | undefined): KeywordScore[] {
+    return this.extractKeywordDetails(text).map((item) => [item.keyword, item.score]);
+  }
+
+  extractKeywordDetails(text: string | null | undefined): KeywordResult[] {
     if (!text) {
       return [];
     }
@@ -76,6 +94,9 @@ export class KeywordExtractor {
     const core = new DataCore(normalizedText, this.stopwordSet, {
       windowsSize: this.config.windowSize,
       n: this.config.n,
+      textProcessor: this.textProcessor,
+      lemmatizer: this.lemmatizer,
+      language: this.config.lan,
     });
 
     core.buildSingleTermsFeatures(this.config.features);
@@ -85,23 +106,27 @@ export class KeywordExtractor {
       .filter((candidate) => candidate.isValid())
       .sort((left, right) => compareCandidates(left, right));
 
+    const candidateDetails = candidates
+      .map((candidate) => toKeywordResult(candidate))
+      .filter((candidate) => this.candidateFilter?.(candidate) ?? true);
+
     if (this.config.dedupLim >= 1) {
-      return candidates.slice(0, this.config.top).map((candidate) => [candidate.uniqueKw, candidate.h]);
+      return candidateDetails.slice(0, this.config.top);
     }
 
-    const resultSet: Array<[number, ComposedWord]> = [];
-    for (const candidate of candidates) {
+    const resultSet: KeywordResult[] = [];
+    for (const candidate of candidateDetails) {
       let shouldAdd = true;
 
-      for (const [, selected] of resultSet) {
-        if (this.dedupFunction(candidate.uniqueKw, selected.uniqueKw) > this.config.dedupLim) {
+      for (const selected of resultSet) {
+        if (this.dedupFunction(candidate.normalizedKeyword, selected.normalizedKeyword) > this.config.dedupLim) {
           shouldAdd = false;
           break;
         }
       }
 
       if (shouldAdd) {
-        resultSet.push([candidate.h, candidate]);
+        resultSet.push(candidate);
       }
 
       if (resultSet.length === this.config.top) {
@@ -109,7 +134,7 @@ export class KeywordExtractor {
       }
     }
 
-    return resultSet.map(([score, candidate]) => [candidate.kw, score]);
+    return resultSet;
   }
 
   extract_keywords(text: string | null | undefined): KeywordScore[] {
@@ -136,7 +161,33 @@ export function extractKeywords(text: string, options: KeywordExtractorOptions =
   return new KeywordExtractor(options).extractKeywords(text);
 }
 
+export function extractKeywordDetails(text: string, options: KeywordExtractorOptions = {}): KeywordResult[] {
+  return new KeywordExtractor(options).extractKeywordDetails(text);
+}
+
+export function createKeywordExtractor(options: KeywordExtractorOptions = {}): KeywordExtractor {
+  return new KeywordExtractor(options);
+}
+
 export { Levenshtein };
+
+function getStrategyFunction(strategy: SimilarityStrategy | DedupFunction): DedupFunction {
+  return typeof strategy === "function" ? strategy : strategy.compare.bind(strategy);
+}
+
+function toKeywordResult(candidate: ComposedWord): KeywordResult {
+  const sentenceIds = [...new Set(candidate.terms.flatMap((term) => [...term.occurs.keys()]))].sort((left, right) => left - right);
+  const occurrences = candidate.tf;
+
+  return {
+    keyword: candidate.kw,
+    normalizedKeyword: candidate.uniqueKw,
+    score: candidate.h,
+    ngramSize: candidate.size,
+    occurrences,
+    sentenceIds,
+  };
+}
 
 function compareCandidates(left: ComposedWord, right: ComposedWord): number {
   if (left.h !== right.h) {

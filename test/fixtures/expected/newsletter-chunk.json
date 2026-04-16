@@ -1,0 +1,42 @@
+[
+  {
+    "keyword": "Vertical",
+    "normalizedKeyword": "vertical",
+    "score": 0.17777439245462645,
+    "ngramSize": 1,
+    "occurrences": 2,
+    "sentenceIds": [2, 3]
+  },
+  {
+    "keyword": "Gizmo and Dreamer",
+    "normalizedKeyword": "gizmo and dreamer",
+    "score": 0.18107633969826237,
+    "ngramSize": 3,
+    "occurrences": 1,
+    "sentenceIds": [3, 5]
+  },
+  {
+    "keyword": "platforms",
+    "normalizedKeyword": "platforms",
+    "score": 0.18904181613756502,
+    "ngramSize": 1,
+    "occurrences": 2,
+    "sentenceIds": [0, 3]
+  },
+  {
+    "keyword": "absorbed",
+    "normalizedKeyword": "absorbed",
+    "score": 0.226396901979683,
+    "ngramSize": 1,
+    "occurrences": 2,
+    "sentenceIds": [0, 3]
+  },
+  {
+    "keyword": "Consumer",
+    "normalizedKeyword": "consumer",
+    "score": 0.2597043637758384,
+    "ngramSize": 1,
+    "occurrences": 2,
+    "sentenceIds": [0, 3]
+  }
+]

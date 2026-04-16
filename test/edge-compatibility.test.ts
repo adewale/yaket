@@ -17,7 +17,7 @@ const FORBIDDEN_IMPORT_PATTERNS = [
 
 describe("edge compatibility guard", () => {
   it("keeps the extraction source free of Node-only runtime imports", () => {
-    for (const fileName of readdirSync(SOURCE_DIR).filter((entry) => entry.endsWith(".ts"))) {
+    for (const fileName of readdirSync(SOURCE_DIR).filter((entry) => entry.endsWith(".ts") && entry !== "cli.ts")) {
       const source = readFileSync(join(SOURCE_DIR, fileName), "utf8");
 
       for (const pattern of FORBIDDEN_IMPORT_PATTERNS) {

@@ -39,7 +39,7 @@ export function preFilter(text: string): string {
 }
 
 export function tokenizeSentences(text: string): string[][] {
-  return splitIntoSentences(text)
+  return splitSentences(text)
     .map((sentence) => tokenizeWords(sentence).filter((token) => !(startsWithApostrophe(token) && token.length > 1) && token.length > 0))
     .filter((sentence) => sentence.length > 0);
 }
@@ -55,7 +55,7 @@ export function tokenizeWords(text: string): string[] {
   return expanded;
 }
 
-function splitIntoSentences(text: string): string[] {
+export function splitSentences(text: string): string[] {
   const sentences: string[] = [];
   let start = 0;
   let index = 0;

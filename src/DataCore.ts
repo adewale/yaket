@@ -1,7 +1,9 @@
 import { ComposedWord, type CandidateTerm } from "./ComposedWord.js";
 import { DirectedGraph } from "./graph.js";
 import { SingleWord } from "./SingleWord.js";
-import { DEFAULT_EXCLUDE, getTag, preFilter, tokenizeSentences, tokenizeWords } from "./utils.js";
+import type { Lemmatizer, TextProcessor } from "./strategies.js";
+import { defaultTextProcessor } from "./strategies.js";
+import { DEFAULT_EXCLUDE, getTag, preFilter } from "./utils.js";
 
 type BlockWord = [tag: string, word: string, term: SingleWord];
 
@@ -10,6 +12,9 @@ interface DataCoreConfig {
   n?: number;
   tagsToDiscard?: Set<string>;
   exclude?: ReadonlySet<string>;
+  textProcessor?: TextProcessor;
+  lemmatizer?: Lemmatizer | null;
+  language?: string;
 }
 
 export class DataCore {
@@ -22,6 +27,9 @@ export class DataCore {
   readonly sentencesObj: BlockWord[][][] = [];
   readonly sentencesStr: string[][] = [];
   readonly freqNs: Record<number, number> = {};
+  readonly textProcessor: TextProcessor;
+  readonly lemmatizer: Lemmatizer | null;
+  readonly language: string;
 
   numberOfSentences = 0;
   numberOfWords = 0;
@@ -33,6 +41,9 @@ export class DataCore {
     this.exclude = config.exclude ?? DEFAULT_EXCLUDE;
     this.tagsToDiscard = config.tagsToDiscard ?? new Set(["u", "d"]);
     this.stopwordSet = stopwordSet;
+    this.textProcessor = config.textProcessor ?? defaultTextProcessor;
+    this.lemmatizer = config.lemmatizer ?? null;
+    this.language = config.language ?? "en";
 
     for (let index = 1; index <= n; index += 1) {
       this.freqNs[index] = 0;
@@ -46,19 +57,20 @@ export class DataCore {
   }
 
   buildCandidate(candidateString: string): ComposedWord {
-    const tokenizedWords = tokenizeWords(candidateString.toLowerCase())
+    const tokenizedWords = this.textProcessor.tokenizeWords(candidateString.toLowerCase())
       .filter((token) => !((token.startsWith("'") || token.startsWith("’")) && token.length > 1) && token.length > 0);
 
     const candidateTerms: CandidateTerm[] = [];
     for (const [index, word] of tokenizedWords.entries()) {
-      const tag = this.getTag(word, index);
-      let termObj: SingleWord | null = this.getTerm(word, false);
+      const candidateWord = this.lemmatizer == null ? word : this.normalizeTerm(word);
+      const tag = this.getTag(candidateWord, index);
+      let termObj: SingleWord | null = this.getTerm(candidateWord, false);
 
       if (termObj.tf === 0) {
         termObj = null;
       }
 
-      candidateTerms.push([tag, word, termObj]);
+      candidateTerms.push([tag, candidateWord, termObj]);
     }
 
     if (!candidateTerms.some(([, , term]) => term != null)) {
@@ -93,7 +105,7 @@ export class DataCore {
   }
 
   getTerm(strWord: string, saveNonSeen = true): SingleWord {
-    let uniqueTerm = strWord.toLowerCase();
+    let uniqueTerm = this.normalizeTerm(strWord);
     const simpleStopword = this.stopwordSet.has(uniqueTerm);
 
     if (uniqueTerm.endsWith("s") && uniqueTerm.length > 3) {
@@ -144,7 +156,10 @@ export class DataCore {
 
   private build(text: string, windowsSize: number, n: number): void {
     const filtered = preFilter(text);
-    const sentences = tokenizeSentences(filtered);
+    const sentences = this.textProcessor.splitSentences(filtered)
+      .map((sentence) => this.textProcessor.tokenizeWords(sentence)
+        .filter((token) => !((token.startsWith("'") || token.startsWith("’")) && token.length > 1) && token.length > 0))
+      .filter((sentence) => sentence.length > 0);
 
     this.sentencesStr.push(...sentences);
     this.numberOfSentences = this.sentencesStr.length;
@@ -185,8 +200,9 @@ export class DataCore {
   }
 
   private processWord(word: string, posText: number, sentenceId: number, posSent: number, blockOfWordObj: BlockWord[], windowsSize: number, n: number): number {
-    const tag = this.getTag(word, posSent);
-    const termObj = this.getTerm(word);
+    const candidateWord = this.lemmatizer == null ? word : this.normalizeTerm(word);
+    const tag = this.getTag(candidateWord, posSent);
+    const termObj = this.getTerm(candidateWord);
 
     termObj.addOccur(tag, sentenceId, posSent, posText);
     posText += 1;
@@ -195,8 +211,8 @@ export class DataCore {
       this.updateCooccurrence(blockOfWordObj, termObj, windowsSize);
     }
 
-    this.generateCandidates([tag, word], termObj, blockOfWordObj, n);
-    blockOfWordObj.push([tag, word, termObj]);
+    this.generateCandidates([tag, candidateWord], termObj, blockOfWordObj, n);
+    blockOfWordObj.push([tag, candidateWord, termObj]);
 
     return posText;
   }
@@ -222,5 +238,18 @@ export class DataCore {
       this.freqNs[candidate.length] = (this.freqNs[candidate.length] ?? 0) + 1;
       this.addOrUpdateComposedWord(new ComposedWord([...candidate].reverse()));
     }
+  }
+
+  private normalizeTerm(word: string): string {
+    let normalized = word.toLowerCase();
+
+    if (this.lemmatizer != null) {
+      normalized = this.lemmatizer.lemmatize(normalized, {
+        original: word,
+        language: this.language,
+      }).toLowerCase();
+    }
+
+    return normalized;
   }
 }

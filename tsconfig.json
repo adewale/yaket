@@ -10,6 +10,7 @@
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
+    "types": ["node"],
     "lib": ["ES2022"],
     "rootDir": "src",
     "outDir": "dist"

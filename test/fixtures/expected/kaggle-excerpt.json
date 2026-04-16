@@ -1,0 +1,42 @@
+[
+  {
+    "keyword": "science community Kaggle",
+    "normalizedKeyword": "science community kaggle",
+    "score": 0.022868570857866696,
+    "ngramSize": 3,
+    "occurrences": 1,
+    "sentenceIds": [0, 1]
+  },
+  {
+    "keyword": "community Kaggle",
+    "normalizedKeyword": "community kaggle",
+    "score": 0.04778970771086575,
+    "ngramSize": 2,
+    "occurrences": 1,
+    "sentenceIds": [0, 1]
+  },
+  {
+    "keyword": "data science community",
+    "normalizedKeyword": "data science community",
+    "score": 0.06339941399255042,
+    "ngramSize": 3,
+    "occurrences": 1,
+    "sentenceIds": [0, 1]
+  },
+  {
+    "keyword": "Google is acquiring",
+    "normalizedKeyword": "google is acquiring",
+    "score": 0.06585622388814175,
+    "ngramSize": 3,
+    "occurrences": 2,
+    "sentenceIds": [0, 1]
+  },
+  {
+    "keyword": "acquiring Kaggle",
+    "normalizedKeyword": "acquiring kaggle",
+    "score": 0.07431205283498787,
+    "ngramSize": 2,
+    "occurrences": 1,
+    "sentenceIds": [0, 1]
+  }
+]
