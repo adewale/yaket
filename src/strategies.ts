@@ -17,6 +17,15 @@ export interface SimilarityStrategy {
   compare(a: string, b: string): number;
 }
 
+export interface CandidateNormalizerContext {
+  readonly original: string;
+  readonly language: string;
+}
+
+export interface CandidateNormalizer {
+  normalize(token: string, context: CandidateNormalizerContext): string;
+}
+
 export interface LemmatizerContext {
   readonly original: string;
   readonly language: string;
@@ -33,6 +42,10 @@ export interface CandidateFilterInput {
   readonly score: number;
   readonly occurrences: number;
   readonly sentenceIds: number[];
+}
+
+export interface KeywordScorer {
+  score(candidates: KeywordResult[]): KeywordResult[];
 }
 
 export interface TextProcessor {

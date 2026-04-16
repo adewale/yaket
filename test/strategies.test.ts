@@ -58,4 +58,32 @@ describe("pluggable strategies", () => {
     expect(details.length).toBeGreaterThan(0);
     expect(details.every((item) => item.ngramSize > 1)).toBe(true);
   });
+
+  it("supports candidate normalizers", () => {
+    const details = extractKeywordDetails("co-founder cofounder ecosystems", {
+      lan: "en",
+      n: 1,
+      top: 5,
+      candidateNormalizer: {
+        normalize(token) {
+          return token.replaceAll("-", "");
+        },
+      },
+    });
+
+    expect(details.some((item) => item.normalizedKeyword === "cofounder")).toBe(true);
+  });
+
+  it("supports custom keyword scorers", () => {
+    const details = extractKeywordDetails("agent swarms coordinate distributed teams", {
+      lan: "en",
+      n: 2,
+      top: 5,
+      keywordScorer(candidates) {
+        return [...candidates].sort((left, right) => right.ngramSize - left.ngramSize || left.score - right.score);
+      },
+    });
+
+    expect(details[0]!.ngramSize).toBeGreaterThanOrEqual(details[details.length - 1]!.ngramSize);
+  });
 });

@@ -59,6 +59,30 @@ To keep Yaket reusable:
 3. add normalization and ranking post-processing in your own pipeline layer
 4. treat Yaket as one stage in enrichment, not as a complete topic system
 
+### Example: search enrichment pipeline
+
+```ts
+import { extractFromDocument } from "yaket";
+
+const enriched = extractFromDocument({
+  id: chunk.id,
+  language: chunk.language,
+  title: chunk.title,
+  body: chunk.body,
+  metadata: { source: "search-index" },
+}, {
+  top: 8,
+  n: 3,
+});
+
+const searchRecord = {
+  id: enriched.id,
+  title: enriched.title,
+  body: chunk.body,
+  keywords: enriched.keywords.map((item) => item.normalizedKeyword),
+};
+```
+
 ## Cloudflare Worker guidance
 
 If you are using Yaket in an edge runtime:
@@ -66,4 +90,4 @@ If you are using Yaket in an edge runtime:
 1. import the extraction API directly
 2. avoid adding adapters that depend on Node-only APIs
 3. keep assets bundled at build time
-4. run Worker compatibility tests as part of CI
+4. run `npm run test:cloudflare` as part of CI

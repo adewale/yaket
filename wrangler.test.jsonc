@@ -1,0 +1,6 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "yaket-cloudflare-tests",
+  "main": "./test/cloudflare/worker-fixture.ts",
+  "compatibility_date": "2026-04-16"
+}

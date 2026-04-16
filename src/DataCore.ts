@@ -1,7 +1,7 @@
 import { ComposedWord, type CandidateTerm } from "./ComposedWord.js";
 import { DirectedGraph } from "./graph.js";
 import { SingleWord } from "./SingleWord.js";
-import type { Lemmatizer, TextProcessor } from "./strategies.js";
+import type { CandidateNormalizer, Lemmatizer, TextProcessor } from "./strategies.js";
 import { defaultTextProcessor } from "./strategies.js";
 import { DEFAULT_EXCLUDE, getTag, preFilter } from "./utils.js";
 
@@ -14,6 +14,7 @@ interface DataCoreConfig {
   exclude?: ReadonlySet<string>;
   textProcessor?: TextProcessor;
   lemmatizer?: Lemmatizer | null;
+  candidateNormalizer?: CandidateNormalizer | null;
   language?: string;
 }
 
@@ -29,6 +30,7 @@ export class DataCore {
   readonly freqNs: Record<number, number> = {};
   readonly textProcessor: TextProcessor;
   readonly lemmatizer: Lemmatizer | null;
+  readonly candidateNormalizer: CandidateNormalizer | null;
   readonly language: string;
 
   numberOfSentences = 0;
@@ -43,6 +45,7 @@ export class DataCore {
     this.stopwordSet = stopwordSet;
     this.textProcessor = config.textProcessor ?? defaultTextProcessor;
     this.lemmatizer = config.lemmatizer ?? null;
+    this.candidateNormalizer = config.candidateNormalizer ?? null;
     this.language = config.language ?? "en";
 
     for (let index = 1; index <= n; index += 1) {
@@ -245,6 +248,13 @@ export class DataCore {
 
     if (this.lemmatizer != null) {
       normalized = this.lemmatizer.lemmatize(normalized, {
+        original: word,
+        language: this.language,
+      }).toLowerCase();
+    }
+
+    if (this.candidateNormalizer != null) {
+      normalized = this.candidateNormalizer.normalize(normalized, {
         original: word,
         language: this.language,
       }).toLowerCase();

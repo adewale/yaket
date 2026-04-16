@@ -10,6 +10,8 @@ This document captures the next work needed to:
 - deepen testing and verification
 - benchmark Yaket against a TF-IDF baseline on the Komoroske dataset
 
+Deferred work that is intentionally not part of the current implementation tranche is tracked in `TODO.md`.
+
 ## Current Baseline
 
 Yaket already includes the core YAKE pipeline:
@@ -59,6 +61,7 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
 3. Replace the current approximate `seqm` implementation with a closer port of the Python similarity semantics.
 4. Add more parity checks for near-tie ranking stability and floating-point tolerance handling.
 5. Expand multilingual validation beyond the current smoke/regression cases.
+   Status: deferred to `TODO.md`.
 
 ### Tier 2: Missing upstream features
 
@@ -87,6 +90,8 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
    - topic merge policy
 4. Add a second adoption track for generic consumers such as `flux-search` so Yaket does not assume a topic system exists.
 5. Document which APIs are extraction-core APIs versus adoption-layer adapters.
+
+The Bobbin repo integration test pass is deferred to `TODO.md`.
 
 ## Pluggable Architecture Plan
 

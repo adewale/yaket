@@ -30,6 +30,8 @@
     "benchmark": "tsx scripts/benchmark.ts",
     "prepack": "npm run build",
     "test": "vitest run",
+    "test:cloudflare": "vitest run --config vitest.cloudflare.config.ts",
+    "test:all": "npm test && npm run test:cloudflare",
     "test:watch": "vitest"
   },
   "keywords": [
@@ -40,11 +42,14 @@
   ],
   "license": "MIT",
   "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.14.1",
+    "@cloudflare/workers-types": "^4.20260405.1",
     "@types/node": "^24.5.2",
     "fast-check": "^4.3.0",
     "esbuild": "^0.25.9",
     "tsx": "^4.20.6",
     "typescript": "^5.9.3",
-    "vitest": "^3.2.4"
+    "vitest": "^4.1.2",
+    "wrangler": "^4.80.0"
   }
 }

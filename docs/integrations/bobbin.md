@@ -53,6 +53,8 @@ Recommended adoption sequence:
 3. Add regression tests for any topic-quality regressions discovered in newsletter-style text.
 4. Only after the wrapper is stable, consider using richer Yaket APIs directly.
 
+The full Bobbin repo integration test pass is intentionally deferred and tracked in `TODO.md`.
+
 ## Example integration
 
 Bobbin's `extractTopics()` flow can stay structurally the same:

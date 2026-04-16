@@ -5,7 +5,7 @@ export { extractFromDocument, extractFromDocuments, extractFromDocumentStream, t
 export { TextHighlighter, type TextHighlighterOptions } from "./highlight.js";
 export { KeywordExtractor, createKeywordExtractor, extractKeywordDetails, extractKeywords, type KeywordExtractorOptions, type KeywordScore, Levenshtein } from "./KeywordExtractor.js";
 export { SingleWord } from "./SingleWord.js";
-export { defaultSentenceSplitter, defaultStopwordProvider, defaultTextProcessor, defaultTokenizer, type CandidateFilterInput, type KeywordResult, type Lemmatizer, type LemmatizerContext, type SentenceSplitter, type SimilarityStrategy, type StopwordProvider, type TextProcessor, type Tokenizer } from "./strategies.js";
+export { defaultSentenceSplitter, defaultStopwordProvider, defaultTextProcessor, defaultTokenizer, type CandidateFilterInput, type CandidateNormalizer, type CandidateNormalizerContext, type KeywordResult, type KeywordScorer, type Lemmatizer, type LemmatizerContext, type SentenceSplitter, type SimilarityStrategy, type StopwordProvider, type TextProcessor, type Tokenizer } from "./strategies.js";
 export { clearSimilarityCaches, getSimilarityCacheStats, jaroSimilarity, levenshteinSimilarity, sequenceSimilarity, type SimilarityCacheStats } from "./similarity.js";
 export { getStopwordText, loadStopwords, supportedLanguages } from "./stopwords.js";
 export { DEFAULT_EXCLUDE, getTag, preFilter, splitSentences, STOPWORD_WEIGHT, tokenizeSentences, tokenizeWords } from "./utils.js";

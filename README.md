@@ -1,37 +1,59 @@
 # Yaket
 
-`Yaket` is a standalone TypeScript port of the YAKE core keyword extraction pipeline.
+`Yaket` is a TypeScript keyword extraction library that ports the core YAKE pipeline into a form that works in Node, browser-style bundles, and Cloudflare Workers.
 
-## Scope
+It is designed for teams that want upstream-like YAKE behavior, deterministic results, and a typed API that can plug into ingestion pipelines such as Bobbin or future consumers such as `flux-search`.
 
-Implemented now:
+## Why use it
 
-- `KeywordExtractor`
-- `DataCore`
-- `SingleWord`
-- `ComposedWord`
-- text preprocessing, sentence splitting, tokenization, and `getTag`
-- Levenshtein and dedup similarity helpers
-- bundled multilingual stopword assets
-- regression fixtures and Python parity checks
-- Bobbin-compatible adapter export
-- document-oriented extraction helpers for ingestion pipelines
-- optional lemmatizer hook
-- text highlighter utility
-- CLI entry point
-- browser/worker-safe package entry points
+- **Upstream-shaped YAKE core**: `KeywordExtractor`, `DataCore`, `SingleWord`, `ComposedWord`, and the core scoring/dedup flow are implemented in TypeScript.
+- **Edge-safe extraction path**: stopwords are bundled, and the extraction core avoids Node-only runtime dependencies.
+- **Pipeline-friendly API**: one-shot extraction, reusable extractor instances, Bobbin-compatible adapter output, and document-oriented helpers are all available.
+- **Verification-heavy**: regression fixtures, Python parity checks, property-based tests, Cloudflare runtime tests, and a benchmark harness are checked in.
 
-Deferred for later parity work:
+## Quick Start
 
-- broader upstream corpus parity coverage
-
-## Install
+> Requires Node.js 20+
 
 ```bash
 npm install yaket
 ```
 
+```ts
+import { extractKeywords } from "yaket";
+
+const keywords = extractKeywords(
+  "Google is acquiring data science community Kaggle.",
+  { lan: "en", n: 3, top: 5 },
+);
+
+console.log(keywords);
+```
+
+Expected shape:
+
+```ts
+[
+  ["science community Kaggle", 0.022868570857866696],
+  ["community Kaggle", 0.04778970771086575],
+]
+```
+
+## Installation
+
+```bash
+npm install yaket
+```
+
+The package ships ESM output and exposes Worker/browser-safe entry points:
+
+- `yaket`
+- `yaket/browser`
+- `yaket/worker`
+
 ## Usage
+
+### Reusable extractor
 
 ```ts
 import { KeywordExtractor } from "yaket";
@@ -43,25 +65,36 @@ const extractor = new KeywordExtractor({
 });
 
 const keywords = extractor.extractKeywords(
-  "Google is acquiring data science community Kaggle.",
+  "Cloudflare Workers process requests close to users.",
 );
-
-console.log(keywords);
 ```
 
-The package also exposes a convenience function:
+### Detailed keyword results
 
 ```ts
-import { extractKeywords } from "yaket";
+import { extractKeywordDetails } from "yaket";
 
-const keywords = extractKeywords("Machine learning is transforming search.", {
+const details = extractKeywordDetails("Machine learning improves software delivery.", {
   lan: "en",
   n: 2,
   top: 5,
 });
 ```
 
-For pipeline-oriented code, the document helpers keep your own document IDs and metadata attached:
+`extractKeywordDetails()` returns:
+
+```ts
+type KeywordResult = {
+  keyword: string;
+  normalizedKeyword: string;
+  score: number;
+  ngramSize: number;
+  occurrences: number;
+  sentenceIds: number[];
+};
+```
+
+### Document-oriented pipelines
 
 ```ts
 import { extractFromDocument } from "yaket";
@@ -74,15 +107,58 @@ const result = extractFromDocument({
 });
 ```
 
-For Bobbin-compatible adoption, use the wrapper that preserves the existing call shape:
+### Bobbin-compatible adapter
 
 ```ts
 import { extractYakeKeywords } from "yaket";
 
-const keywords = extractYakeKeywords("Platform ecosystems reward integration.", 5, 3);
+const keywords = extractYakeKeywords(
+  "Platform ecosystems reward integration.",
+  5,
+  3,
+);
 ```
 
-To highlight extracted keywords in text:
+This preserves Bobbin's current output shape:
+
+```ts
+type BobbinYakeResult = {
+  keyword: string;
+  score: number;
+};
+```
+
+### Custom hooks
+
+```ts
+import { extractKeywordDetails } from "yaket";
+
+const details = extractKeywordDetails("models model models", {
+  n: 1,
+  candidateNormalizer: {
+    normalize(token) {
+      return token.endsWith("s") ? token.slice(0, -1) : token;
+    },
+  },
+  lemmatizer: {
+    lemmatize(token) {
+      return token;
+    },
+  },
+});
+```
+
+Available extension points:
+
+- `TextProcessor`
+- `StopwordProvider`
+- `SimilarityStrategy`
+- `CandidateNormalizer`
+- `Lemmatizer`
+- `KeywordScorer`
+- `candidateFilter`
+
+### Highlighting
 
 ```ts
 import { TextHighlighter, extractKeywords } from "yaket";
@@ -94,56 +170,81 @@ const highlighted = new TextHighlighter().highlight(
 );
 ```
 
-To experiment with custom normalization, you can provide a lemmatizer hook:
-
-```ts
-import { extractKeywordDetails } from "yaket";
-
-const details = extractKeywordDetails("models model models", {
-  n: 1,
-  lemmatizer: {
-    lemmatize(token) {
-      return token.endsWith("s") ? token.slice(0, -1) : token;
-    },
-  },
-});
-```
-
 ## CLI
 
 ```bash
 yaket --text-input "Google is acquiring Kaggle" --language en --ngram-size 3 --top 5 --verbose
 ```
 
-## API Notes
+## Cloudflare Compatibility
 
-- Lower scores are better, matching YAKE.
-- Results are returned in deterministic order for stable inputs.
-- Stopword lists are bundled at build time; no runtime filesystem reads are required.
-- The implementation currently aims to match upstream Python YAKE core behavior, not the modified behavior of `yake-wasm`.
-- The extraction path is kept free of Node-only runtime dependencies so it can be bundled for Cloudflare Workers and browser-style runtimes.
+Yaket keeps the extraction core free of runtime filesystem access and Node-only extraction dependencies.
+
+Verification currently includes:
+
+- source guards for extraction modules
+- browser-target bundling smoke tests
+- a real Cloudflare Workers test lane via `@cloudflare/vitest-pool-workers`
+
+Run it with:
+
+```bash
+npm run test:cloudflare
+```
+
+## Benchmarks
+
+The repository includes a benchmark harness that compares:
+
+- Yaket
+- upstream Python YAKE
+- the original Bobbin YAKE-like implementation
+- a simple TF-IDF baseline
+
+Current checked-in report:
+
+- `docs/benchmarks/komoroske-2026-04-06.md`
+
+Run it with:
+
+```bash
+npm run benchmark
+```
+
+## Architecture
+
+- Architecture overview: `docs/architecture.md`
+- Bobbin integration guide: `docs/integrations/bobbin.md`
+- Generic pipeline guide: `docs/integrations/pipelines.md`
+- Roadmap: `docs/roadmap.md`
+- Deferred work: `TODO.md`
+- Audit notes: `docs/audits/implementation-audit-2026-04-16.md`
+
+## Limitations
+
+- The tokenizer is close to YAKE, but still not a literal `segtok` port.
+- Dedup `seqm` behavior is still approximate rather than a byte-for-byte Python clone.
+- Multilingual support exists through bundled stopwords, but broad multilingual parity coverage is deferred.
+- Bobbin's full topic-layer integration test suite is deferred and tracked in `TODO.md`.
 
 ## Development
 
 ```bash
 npm install
 npm test
+npm run test:cloudflare
 npm run build
 npm run benchmark
 ```
 
-`test/python-parity.test.ts` performs a live comparison against the Python reference implementation when `PYTHONPATH` points at an upstream YAKE checkout. The default path used during local development is `/tmp/yake`.
+`test/python-parity.test.ts` performs a live comparison against upstream Python YAKE when `PYTHONPATH` points at a YAKE checkout. The default path used during local development is `/tmp/yake`.
 
-## Roadmap
+## When Not To Use Yaket
 
-See `docs/roadmap.md` for:
+- If you need corpus-wide topic modeling rather than single-document keyword extraction.
+- If you need production-grade lemmatization out of the box today.
+- If exact upstream Python tokenization parity across all languages is a hard requirement right now.
 
-- parity gaps versus upstream Python YAKE
-- architectural changes for pluggable ingestion-pipeline use
-- testing and verification strategy
-- planned TF-IDF benchmark work on the Komoroske dataset
-- Bobbin and generic ingestion-pipeline integration guides
+## License
 
-Current benchmark snapshot:
-
-- `docs/benchmarks/komoroske-2026-04-06.md`
+MIT

@@ -1,6 +1,6 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { DataCore } from "./DataCore.js";
-import type { CandidateFilterInput, KeywordResult, Lemmatizer, SimilarityStrategy, StopwordProvider, TextProcessor } from "./strategies.js";
+import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, SimilarityStrategy, StopwordProvider, TextProcessor } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity } from "./similarity.js";
 
@@ -24,6 +24,8 @@ export interface KeywordExtractorOptions {
   stopwordProvider?: StopwordProvider;
   dedupStrategy?: SimilarityStrategy | DedupFunction;
   lemmatizer?: Lemmatizer;
+  candidateNormalizer?: CandidateNormalizer;
+  keywordScorer?: KeywordScorer | ((candidates: KeywordResult[]) => KeywordResult[]);
   candidateFilter?: (candidate: CandidateFilterInput) => boolean;
 }
 
@@ -44,6 +46,8 @@ export class KeywordExtractor {
   readonly stopwordSet: Set<string>;
   readonly textProcessor?: TextProcessor;
   readonly lemmatizer: Lemmatizer | null;
+  readonly candidateNormalizer: CandidateNormalizer | null;
+  readonly keywordScorer: ((candidates: KeywordResult[]) => KeywordResult[]) | null;
   readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
   private readonly dedupFunction: DedupFunction;
 
@@ -60,6 +64,8 @@ export class KeywordExtractor {
 
     this.textProcessor = options.textProcessor;
     this.lemmatizer = options.lemmatizer ?? null;
+    this.candidateNormalizer = options.candidateNormalizer ?? null;
+    this.keywordScorer = options.keywordScorer == null ? null : getKeywordScorer(options.keywordScorer);
     this.candidateFilter = options.candidateFilter;
     this.stopwordSet = options.stopwords == null
       ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.lan)
@@ -96,6 +102,7 @@ export class KeywordExtractor {
       n: this.config.n,
       textProcessor: this.textProcessor,
       lemmatizer: this.lemmatizer,
+      candidateNormalizer: this.candidateNormalizer,
       language: this.config.lan,
     });
 
@@ -109,13 +116,14 @@ export class KeywordExtractor {
     const candidateDetails = candidates
       .map((candidate) => toKeywordResult(candidate))
       .filter((candidate) => this.candidateFilter?.(candidate) ?? true);
+    const scoredCandidateDetails = this.keywordScorer == null ? candidateDetails : this.keywordScorer(candidateDetails);
 
     if (this.config.dedupLim >= 1) {
-      return candidateDetails.slice(0, this.config.top);
+      return scoredCandidateDetails.slice(0, this.config.top);
     }
 
     const resultSet: KeywordResult[] = [];
-    for (const candidate of candidateDetails) {
+    for (const candidate of scoredCandidateDetails) {
       let shouldAdd = true;
 
       for (const selected of resultSet) {
@@ -173,6 +181,10 @@ export { Levenshtein };
 
 function getStrategyFunction(strategy: SimilarityStrategy | DedupFunction): DedupFunction {
   return typeof strategy === "function" ? strategy : strategy.compare.bind(strategy);
+}
+
+function getKeywordScorer(strategy: KeywordScorer | ((candidates: KeywordResult[]) => KeywordResult[])): (candidates: KeywordResult[]) => KeywordResult[] {
+  return typeof strategy === "function" ? strategy : strategy.score.bind(strategy);
 }
 
 function toKeywordResult(candidate: ComposedWord): KeywordResult {
