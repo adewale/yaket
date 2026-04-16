@@ -4,6 +4,21 @@
 
 It is designed for teams that want upstream-like YAKE behavior, deterministic results, and a typed API that can plug into ingestion pipelines such as [Bobbin](https://github.com/adewale/bobbin) or future consumers such as `flux-search`.
 
+## Attribution
+
+Yaket is an independent TypeScript port/reimplementation of the YAKE approach and is based on the upstream Python YAKE project:
+
+- Original project: [INESCTEC/yake](https://github.com/INESCTEC/yake)
+
+The underlying research is:
+
+- Ricardo Campos, Vitor Mangaravite, Arian Pasquali, Alipio Jorge, Celine N. S. Santos, and Adam Jatowt.
+  *YAKE! Keyword Extraction from Single Documents using Multiple Local Features*.
+  Information Sciences 509 (2020), 257-289.
+  DOI: [`10.1016/j.ins.2019.09.013`](https://doi.org/10.1016/j.ins.2019.09.013)
+
+Yaket aims to preserve the core YAKE behavior where practical, while adapting the implementation to JavaScript/TypeScript runtimes and edge-compatible packaging.
+
 ## Why use it
 
 - **Upstream-shaped YAKE core**: `KeywordExtractor`, `DataCore`, `SingleWord`, `ComposedWord`, and the core scoring/dedup flow are implemented in TypeScript.
