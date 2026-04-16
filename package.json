@@ -1,7 +1,21 @@
 {
   "name": "yaket",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "TypeScript port of the YAKE keyword extraction core pipeline",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/adewale/yaket.git"
+  },
+  "homepage": "https://github.com/adewale/yaket#readme",
+  "bugs": {
+    "url": "https://github.com/adewale/yaket/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
