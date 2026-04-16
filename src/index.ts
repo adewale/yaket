@@ -1,4 +1,5 @@
 export { ComposedWord } from "./ComposedWord.js";
+export { extractYakeKeywords, type BobbinYakeResult } from "./bobbin.js";
 export { DataCore } from "./DataCore.js";
 export { KeywordExtractor, extractKeywords, type KeywordExtractorOptions, type KeywordScore, Levenshtein } from "./KeywordExtractor.js";
 export { SingleWord } from "./SingleWord.js";
