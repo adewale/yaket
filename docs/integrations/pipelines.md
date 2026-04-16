@@ -18,7 +18,7 @@ Treat Yaket as a document-to-keywords transform.
 import { extractKeywords } from "@ade_oshineye/yaket";
 
 const keywords = extractKeywords(document.body, {
-  lan: document.language ?? "en",
+  language: document.language ?? "en",
   n: 3,
   top: 10,
 });
@@ -42,7 +42,7 @@ function extractDocumentKeywords(document: InputDocument) {
   return {
     id: document.id,
     keywords: extractKeywords(document.body, {
-      lan: document.language ?? "en",
+      language: document.language ?? "en",
       n: 3,
       top: 10,
     }),

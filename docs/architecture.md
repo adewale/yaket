@@ -27,13 +27,14 @@ flowchart TD
     K --> L[Final Ranked Keywords]
 
     M[CandidateNormalizer / Lemmatizer] --> C
-    N[KeywordScorer Override] --> J
-    O[CandidateFilter] --> J
+    N[SingleWordScorer / MultiWordScorer] --> H
+    O[KeywordScorer Override] --> J
+    P[CandidateFilter] --> J
 
-    L --> P[Bobbin Adapter]
-    L --> Q[Document Pipeline Helpers]
-    L --> R[TextHighlighter]
-    L --> S[CLI]
+    L --> Q[Bobbin Adapter]
+    L --> R[Document Pipeline Helpers]
+    L --> S[TextHighlighter]
+    L --> T[CLI]
 ```
 
 ## Module Map
@@ -90,6 +91,8 @@ These remain optional and separate:
 - `SimilarityStrategy`
 - `CandidateNormalizer`
 - `Lemmatizer`
+- `SingleWordScorer`
+- `MultiWordScorer`
 - `KeywordScorer`
 - `candidateFilter`
 

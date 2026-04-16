@@ -65,7 +65,7 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
    - Unicode punctuation
    - mixed alphanumeric tokens
    - quoted text and parentheticals
-3. Replace the current approximate `seqm` implementation with a closer port of the Python similarity semantics.
+3. Tighten the remaining `seqm` edge cases where heuristic similarity can still drift from Python YAKE.
 4. Add more parity checks for near-tie ranking stability and floating-point tolerance handling.
 5. Expand multilingual validation beyond the current smoke/regression cases.
    Status: deferred to `TODO.md`.
@@ -128,15 +128,19 @@ Introduce a small set of strategy interfaces around the existing core:
 5. `SimilarityStrategy`
    - `compare(a: string, b: string): number`
 6. `KeywordScorer`
-   - default YAKE scorer plus optional alternates for experiments
-7. `CandidateFilter`
+    - default YAKE scorer plus optional alternates for experiments
+7. `SingleWordScorer`
+   - replaces the internal YAKE single-word score formula directly
+8. `MultiWordScorer`
+   - replaces the internal YAKE multi-word score formula directly
+9. `CandidateFilter`
    - boundary, stopword, and tag filtering as replaceable policies
 
 ### Recommended API shape
 
 1. Keep `new KeywordExtractor(options)` as the main API.
 2. Add `createKeywordExtractor({ ...strategies })` for composition-heavy users.
-3. Add a pure function `extractKeywords(text, options)` for one-shot use.
+3. Add pure functions `extract(text, options)` and `extractKeywords(text, options)` for one-shot use.
 4. Add a richer result type:
 
 ```ts
