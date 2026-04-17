@@ -39,6 +39,8 @@
         max-width: 980px;
         margin: 0 auto;
         padding: 1.5rem max(20px, 4vw) 2.5rem;
+        display: grid;
+        gap: 1.25rem;
       }
 
       h1,
@@ -84,6 +86,13 @@
         padding: 1rem;
       }
 
+      .sample-shell {
+        display: grid;
+        grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
       button {
         font: inherit;
       }
@@ -98,18 +107,20 @@
       }
 
       .tab-list {
-        display: flex;
-        gap: 0.5rem;
-        flex-wrap: wrap;
+        display: grid;
+        gap: 0.6rem;
+        align-content: start;
       }
 
       .sample-tab {
         border: 1px solid var(--line-strong);
-        border-radius: 999px;
+        border-radius: 0.8rem;
         background: #202a39;
         color: var(--text);
         cursor: pointer;
         padding: 0.7rem 0.95rem;
+        text-align: left;
+        width: 100%;
       }
 
       .sample-tab:hover,
@@ -128,6 +139,8 @@
         border-radius: 0.8rem;
         background: var(--field);
         padding: 1rem;
+        min-height: 16rem;
+        align-content: start;
       }
 
       .sample-copy {
@@ -140,6 +153,10 @@
         width: 100%;
         border-collapse: collapse;
         table-layout: fixed;
+      }
+
+      #results-panel {
+        min-height: 23rem;
       }
 
       .results-table th,
@@ -162,7 +179,11 @@
         word-break: break-word;
       }
 
-      @media (max-width: 700px) {
+      @media (max-width: 760px) {
+        .sample-shell {
+          grid-template-columns: 1fr;
+        }
+
         .results-table,
         .results-table thead,
         .results-table tbody,
@@ -200,11 +221,13 @@
 
       <section class="panel stack">
         <h2>Sample text</h2>
-        <div class="tab-list" id="sample-tabs" role="tablist" aria-label="Sample texts"></div>
-        <section class="sample-content stack" id="sample-panel" role="tabpanel" aria-live="polite">
-          <h2 id="sample-title">—</h2>
-          <p class="sample-copy" id="sample-text">—</p>
-        </section>
+        <div class="sample-shell">
+          <div class="tab-list" id="sample-tabs" role="tablist" aria-label="Sample texts"></div>
+          <section class="sample-content stack" id="sample-panel" role="tabpanel" aria-live="polite">
+            <h2 id="sample-title">—</h2>
+            <p class="sample-copy" id="sample-text">—</p>
+          </section>
+        </div>
       </section>
 
       <section class="panel stack" id="results-panel">

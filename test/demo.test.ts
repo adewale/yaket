@@ -50,6 +50,13 @@ describe("demo page", () => {
     expect(resultsPanelIndex).toBeGreaterThan(samplePanelIndex);
   });
 
+  it("uses a grid shell and reserved panel heights to reduce layout shift", () => {
+    expect(demoHtml).toContain('class="sample-shell"');
+    expect(demoHtml).toContain("grid-template-columns: minmax(0, 14rem) minmax(0, 1fr)");
+    expect(demoHtml).toContain("min-height: 16rem");
+    expect(demoHtml).toContain("min-height: 23rem");
+  });
+
   it("uses the current published package line in the browser import", () => {
     expect(demoHtml).toContain("@ade_oshineye/yaket@0.4.0");
   });
