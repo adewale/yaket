@@ -10,10 +10,10 @@
 
 | System | Duration (ms) | Notes |
 |---|---:|---|
-| Yaket | 43.04 | ok |
-| Bobbin | 72.72 | ok |
-| TF-IDF | 644.56 | ok |
-| Python YAKE | 271.17 | ok |
+| Yaket | 53.63 | ok |
+| Bobbin | 114.02 | ok |
+| TF-IDF | 857.28 | ok |
+| Python YAKE | 271.55 | ok |
 
 ## Top Keywords
 

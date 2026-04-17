@@ -2,6 +2,31 @@
 
 All notable changes to this project will be documented in this file.
 
+## 0.4.0 - 2026-04-16
+
+Extensibility, documentation, and benchmark expansion release.
+
+### Added
+
+- first-class `singleWordScorer` and `multiWordScorer` hooks for replacing the internal YAKE scoring formulas
+- canonical `YakeOptions` and `YakeResult` public aliases
+- short `extract()` helper as a concise alias for `extractKeywords()`
+- richer stopword controls via `STOPWORDS`, `bundledStopwordTexts`, `createStopwordSet()`, and `createStaticStopwordProvider()`
+- API reference, use-case guide, algorithm-drift guide, and contribution guide
+- interactive browser demo and GitHub Pages workflow
+- Inspec and SemEval benchmark script and benchmark report support
+- red-green tests for scorer hooks, option precedence, and representative `seqm` parity examples
+
+### Changed
+
+- canonical option precedence now favors `language`, `dedupLim`, `dedupFunc`, and `windowSize` while still accepting legacy aliases for compatibility
+- documentation now reflects the expanded tuning surface and clearer separation between current capabilities and deferred work
+
+### Notes
+
+- the remaining largest parity risks are still tokenizer drift from upstream `segtok` behavior and edge-case `seqm` heuristics
+- broader Unicode/CJK/emoji fuzzing and broader multilingual verification remain intentionally deferred in `TODO.md`
+
 ## 0.3.0 - 2026-04-16
 
 Stability and release-quality update.
