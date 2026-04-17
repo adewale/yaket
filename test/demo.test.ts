@@ -17,7 +17,14 @@ describe("demo page", () => {
     expect(demoHtml).toContain("News article");
     expect(demoHtml).toContain("Scientific abstract");
     expect(demoHtml).toContain("Newsletter");
+    expect(demoHtml).toContain("Product docs");
     expect(demoHtml).toContain("Highlighted text");
+  });
+
+  it("shows a direct Yaket versus TF-IDF comparison", () => {
+    expect(demoHtml).toContain("Yaket results");
+    expect(demoHtml).toContain("TF-IDF baseline");
+    expect(demoHtml).toContain("Overlap");
   });
 
   it("uses the current published package line in the browser import", () => {
@@ -28,5 +35,10 @@ describe("demo page", () => {
     expect(demoHtml).toContain("Lower score means more relevant");
     expect(demoHtml).toContain("occurrences");
     expect(demoHtml).toContain("sentence spread");
+  });
+
+  it("drops the old meta-commentary panels", () => {
+    expect(demoHtml).not.toContain("Why this page matters");
+    expect(demoHtml).not.toContain("What this demo proves");
   });
 });

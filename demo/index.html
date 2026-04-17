@@ -12,29 +12,18 @@
       :root {
         color-scheme: dark;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --space-2xs: 0.375rem;
-        --space-xs: 0.625rem;
-        --space-sm: 0.875rem;
-        --space-md: 1.125rem;
-        --space-lg: 1.5rem;
-        --space-xl: 2rem;
-        --space-2xl: clamp(2.5rem, 5vw, 4rem);
-        --radius-sm: 0.875rem;
-        --radius-md: 1.25rem;
-        --surface-0: #0b1220;
-        --surface-1: rgba(14, 22, 36, 0.9);
-        --surface-2: rgba(18, 27, 43, 0.94);
-        --line-soft: rgba(171, 188, 221, 0.16);
-        --line-strong: rgba(171, 188, 221, 0.28);
-        --text-strong: #f7f9fc;
-        --text-base: rgba(230, 236, 246, 0.9);
-        --text-muted: rgba(189, 201, 224, 0.74);
-        --text-subtle: rgba(160, 174, 202, 0.66);
-        --accent: #7aa7ff;
-        --accent-soft: rgba(122, 167, 255, 0.16);
-        --accent-strong: #8ecfbf;
+        --bg: #0f1624;
+        --panel: #151e2f;
+        --panel-alt: #192437;
+        --line: rgba(190, 205, 235, 0.16);
+        --line-strong: rgba(190, 205, 235, 0.28);
+        --text: rgba(240, 245, 252, 0.92);
+        --muted: rgba(192, 204, 228, 0.72);
+        --subtle: rgba(161, 174, 199, 0.68);
+        --accent: #7ea8ff;
+        --accent-soft: rgba(126, 168, 255, 0.14);
         --mark: rgba(255, 213, 110, 0.28);
-        --shadow-soft: 0 20px 48px rgba(0, 0, 0, 0.22);
+        --shadow: 0 18px 42px rgba(0, 0, 0, 0.22);
       }
 
       * {
@@ -44,378 +33,321 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background:
-          radial-gradient(circle at top, rgba(122, 167, 255, 0.14), transparent 38%),
-          var(--surface-0);
-        color: var(--text-base);
+        background: radial-gradient(circle at top, rgba(126, 168, 255, 0.12), transparent 35%), var(--bg);
+        color: var(--text);
       }
 
       main {
-        max-width: 1180px;
+        max-width: 1120px;
         margin: 0 auto;
-        padding: var(--space-2xl) max(20px, 4vw);
+        padding: 2.5rem max(20px, 4vw) 4rem;
       }
 
       h1,
       h2,
       h3,
-      p {
+      p,
+      ul,
+      ol,
+      dl {
         margin: 0;
       }
 
       h1 {
         max-width: 10ch;
-        color: var(--text-strong);
-        font-size: clamp(2.7rem, 7vw, 4.9rem);
-        line-height: 0.94;
-        letter-spacing: -0.045em;
+        font-size: clamp(2.6rem, 7vw, 4.8rem);
+        line-height: 0.95;
+        letter-spacing: -0.05em;
       }
 
       h2 {
-        color: var(--text-strong);
-        font-size: 1.15rem;
+        font-size: 1.05rem;
         letter-spacing: -0.02em;
+      }
+
+      .hero {
+        display: grid;
+        gap: 1rem;
+        margin-bottom: 2rem;
       }
 
       .eyebrow {
         display: inline-flex;
+        width: fit-content;
         align-items: center;
-        gap: var(--space-2xs);
         border: 1px solid var(--line-strong);
         border-radius: 999px;
-        padding: 0.45rem 0.8rem;
+        padding: 0.42rem 0.75rem;
         color: var(--accent);
-        background: rgba(18, 28, 46, 0.76);
+        background: rgba(20, 29, 44, 0.75);
         font-size: 0.78rem;
         font-weight: 700;
         letter-spacing: 0.08em;
         text-transform: uppercase;
       }
 
-      .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
-        gap: var(--space-xl);
-        align-items: start;
-        margin-bottom: var(--space-xl);
-      }
-
-      .hero-copy {
-        display: grid;
-        gap: var(--space-md);
-      }
-
       .lead {
-        max-width: 62ch;
-        color: var(--text-muted);
-        font-size: clamp(1rem, 2vw, 1.08rem);
+        max-width: 65ch;
+        color: var(--muted);
         line-height: 1.7;
       }
 
-      .hero-notes {
+      .grid {
         display: grid;
-        gap: var(--space-sm);
-      }
-
-      .note {
-        border: 1px solid var(--line-soft);
-        border-radius: var(--radius-md);
-        background: var(--surface-1);
-        padding: var(--space-md);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .note p,
-      .note li,
-      .panel p,
-      .panel li {
-        color: var(--text-muted);
-        line-height: 1.62;
-      }
-
-      .note-list {
-        display: grid;
-        gap: var(--space-xs);
-        margin: 0;
-        padding-left: 1rem;
-      }
-
-      .workspace {
-        display: grid;
-        grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.85fr);
-        gap: var(--space-xl);
-      }
-
-      .panel {
-        border: 1px solid var(--line-soft);
-        border-radius: var(--radius-md);
-        background: var(--surface-1);
-        padding: var(--space-lg);
-        box-shadow: var(--shadow-soft);
+        grid-template-columns: minmax(0, 1.15fr) minmax(320px, 0.95fr);
+        gap: 1.5rem;
       }
 
       .stack {
         display: grid;
-        gap: var(--space-lg);
+        gap: 1.25rem;
+      }
+
+      .panel {
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--panel);
+        box-shadow: var(--shadow);
+        padding: 1.25rem;
       }
 
       .section-header {
         display: grid;
-        gap: var(--space-xs);
+        gap: 0.45rem;
       }
 
-      .sample-row {
-        display: grid;
-        gap: var(--space-xs);
+      .muted {
+        color: var(--muted);
+        line-height: 1.6;
       }
 
-      .sample-label,
-      label {
-        color: var(--text-base);
-        font-size: 0.92rem;
-        font-weight: 650;
+      .subtle {
+        color: var(--subtle);
       }
 
       .sample-buttons {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--space-xs);
+        gap: 0.55rem;
+      }
+
+      button,
+      input,
+      select,
+      textarea {
+        font: inherit;
       }
 
       .sample-button,
-      .run-button,
-      .ghost-button {
-        border: 1px solid transparent;
-        transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
-      }
-
-      .sample-button {
-        border-radius: 999px;
-        background: rgba(20, 31, 47, 0.86);
-        color: var(--text-muted);
+      .primary-button,
+      .secondary-button {
+        border: 1px solid var(--line-strong);
+        border-radius: 0.75rem;
+        background: var(--panel-alt);
+        color: var(--text);
         cursor: pointer;
-        padding: 0.62rem 0.94rem;
+        padding: 0.7rem 0.95rem;
+        transition: border-color 160ms ease, background-color 160ms ease, transform 160ms ease;
       }
 
       .sample-button:hover,
       .sample-button:focus-visible,
-      .sample-button[aria-pressed="true"] {
-        border-color: rgba(122, 167, 255, 0.44);
-        background: rgba(35, 52, 78, 0.94);
-        color: var(--text-strong);
+      .sample-button[aria-pressed="true"],
+      .primary-button:hover,
+      .primary-button:focus-visible,
+      .secondary-button:hover,
+      .secondary-button:focus-visible {
+        border-color: rgba(126, 168, 255, 0.48);
+        background: rgba(33, 46, 70, 0.96);
         outline: none;
+        transform: translateY(-1px);
       }
 
-      textarea,
+      .primary-button {
+        background: linear-gradient(135deg, #7ea8ff, #8bd0c2);
+        color: #09101a;
+        font-weight: 760;
+      }
+
+      .controls {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.9rem;
+      }
+
+      label {
+        display: grid;
+        gap: 0.42rem;
+        color: var(--text);
+        font-size: 0.94rem;
+        font-weight: 650;
+      }
+
       input,
-      select {
+      select,
+      textarea {
         width: 100%;
-        border-radius: 1rem;
-        border: 1px solid rgba(171, 188, 221, 0.18);
-        background: rgba(10, 17, 30, 0.96);
-        color: var(--text-strong);
-        padding: 0.9rem 1rem;
-        font: inherit;
-        transition: border-color 180ms ease, box-shadow 180ms ease;
+        border-radius: 0.8rem;
+        border: 1px solid var(--line);
+        background: #0d1422;
+        color: var(--text);
+        padding: 0.82rem 0.9rem;
       }
 
       textarea {
-        min-height: 20rem;
+        min-height: 18rem;
         resize: vertical;
         line-height: 1.65;
       }
 
-      textarea:focus,
       input:focus,
       select:focus,
-      .sample-button:focus,
-      .run-button:focus,
-      .ghost-button:focus {
+      textarea:focus,
+      button:focus {
         outline: none;
       }
 
-      textarea:focus-visible,
       input:focus-visible,
       select:focus-visible,
-      .sample-button:focus-visible,
-      .run-button:focus-visible,
-      .ghost-button:focus-visible {
-        border-color: rgba(122, 167, 255, 0.56);
-        box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.15);
-      }
-
-      .control-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: var(--space-sm);
-      }
-
-      .field {
-        display: grid;
-        gap: 0.45rem;
+      textarea:focus-visible,
+      button:focus-visible {
+        border-color: rgba(126, 168, 255, 0.56);
+        box-shadow: 0 0 0 3px rgba(126, 168, 255, 0.14);
       }
 
       .button-row {
         display: flex;
         flex-wrap: wrap;
+        gap: 0.75rem;
         align-items: center;
-        gap: var(--space-sm);
-      }
-
-      .run-button {
-        border-radius: 999px;
-        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
-        color: #08101b;
-        cursor: pointer;
-        font: inherit;
-        font-weight: 800;
-        padding: 0.92rem 1.22rem;
-      }
-
-      .run-button:hover,
-      .run-button:focus-visible,
-      .ghost-button:hover,
-      .ghost-button:focus-visible {
-        transform: translateY(-1px);
-      }
-
-      .ghost-button {
-        border-radius: 999px;
-        background: rgba(19, 29, 47, 0.92);
-        color: var(--text-base);
-        cursor: pointer;
-        font: inherit;
-        font-weight: 700;
-        padding: 0.92rem 1.12rem;
       }
 
       .status {
-        color: var(--text-subtle);
+        color: var(--subtle);
         font-size: 0.92rem;
       }
 
-      .stats {
+      .comparison-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 1rem;
+      }
+
+      .summary-grid {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--space-sm);
+        gap: 0.75rem;
       }
 
-      .stat {
-        border: 1px solid rgba(171, 188, 221, 0.13);
-        border-radius: var(--radius-sm);
-        background: var(--surface-2);
-        padding: 0.9rem 0.95rem;
+      .summary {
+        border: 1px solid var(--line);
+        border-radius: 0.8rem;
+        background: #101928;
+        padding: 0.85rem 0.9rem;
       }
 
-      .stat-label {
-        color: var(--text-subtle);
+      .summary dt {
+        color: var(--subtle);
         font-size: 0.78rem;
+        letter-spacing: 0.05em;
         text-transform: uppercase;
-        letter-spacing: 0.06em;
       }
 
-      .stat-value {
-        display: block;
-        margin-top: 0.35rem;
-        color: var(--text-strong);
-        font-size: 1.15rem;
+      .summary dd {
+        margin: 0.3rem 0 0;
+        color: var(--text);
+        font-size: 1.12rem;
         font-weight: 760;
       }
 
-      .score-note {
-        border-radius: var(--radius-sm);
-        background: rgba(122, 167, 255, 0.08);
-        color: var(--text-muted);
-        padding: 0.82rem 0.9rem;
+      table {
+        width: 100%;
+        border-collapse: collapse;
       }
 
-      .results {
-        display: grid;
-        gap: var(--space-xs);
-        list-style: none;
-        margin: 0;
-        padding: 0;
+      thead th {
+        color: var(--subtle);
+        font-size: 0.8rem;
+        font-weight: 700;
+        text-align: left;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 0 0 0.55rem;
       }
 
-      .result-item {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: var(--space-sm);
-        align-items: start;
-        border: 1px solid rgba(171, 188, 221, 0.13);
-        border-radius: var(--radius-sm);
-        background: var(--surface-2);
-        padding: 0.85rem 0.92rem;
+      tbody td {
+        border-top: 1px solid rgba(190, 205, 235, 0.08);
+        padding: 0.7rem 0;
+        vertical-align: top;
+      }
+
+      tbody td:last-child,
+      thead th:last-child {
+        text-align: right;
       }
 
       .result-title {
-        color: var(--text-strong);
-        font-size: 0.98rem;
-        font-weight: 680;
+        color: var(--text);
+        font-weight: 650;
       }
 
       .result-meta {
-        margin-top: 0.28rem;
-        color: var(--text-subtle);
-        font-size: 0.84rem;
+        display: block;
+        margin-top: 0.24rem;
+        color: var(--subtle);
+        font-size: 0.82rem;
       }
 
-      .score {
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        min-width: 6rem;
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .pill {
         border-radius: 999px;
         background: var(--accent-soft);
-        color: #8fd0c2;
-        font-size: 0.9rem;
-        font-weight: 740;
-        font-variant-numeric: tabular-nums;
-        padding: 0.48rem 0.76rem;
+        color: var(--text);
+        padding: 0.45rem 0.75rem;
       }
 
       .highlighted {
-        min-height: 16rem;
-        border: 1px solid rgba(171, 188, 221, 0.13);
-        border-radius: var(--radius-sm);
-        background: rgba(10, 17, 30, 0.96);
-        color: var(--text-base);
-        padding: 0.95rem 1rem;
-        line-height: 1.78;
+        min-height: 15rem;
+        border: 1px solid var(--line);
+        border-radius: 0.8rem;
+        background: #0d1422;
+        padding: 0.9rem;
+        line-height: 1.75;
       }
 
       mark {
+        border-radius: 0.35rem;
         background: var(--mark);
-        color: var(--text-strong);
-        border-radius: 0.4rem;
-        padding: 0.05rem 0.2rem;
+        color: var(--text);
+        padding: 0.04rem 0.18rem;
       }
 
-      .footer-meta {
+      .footer-links {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--space-xs) var(--space-md);
-        color: var(--text-subtle);
-        font-size: 0.88rem;
+        gap: 0.6rem 1rem;
+        color: var(--subtle);
+        font-size: 0.9rem;
       }
 
-      .footer-meta a {
-        color: #9ec3ff;
+      a {
+        color: #a8c8ff;
       }
 
-      code,
-      .kbd {
-        border-radius: 0.45rem;
-        background: rgba(19, 29, 48, 0.82);
-        color: var(--text-strong);
-        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-        font-size: 0.92em;
-        padding: 0.12rem 0.42rem;
+      code {
+        border-radius: 0.4rem;
+        background: rgba(22, 31, 48, 0.86);
+        padding: 0.12rem 0.38rem;
       }
 
       @media (max-width: 980px) {
-        .hero,
-        .workspace {
+        .grid,
+        .comparison-grid {
           grid-template-columns: 1fr;
         }
       }
@@ -425,17 +357,9 @@
           padding-inline: 18px;
         }
 
-        .control-grid,
-        .stats {
+        .controls,
+        .summary-grid {
           grid-template-columns: 1fr;
-        }
-
-        .result-item {
-          grid-template-columns: 1fr;
-        }
-
-        .score {
-          justify-self: start;
         }
       }
 
@@ -454,67 +378,40 @@
   <body>
     <main>
       <section class="hero" aria-labelledby="hero-title">
-        <div class="hero-copy">
-          <span class="eyebrow">Yaket in the browser</span>
-          <h1 id="hero-title">A simpler demo of what YAKE is actually good at.</h1>
-          <p class="lead">
-            Yaket is a TypeScript port of YAKE for <strong>Single-document</strong> keyword extraction.
-            It works with <strong>No training corpus</strong> and relies on <strong>Local statistical features</strong>
-            like frequency, position, spread, casing, and co-occurrence instead of embeddings or external corpora.
-          </p>
-        </div>
-
-        <div class="hero-notes">
-          <div class="note">
-            <h2>Why this page matters</h2>
-            <ul class="note-list">
-              <li>It shows YAKE on samples where phrase extraction is more legible than the old short Kaggle snippet.</li>
-              <li>It explains how to read the ranking instead of assuming users already know the YAKE scoring convention.</li>
-              <li>It keeps the browser story visible without turning the demo into a product landing page.</li>
-            </ul>
-          </div>
-          <div class="note">
-            <h2>What to look for</h2>
-            <p>
-              Lower score means more relevant. Check the top phrases, their <span class="kbd">occurrences</span>,
-              and their <span class="kbd">sentence spread</span> to decide whether the ranking is surfacing stable
-              concepts or short-lived fragments.
-            </p>
-          </div>
-        </div>
+        <span class="eyebrow">Yaket demo</span>
+        <h1 id="hero-title">Compare Yaket and TF-IDF on the same text.</h1>
+        <p class="lead">
+          Yaket is a TypeScript port of YAKE for <strong>Single-document</strong> keyword extraction. It works with
+          <strong>No training corpus</strong> and uses <strong>Local statistical features</strong> such as frequency,
+          position, spread, casing, and co-occurrence. Lower score means more relevant.
+        </p>
       </section>
 
-      <section class="workspace" aria-label="Interactive Yaket playground">
+      <section class="grid" aria-label="Interactive Yaket playground">
         <section class="panel stack" aria-labelledby="playground-title">
           <div class="section-header">
             <h2 id="playground-title">Try a sample</h2>
-            <p class="muted">Use a document with enough context. YAKE is single-document, but it still benefits from real prose.</p>
+            <p class="muted">Pick a sample or paste your own text. Then compare Yaket results with a simple TF-IDF baseline.</p>
           </div>
 
-          <div class="sample-row">
-            <div class="sample-buttons" id="sample-buttons" role="group" aria-label="Sample texts"></div>
-          </div>
+          <div class="sample-buttons" id="sample-buttons" role="group" aria-label="Sample texts"></div>
 
-          <label class="field" for="input">
-            <span class="sample-label">Input text</span>
+          <label for="input">
+            Input text
             <textarea id="input"></textarea>
           </label>
 
-          <div class="control-grid">
-            <label class="field" for="language">
-              <span>Language</span>
+          <div class="controls">
+            <label for="language">Language
               <input id="language" value="en" autocomplete="off" />
             </label>
-            <label class="field" for="top">
-              <span>Top results</span>
+            <label for="top">Top results
               <input id="top" type="number" min="1" value="10" />
             </label>
-            <label class="field" for="ngram">
-              <span>Max n-gram</span>
+            <label for="ngram">Max n-gram
               <input id="ngram" type="number" min="1" value="3" />
             </label>
-            <label class="field" for="dedupFunc">
-              <span>Dedup function</span>
+            <label for="dedupFunc">Dedup function
               <select id="dedupFunc">
                 <option value="seqm">seqm</option>
                 <option value="levs">levs</option>
@@ -524,63 +421,94 @@
           </div>
 
           <div class="button-row">
-            <button class="run-button" id="run">Extract keyphrases</button>
-            <button class="ghost-button" id="copy-results" type="button">Copy results</button>
-            <p class="status" id="status">Ready.</p>
+            <button class="primary-button" id="run">Compare</button>
+            <button class="secondary-button" id="copy-results" type="button">Copy Yaket results</button>
+            <span class="status" id="status">Ready.</span>
           </div>
         </section>
 
-        <aside class="stack">
+        <section class="stack">
           <section class="panel stack">
             <div class="section-header">
-              <h2>Results</h2>
-              <p class="score-note">Lower score means more relevant. YAKE returns ranked keyphrases, not named entities.</p>
+              <h2>Summary</h2>
+              <p class="muted">Use this as a quick read: top phrase, best score, and overlap with the TF-IDF baseline.</p>
             </div>
 
-            <div class="stats" aria-label="Result summary">
-              <div class="stat">
-                <span class="stat-label">Top phrase</span>
-                <span class="stat-value" id="top-keyword">—</span>
+            <dl class="summary-grid">
+              <div class="summary">
+                <dt>Top phrase</dt>
+                <dd id="top-keyword">—</dd>
               </div>
-              <div class="stat">
-                <span class="stat-label">Best score</span>
-                <span class="stat-value" id="best-score">—</span>
+              <div class="summary">
+                <dt>Best score</dt>
+                <dd id="best-score">—</dd>
               </div>
-              <div class="stat">
-                <span class="stat-label">Results</span>
-                <span class="stat-value" id="result-count">—</span>
+              <div class="summary">
+                <dt>Overlap</dt>
+                <dd id="overlap-count">—</dd>
+              </div>
+            </dl>
+          </section>
+
+          <section class="panel stack">
+            <div class="section-header">
+              <h2>Comparison</h2>
+              <p class="muted">Yaket results include occurrences and sentence spread. TF-IDF uses the built-in demo samples plus the current text as a tiny comparison corpus.</p>
+            </div>
+
+            <div class="comparison-grid">
+              <div class="stack">
+                <h3>Yaket results</h3>
+                <table>
+                  <thead>
+                    <tr><th>Phrase</th><th>Score</th></tr>
+                  </thead>
+                  <tbody id="yaket-results"></tbody>
+                </table>
+              </div>
+
+              <div class="stack">
+                <h3>TF-IDF baseline</h3>
+                <table>
+                  <thead>
+                    <tr><th>Phrase</th><th>Score</th></tr>
+                  </thead>
+                  <tbody id="tfidf-results"></tbody>
+                </table>
               </div>
             </div>
 
-            <ol class="results" id="results"></ol>
+            <div class="stack">
+              <h3>Overlap</h3>
+              <div class="pill-row" id="overlap"></div>
+            </div>
           </section>
 
           <section class="panel stack">
             <div class="section-header">
               <h2>Highlighted text</h2>
-              <p class="muted">This helps explain why a phrase ranked well: you can see it in context instead of in isolation.</p>
+              <p class="muted">This helps show why Yaket surfaced a phrase instead of leaving it as an abstract list item.</p>
             </div>
             <div class="highlighted" id="highlighted" aria-live="polite"></div>
           </section>
 
-          <section class="panel stack">
-            <h2>Where Yaket fits</h2>
-            <p class="muted">
-              Good for article tagging, search indexing, newsletter topic extraction, and lightweight chunk metadata.
-              If you want semantic similarity instead of deterministic phrase extraction, compare it with embedding-heavy tools like KeyBERT.
-            </p>
-            <div class="footer-meta">
-              <span>Package: <a href="https://www.npmjs.com/package/@ade_oshineye/yaket">npm</a></span>
-              <span>Source: <a href="https://github.com/adewale/yaket">GitHub</a></span>
-              <span>Paper: <a href="https://doi.org/10.1016/j.ins.2019.09.013">YAKE! (2020)</a></span>
-            </div>
+          <section class="panel footer-links">
+            <span>Package: <a href="https://www.npmjs.com/package/@ade_oshineye/yaket">npm</a></span>
+            <span>Source: <a href="https://github.com/adewale/yaket">GitHub</a></span>
+            <span>Paper: <a href="https://doi.org/10.1016/j.ins.2019.09.013">YAKE! (2020)</a></span>
           </section>
-        </aside>
+        </section>
       </section>
     </main>
 
     <script type="module">
-      import { TextHighlighter, extractKeywordDetails } from "https://esm.sh/@ade_oshineye/yaket@0.4.0?bundle";
+      import {
+        TextHighlighter,
+        extractKeywordDetails,
+        loadStopwords,
+        splitSentences,
+        tokenizeWords,
+      } from "https://esm.sh/@ade_oshineye/yaket@0.4.0?bundle";
 
       const SAMPLE_PRESETS = [
         {
@@ -611,6 +539,15 @@
           text: `Consumer AI is being absorbed by platforms. Enterprise AI converges around a few vendors. Vertical AI is the third path. If consumer gets absorbed by incumbents and enterprise consolidates around platforms, vertical AI carves out domain-specific value. The APIs become commodities. Meta just acqui-hired both Gizmo and Dreamer. Karpathy's software model evolves. The ecosystem grows through network effects.`
         },
         {
+          id: "product-docs",
+          label: "Product docs",
+          language: "en",
+          ngram: 2,
+          top: 10,
+          dedupFunc: "levs",
+          text: `The indexing service creates hybrid retrieval metadata for each chunk. It stores BM25 text fields, dense embeddings, chunk-level filters, and weighted keywords. Incremental reindexing reuses previous vectors, but always refreshes keyword metadata so search results stay explainable and debuggable.`
+        },
+        {
           id: "search",
           label: "Search indexing",
           language: "en",
@@ -626,15 +563,17 @@
       const top = document.getElementById("top");
       const ngram = document.getElementById("ngram");
       const dedupFunc = document.getElementById("dedupFunc");
-      const results = document.getElementById("results");
       const status = document.getElementById("status");
-      const run = document.getElementById("run");
       const topKeyword = document.getElementById("top-keyword");
       const bestScore = document.getElementById("best-score");
-      const resultCount = document.getElementById("result-count");
+      const overlapCount = document.getElementById("overlap-count");
+      const yaketResults = document.getElementById("yaket-results");
+      const tfidfResults = document.getElementById("tfidf-results");
+      const overlap = document.getElementById("overlap");
       const highlighted = document.getElementById("highlighted");
       const sampleButtons = document.getElementById("sample-buttons");
       const copyResults = document.getElementById("copy-results");
+      const run = document.getElementById("run");
 
       let activeSampleId = SAMPLE_PRESETS[0].id;
 
@@ -666,51 +605,116 @@
         render();
       }
 
-      function render() {
-        status.textContent = "Extracting...";
+      function countCandidates(text, stopwords, maxNgram) {
+        const counts = new Map();
 
-        const items = extractKeywordDetails(input.value, {
-          language: language.value || "en",
-          top: Number(top.value) || 10,
-          n: Number(ngram.value) || 3,
+        for (const sentence of splitSentences(text)) {
+          const words = tokenizeWords(sentence)
+            .map((word) => word.toLowerCase())
+            .filter((word) => word.length > 0 && !((word.startsWith("'") || word.startsWith("’")) && word.length > 1));
+
+          for (let size = 1; size <= maxNgram; size += 1) {
+            for (let index = 0; index <= words.length - size; index += 1) {
+              const candidateWords = words.slice(index, index + size);
+              if (candidateWords.length === 0) continue;
+              if (stopwords.has(candidateWords[0]) || stopwords.has(candidateWords[candidateWords.length - 1])) continue;
+              if (size === 1 && candidateWords[0].length < 3) continue;
+
+              const candidate = candidateWords.join(" ");
+              counts.set(candidate, (counts.get(candidate) ?? 0) + 1);
+            }
+          }
+        }
+
+        return counts;
+      }
+
+      function extractTfidf(text, corpus, stopwords, maxNgram, topK) {
+        const corpusCounts = corpus.map((document) => countCandidates(document, stopwords, maxNgram));
+        const targetCounts = countCandidates(text, stopwords, maxNgram);
+        const totalDocuments = corpusCounts.length;
+
+        return [...targetCounts.entries()]
+          .map(([keyword, tf]) => {
+            const df = corpusCounts.reduce((count, counts) => count + (counts.has(keyword) ? 1 : 0), 0);
+            const idf = Math.log((1 + totalDocuments) / (1 + df)) + 1;
+            return { keyword, score: tf * idf };
+          })
+          .sort((left, right) => right.score - left.score || left.keyword.localeCompare(right.keyword))
+          .slice(0, topK);
+      }
+
+      function renderTable(tbody, rows, metadata) {
+        tbody.replaceChildren(...rows.map((row, index) => {
+          const tr = document.createElement("tr");
+
+          const phraseCell = document.createElement("td");
+          const title = document.createElement("div");
+          title.className = "result-title";
+          title.textContent = `${index + 1}. ${row.keyword}`;
+          phraseCell.append(title);
+
+          if (metadata != null) {
+            const meta = document.createElement("span");
+            meta.className = "result-meta";
+            meta.textContent = metadata(row);
+            phraseCell.append(meta);
+          }
+
+          const scoreCell = document.createElement("td");
+          scoreCell.textContent = row.score.toFixed(6);
+
+          tr.append(phraseCell, scoreCell);
+          return tr;
+        }));
+      }
+
+      function render() {
+        status.textContent = "Comparing...";
+
+        const topK = Number(top.value) || 10;
+        const maxNgram = Number(ngram.value) || 3;
+        const lang = language.value || "en";
+        const text = input.value;
+
+        const yaket = extractKeywordDetails(text, {
+          language: lang,
+          top: topK,
+          n: maxNgram,
           dedupFunc: dedupFunc.value,
         });
 
-        topKeyword.textContent = items[0]?.keyword ?? "—";
-        bestScore.textContent = items[0] ? items[0].score.toFixed(6) : "—";
-        resultCount.textContent = String(items.length);
+        const stopwords = loadStopwords(lang);
+        const corpus = [...SAMPLE_PRESETS.map((sample) => sample.text), text];
+        const tfidf = extractTfidf(text, corpus, stopwords, maxNgram, topK);
+        const shared = tfidf.map((item) => item.keyword).filter((keyword) => yaket.some((result) => result.normalizedKeyword === keyword));
 
-        results.replaceChildren(...items.map((item, index) => {
-          const li = document.createElement("li");
-          li.className = "result-item";
+        topKeyword.textContent = yaket[0]?.keyword ?? "—";
+        bestScore.textContent = yaket[0] ? yaket[0].score.toFixed(6) : "—";
+        overlapCount.textContent = `${shared.length}/${Math.min(topK, yaket.length)}`;
 
-          const content = document.createElement("div");
-          const title = document.createElement("div");
-          title.className = "result-title";
-          title.textContent = `${index + 1}. ${item.keyword}`;
-          const meta = document.createElement("div");
-          meta.className = "result-meta";
-          meta.textContent = `${item.occurrences} occurrences · ${item.sentenceIds.length} sentence spread · normalized as ${item.normalizedKeyword}`;
-          content.append(title, meta);
+        renderTable(yaketResults, yaket, (row) => `${row.occurrences} occurrences · ${row.sentenceIds.length} sentence spread`);
+        renderTable(tfidfResults, tfidf);
 
-          const score = document.createElement("span");
-          score.className = "score";
-          score.textContent = item.score.toFixed(6);
+        overlap.replaceChildren(...(shared.length > 0
+          ? shared.map((keyword) => {
+              const pill = document.createElement("span");
+              pill.className = "pill";
+              pill.textContent = keyword;
+              return pill;
+            })
+          : [Object.assign(document.createElement("span"), { className: "pill", textContent: "No overlap in the current top results" })]
+        ));
 
-          li.append(content, score);
-          return li;
-        }));
-
-        const highlighter = new TextHighlighter({ maxNgramSize: Number(ngram.value) || 3 });
-        highlighted.innerHTML = highlighter.highlight(input.value, items.slice(0, Math.min(items.length, 10)));
-
-        status.textContent = `${items.length} keyphrase${items.length === 1 ? "" : "s"} extracted. Lower score means more relevant.`;
+        const highlighter = new TextHighlighter({ maxNgramSize: maxNgram });
+        highlighted.innerHTML = highlighter.highlight(text, yaket.slice(0, Math.min(yaket.length, 8)));
+        status.textContent = `${yaket.length} Yaket keyphrases and ${tfidf.length} TF-IDF phrases compared. Lower score means more relevant.`;
       }
 
       copyResults.addEventListener("click", async () => {
-        const lines = Array.from(results.querySelectorAll(".result-title")).map((node) => node.textContent?.replace(/^\d+\.\s*/, "") ?? "").filter(Boolean);
+        const lines = Array.from(yaketResults.querySelectorAll(".result-title")).map((node) => node.textContent?.replace(/^\d+\.\s*/, "") ?? "").filter(Boolean);
         await navigator.clipboard.writeText(lines.join("\n"));
-        status.textContent = "Top results copied to clipboard.";
+        status.textContent = "Yaket results copied to clipboard.";
       });
 
       run.addEventListener("click", render);
