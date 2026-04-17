@@ -78,6 +78,13 @@
         padding: 1rem;
       }
 
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(340px, 0.95fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
       .stack {
         display: grid;
         gap: 1rem;
@@ -167,6 +174,27 @@
         font-size: 0.92rem;
       }
 
+      .results-panel {
+        transition: border-color 160ms ease, box-shadow 160ms ease, background-color 160ms ease;
+      }
+
+      .results-panel.updated {
+        border-color: rgba(143, 177, 255, 0.44);
+        box-shadow: 0 0 0 2px rgba(143, 177, 255, 0.12), var(--shadow);
+      }
+
+      .results-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 0.75rem;
+      }
+
+      .updated-label {
+        color: var(--subtle);
+        font-size: 0.82rem;
+      }
+
       .results {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -212,6 +240,14 @@
         font-size: 0.8rem;
       }
 
+      @media (max-width: 900px) {
+        .layout,
+        .controls,
+        .results {
+          grid-template-columns: 1fr;
+        }
+      }
+
       @media (max-width: 760px) {
         .controls,
         .results {
@@ -230,58 +266,67 @@
         </p>
       </section>
 
-      <section class="panel stack">
-        <form id="controls" onsubmit="return false;">
-          <div class="controls">
-            <label for="sample">Sample text
-              <select id="sample"></select>
+      <section class="layout">
+        <section class="panel stack">
+          <form id="controls" onsubmit="return false;">
+            <div class="controls">
+              <label for="sample">Sample text
+                <select id="sample"></select>
+              </label>
+              <label for="language">Language
+                <input id="language" value="en" autocomplete="off" />
+              </label>
+              <label for="top">Top results
+                <input id="top" type="number" min="1" value="10" />
+              </label>
+              <label for="ngram">Max n-gram
+                <input id="ngram" type="number" min="1" value="3" />
+              </label>
+            </div>
+
+            <label for="input">Text
+              <textarea id="input"></textarea>
             </label>
-            <label for="language">Language
-              <input id="language" value="en" autocomplete="off" />
-            </label>
-            <label for="top">Top results
-              <input id="top" type="number" min="1" value="10" />
-            </label>
-            <label for="ngram">Max n-gram
-              <input id="ngram" type="number" min="1" value="3" />
-            </label>
+
+            <div class="actions">
+              <button id="run" type="button">Compare</button>
+              <span class="status" id="status">Ready.</span>
+            </div>
+          </form>
+        </section>
+
+        <section class="results-panel panel stack" id="results-panel">
+          <div class="results-header">
+            <h2>Results</h2>
+            <span class="updated-label" id="updated-label">Updated —</span>
           </div>
 
-          <label for="input">Text
-            <textarea id="input"></textarea>
-          </label>
+          <div class="results">
+            <section>
+              <h2>Yaket results</h2>
+              <table>
+                <thead>
+                  <tr><th>Phrase</th><th>Score</th></tr>
+                </thead>
+                <tbody id="yaket-results"></tbody>
+              </table>
+            </section>
 
-          <div class="actions">
-            <button id="run" type="button">Compare</button>
-            <span class="status" id="status">Ready.</span>
+            <section>
+              <h2>TF-IDF baseline</h2>
+              <table>
+                <thead>
+                  <tr><th>Phrase</th><th>Score</th></tr>
+                </thead>
+                <tbody id="tfidf-results"></tbody>
+              </table>
+            </section>
           </div>
-        </form>
-
-        <div class="results">
-          <section>
-            <h2>Yaket results</h2>
-            <table>
-              <thead>
-                <tr><th>Phrase</th><th>Score</th></tr>
-              </thead>
-              <tbody id="yaket-results"></tbody>
-            </table>
-          </section>
 
           <section>
-            <h2>TF-IDF baseline</h2>
-            <table>
-              <thead>
-                <tr><th>Phrase</th><th>Score</th></tr>
-              </thead>
-              <tbody id="tfidf-results"></tbody>
-            </table>
+            <h2>Overlap</h2>
+            <div class="status" id="overlap">—</div>
           </section>
-        </div>
-
-        <section>
-          <h2>Overlap</h2>
-          <div class="status" id="overlap">—</div>
         </section>
       </section>
     </main>
@@ -329,11 +374,13 @@
       const language = document.getElementById("language");
       const top = document.getElementById("top");
       const ngram = document.getElementById("ngram");
+      const compareButton = document.getElementById("run");
       const status = document.getElementById("status");
+      const resultsPanel = document.getElementById("results-panel");
+      const updatedLabel = document.getElementById("updated-label");
       const yaketResults = document.getElementById("yaket-results");
       const tfidfResults = document.getElementById("tfidf-results");
       const overlap = document.getElementById("overlap");
-      const run = document.getElementById("run");
 
       function populateSampleSelect() {
         sample.replaceChildren(...SAMPLE_PRESETS.map((item) => {
@@ -417,6 +464,7 @@
       }
 
       function render() {
+        compareButton.textContent = "Comparing…";
         status.textContent = "Comparing...";
 
         const topK = Number(top.value) || 10;
@@ -438,11 +486,16 @@
         renderRows(yaketResults, yaket, (row) => `${row.occurrences} occurrences · ${row.sentenceIds.length} sentence spread`);
         renderRows(tfidfResults, tfidf);
         overlap.textContent = shared.length > 0 ? shared.join(", ") : "No overlap in the current top results";
+        updatedLabel.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
+        resultsPanel.classList.remove("updated");
+        requestAnimationFrame(() => resultsPanel.classList.add("updated"));
+        setTimeout(() => resultsPanel.classList.remove("updated"), 1400);
         status.textContent = `${yaket.length} Yaket keyphrases and ${tfidf.length} TF-IDF phrases compared. Lower score means more relevant.`;
+        compareButton.textContent = "Compare again";
       }
 
       sample.addEventListener("change", (event) => applySample(event.target.value));
-      run.addEventListener("click", render);
+      compareButton.addEventListener("click", render);
 
       populateSampleSelect();
       applySample(SAMPLE_PRESETS[0].id);
