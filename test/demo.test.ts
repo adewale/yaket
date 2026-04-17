@@ -35,9 +35,15 @@ describe("demo page", () => {
     expect(demoHtml).toContain("Overlap");
   });
 
-  it("keeps the comparison panel above the fold in the main layout", () => {
-    expect(demoHtml).toContain('class="layout"');
+  it("keeps input and results together above the fold in the main layout", () => {
     expect(demoHtml).toContain('results-panel');
+    expect(demoHtml).toContain('class="layout"');
+
+    const sampleIndex = demoHtml.indexOf('id="sample"');
+    const resultsIndex = demoHtml.indexOf('id="results-panel"');
+
+    expect(sampleIndex).toBeGreaterThanOrEqual(0);
+    expect(resultsIndex).toBeGreaterThan(sampleIndex);
   });
 
   it("uses the current published package line in the browser import", () => {
@@ -50,9 +56,10 @@ describe("demo page", () => {
     expect(demoHtml).not.toContain("Lower score means more relevant");
   });
 
-  it("makes compare interactions visibly update the results panel", () => {
+  it("makes sample and configuration changes visibly update the results panel", () => {
     expect(demoHtml).toContain("Updated");
     expect(demoHtml).toContain("resultsPanel.classList.add(\"updated\")");
+    expect(demoHtml).toContain("sample.addEventListener(\"change\"");
     expect(demoHtml).toContain("compareButton.textContent = \"Comparing…\"");
   });
 
