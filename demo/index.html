@@ -21,6 +21,8 @@
         --muted: rgba(196, 205, 220, 0.74);
         --subtle: rgba(163, 174, 193, 0.68);
         --accent: #8fb1ff;
+        --mark-yaket: rgba(143, 177, 255, 0.24);
+        --mark-tfidf: rgba(255, 210, 120, 0.24);
         --shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
       }
 
@@ -36,14 +38,16 @@
       }
 
       main {
-        max-width: 900px;
+        max-width: 1120px;
         margin: 0 auto;
         padding: 1.5rem max(20px, 4vw) 2.5rem;
       }
 
       h1,
       h2,
-      p {
+      h3,
+      p,
+      ul {
         margin: 0;
       }
 
@@ -55,6 +59,11 @@
 
       h2 {
         font-size: 0.95rem;
+        font-weight: 650;
+      }
+
+      h3 {
+        font-size: 0.9rem;
         font-weight: 650;
       }
 
@@ -70,19 +79,19 @@
         line-height: 1.55;
       }
 
+      .layout {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(420px, 1.1fr);
+        gap: 1rem;
+        align-items: start;
+      }
+
       .panel {
         border: 1px solid var(--line);
         border-radius: 0.85rem;
         background: var(--panel);
         box-shadow: var(--shadow);
         padding: 1rem;
-      }
-
-      .layout {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(340px, 0.95fr);
-        gap: 1rem;
-        align-items: start;
       }
 
       .stack {
@@ -195,62 +204,55 @@
         font-size: 0.82rem;
       }
 
-      .results {
+      .comparison {
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 1rem;
-        margin-top: 1rem;
       }
 
-      table {
-        width: 100%;
-        border-collapse: collapse;
+      .topic-list {
+        list-style: none;
+        padding: 0;
+        display: grid;
+        gap: 0.45rem;
       }
 
-      th,
-      td {
-        padding: 0.65rem 0;
-        border-top: 1px solid rgba(205, 214, 231, 0.08);
-        vertical-align: top;
+      .topic-list li {
+        color: var(--text);
       }
 
-      th {
-        border-top: 0;
-        color: var(--subtle);
-        font-size: 0.76rem;
-        font-weight: 700;
-        letter-spacing: 0.05em;
-        text-align: left;
-        text-transform: uppercase;
+      .highlight-box {
+        border: 1px solid rgba(205, 214, 231, 0.08);
+        border-radius: 0.7rem;
+        background: var(--field);
+        color: var(--muted);
+        padding: 0.8rem 0.9rem;
+        line-height: 1.65;
       }
 
-      th:last-child,
-      td:last-child {
-        text-align: right;
+      .overlap {
+        color: var(--muted);
+        line-height: 1.55;
       }
 
-      .result-title {
-        font-weight: 600;
+      mark.yaket {
+        background: var(--mark-yaket);
+        color: var(--text);
+        border-radius: 0.25rem;
+        padding: 0.02rem 0.16rem;
       }
 
-      .result-meta {
-        display: block;
-        margin-top: 0.18rem;
-        color: var(--subtle);
-        font-size: 0.8rem;
+      mark.tfidf {
+        background: var(--mark-tfidf);
+        color: var(--text);
+        border-radius: 0.25rem;
+        padding: 0.02rem 0.16rem;
       }
 
       @media (max-width: 900px) {
         .layout,
         .controls,
-        .results {
-          grid-template-columns: 1fr;
-        }
-      }
-
-      @media (max-width: 760px) {
-        .controls,
-        .results {
+        .comparison {
           grid-template-columns: 1fr;
         }
       }
@@ -262,7 +264,7 @@
         <h1>Yaket vs TF-IDF</h1>
         <p>
           Compare Yaket and TF-IDF on the same text. Yaket is <strong>Single-document</strong>, uses
-          <strong>Local statistical features</strong>, and needs <strong>No training corpus</strong>. Lower Yaket score means more relevant.
+          <strong>Local statistical features</strong>, and needs <strong>No training corpus</strong>.
         </p>
       </section>
 
@@ -301,31 +303,29 @@
             <span class="updated-label" id="updated-label">Updated —</span>
           </div>
 
-          <div class="results">
-            <section>
+          <div class="comparison">
+            <section class="stack">
               <h2>Yaket results</h2>
-              <table>
-                <thead>
-                  <tr><th>Phrase</th><th>Score</th></tr>
-                </thead>
-                <tbody id="yaket-results"></tbody>
-              </table>
+              <ul class="topic-list" id="yaket-results"></ul>
+              <div class="stack">
+                <h3>Yaket highlights</h3>
+                <div class="highlight-box" id="yaket-highlights">—</div>
+              </div>
             </section>
 
-            <section>
+            <section class="stack">
               <h2>TF-IDF baseline</h2>
-              <table>
-                <thead>
-                  <tr><th>Phrase</th><th>Score</th></tr>
-                </thead>
-                <tbody id="tfidf-results"></tbody>
-              </table>
+              <ul class="topic-list" id="tfidf-results"></ul>
+              <div class="stack">
+                <h3>TF-IDF highlights</h3>
+                <div class="highlight-box" id="tfidf-highlights">—</div>
+              </div>
             </section>
           </div>
 
-          <section>
+          <section class="stack">
             <h2>Overlap</h2>
-            <div class="status" id="overlap">—</div>
+            <div class="overlap" id="overlap">—</div>
           </section>
         </section>
       </section>
@@ -380,6 +380,8 @@
       const updatedLabel = document.getElementById("updated-label");
       const yaketResults = document.getElementById("yaket-results");
       const tfidfResults = document.getElementById("tfidf-results");
+      const yaketHighlights = document.getElementById("yaket-highlights");
+      const tfidfHighlights = document.getElementById("tfidf-highlights");
       const overlap = document.getElementById("overlap");
 
       function populateSampleSelect() {
@@ -440,27 +442,43 @@
           .slice(0, topK);
       }
 
-      function renderRows(tbody, rows, metadata) {
-        tbody.replaceChildren(...rows.map((row, index) => {
-          const tr = document.createElement("tr");
-          const phraseCell = document.createElement("td");
+      function renderList(target, items, metadata) {
+        target.replaceChildren(...items.map((item) => {
+          const li = document.createElement("li");
           const title = document.createElement("div");
           title.className = "result-title";
-          title.textContent = `${index + 1}. ${row.keyword}`;
-          phraseCell.append(title);
+          title.textContent = item.keyword;
+          li.append(title);
 
           if (metadata) {
             const meta = document.createElement("span");
             meta.className = "result-meta";
-            meta.textContent = metadata(row);
-            phraseCell.append(meta);
+            meta.textContent = metadata(item);
+            li.append(meta);
           }
 
-          const scoreCell = document.createElement("td");
-          scoreCell.textContent = row.score.toFixed(6);
-          tr.append(phraseCell, scoreCell);
-          return tr;
+          return li;
         }));
+      }
+
+      function highlightText(text, keywords, className) {
+        const phrases = [...new Set(keywords.map((item) => item.keyword).filter(Boolean))]
+          .sort((left, right) => right.length - left.length)
+          .map((value) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"));
+
+        if (phrases.length === 0) {
+          return escapeHtml(text);
+        }
+
+        const pattern = new RegExp(`(^|[^\\p{L}\\p{Nd}])(${phrases.join("|")})(?=$|[^\\p{L}\\p{Nd}])`, "giu");
+        return escapeHtml(text).replace(pattern, `$1<mark class="${className}">$2</mark>`);
+      }
+
+      function escapeHtml(value) {
+        return value
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;");
       }
 
       function render() {
@@ -476,21 +494,23 @@
           language: lang,
           top: topK,
           n: maxNgram,
-        });
+        }).map(({ keyword, occurrences, sentenceIds }) => ({ keyword, occurrences, sentenceIds }));
 
         const stopwords = loadStopwords(lang);
         const corpus = [...SAMPLE_PRESETS.map((item) => item.text), text];
         const tfidf = extractTfidf(text, corpus, stopwords, maxNgram, topK);
-        const shared = tfidf.map((item) => item.keyword).filter((keyword) => yaket.some((result) => result.normalizedKeyword === keyword));
+        const shared = tfidf.map((item) => item.keyword).filter((keyword) => yaket.some((result) => result.keyword.toLowerCase() === keyword));
 
-        renderRows(yaketResults, yaket, (row) => `${row.occurrences} occurrences · ${row.sentenceIds.length} sentence spread`);
-        renderRows(tfidfResults, tfidf);
+        renderList(yaketResults, yaket, (row) => `${row.occurrences} occurrences · ${row.sentenceIds.length} sentence spread`);
+        renderList(tfidfResults, tfidf);
+        yaketHighlights.innerHTML = highlightText(text, yaket, "yaket");
+        tfidfHighlights.innerHTML = highlightText(text, tfidf, "tfidf");
         overlap.textContent = shared.length > 0 ? shared.join(", ") : "No overlap in the current top results";
         updatedLabel.textContent = `Updated ${new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}`;
         resultsPanel.classList.remove("updated");
         requestAnimationFrame(() => resultsPanel.classList.add("updated"));
         setTimeout(() => resultsPanel.classList.remove("updated"), 1400);
-        status.textContent = `${yaket.length} Yaket keyphrases and ${tfidf.length} TF-IDF phrases compared. Lower score means more relevant.`;
+        status.textContent = `${yaket.length} Yaket topics and ${tfidf.length} TF-IDF topics shown.`;
         compareButton.textContent = "Compare again";
       }
 

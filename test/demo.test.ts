@@ -24,12 +24,14 @@ describe("demo page", () => {
     expect(demoHtml).toContain("Scientific abstract");
     expect(demoHtml).toContain("Newsletter");
     expect(demoHtml).toContain("Product docs");
-    expect(demoHtml).toContain("Compare");
+    expect(demoHtml).toContain('id="run"');
   });
 
   it("shows a direct Yaket versus TF-IDF comparison", () => {
     expect(demoHtml).toContain("Yaket results");
     expect(demoHtml).toContain("TF-IDF baseline");
+    expect(demoHtml).toContain("Yaket highlights");
+    expect(demoHtml).toContain("TF-IDF highlights");
     expect(demoHtml).toContain("Overlap");
   });
 
@@ -42,9 +44,10 @@ describe("demo page", () => {
     expect(demoHtml).toContain("@ade_oshineye/yaket@0.4.0");
   });
 
-  it("documents how to read the ranking and score", () => {
-    expect(demoHtml).toContain("Lower score means more relevant");
+  it("focuses on surfaced topics instead of scores", () => {
     expect(demoHtml).toContain("Compare Yaket and TF-IDF on the same text");
+    expect(demoHtml).not.toContain("Score");
+    expect(demoHtml).not.toContain("Lower score means more relevant");
   });
 
   it("makes compare interactions visibly update the results panel", () => {
@@ -56,7 +59,6 @@ describe("demo page", () => {
   it("drops extra chrome and secondary sections", () => {
     expect(demoHtml).not.toContain("Why this page matters");
     expect(demoHtml).not.toContain("What this demo proves");
-    expect(demoHtml).not.toContain("Highlighted text");
     expect(demoHtml).not.toContain("Copy Yaket results");
     expect(demoHtml).not.toContain("Summary");
     expect(demoHtml).not.toContain("Where Yaket fits");
