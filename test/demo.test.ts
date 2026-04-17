@@ -19,12 +19,13 @@ describe("demo page", () => {
 
   it("uses a single simple sample picker and conventional controls", () => {
     expect(demoHtml).toContain("Sample text");
-    expect(demoHtml).toContain("select id=");
+    expect(demoHtml).toContain('id="sample-picker"');
+    expect(demoHtml).toContain("sample-button");
     expect(demoHtml).toContain("News article");
     expect(demoHtml).toContain("Scientific abstract");
     expect(demoHtml).toContain("Newsletter");
     expect(demoHtml).toContain("Product docs");
-    expect(demoHtml).toContain('id="run"');
+    expect(demoHtml).not.toContain('id="run"');
   });
 
   it("shows a direct Yaket versus TF-IDF comparison", () => {
@@ -35,15 +36,19 @@ describe("demo page", () => {
     expect(demoHtml).toContain("Overlap");
   });
 
-  it("keeps input and results together above the fold in the main layout", () => {
+  it("puts sample picker first, results below it, and config in the right column", () => {
     expect(demoHtml).toContain('results-panel');
     expect(demoHtml).toContain('class="layout"');
+    expect(demoHtml).toContain('class="main-column"');
+    expect(demoHtml).toContain('class="controls config-controls"');
 
-    const sampleIndex = demoHtml.indexOf('id="sample"');
+    const sampleIndex = demoHtml.indexOf('id="sample-picker"');
     const resultsIndex = demoHtml.indexOf('id="results-panel"');
+    const controlsIndex = demoHtml.indexOf('id="controls"');
 
     expect(sampleIndex).toBeGreaterThanOrEqual(0);
     expect(resultsIndex).toBeGreaterThan(sampleIndex);
+    expect(controlsIndex).toBeGreaterThan(resultsIndex);
   });
 
   it("uses the current published package line in the browser import", () => {
@@ -59,8 +64,9 @@ describe("demo page", () => {
   it("makes sample and configuration changes visibly update the results panel", () => {
     expect(demoHtml).toContain("Updated");
     expect(demoHtml).toContain("resultsPanel.classList.add(\"updated\")");
-    expect(demoHtml).toContain("sample.addEventListener(\"change\"");
-    expect(demoHtml).toContain("compareButton.textContent = \"Comparing…\"");
+    expect(demoHtml).toContain("button.addEventListener(\"click\"");
+    expect(demoHtml).toContain("input.addEventListener(\"input\", scheduleRender)");
+    expect(demoHtml).not.toContain("Compare again");
   });
 
   it("drops extra chrome and secondary sections", () => {

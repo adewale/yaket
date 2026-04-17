@@ -81,9 +81,14 @@
 
       .layout {
         display: grid;
-        grid-template-columns: minmax(0, 1fr) minmax(420px, 1.1fr);
+        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.85fr);
         gap: 1rem;
         align-items: start;
+      }
+
+      .main-column {
+        display: grid;
+        gap: 1rem;
       }
 
       .panel {
@@ -108,6 +113,10 @@
         display: grid;
         grid-template-columns: repeat(2, minmax(0, 1fr));
         gap: 0.85rem;
+      }
+
+      .config-controls {
+        grid-template-columns: 1fr;
       }
 
       label {
@@ -156,9 +165,8 @@
         box-shadow: 0 0 0 3px rgba(143, 177, 255, 0.12);
       }
 
-      .actions {
+      .sample-picker {
         display: flex;
-        align-items: center;
         gap: 0.75rem;
         flex-wrap: wrap;
       }
@@ -176,6 +184,11 @@
       button:focus-visible {
         border-color: rgba(143, 177, 255, 0.48);
         background: #263245;
+      }
+
+      .sample-button[aria-pressed="true"] {
+        border-color: rgba(143, 177, 255, 0.58);
+        background: rgba(143, 177, 255, 0.16);
       }
 
       .status {
@@ -269,12 +282,50 @@
       </section>
 
       <section class="layout">
+        <section class="main-column">
+          <section class="panel stack">
+            <label for="sample-picker">Sample text
+              <div class="sample-picker" id="sample-picker"></div>
+            </label>
+            <span class="status" id="status">Ready.</span>
+          </section>
+
+          <section class="results-panel panel stack" id="results-panel">
+            <div class="results-header">
+              <h2>Results</h2>
+              <span class="updated-label" id="updated-label">Updated —</span>
+            </div>
+
+            <div class="comparison">
+              <section class="stack">
+                <h2>Yaket results</h2>
+                <ul class="topic-list" id="yaket-results"></ul>
+                <div class="stack">
+                  <h3>Yaket highlights</h3>
+                  <div class="highlight-box" id="yaket-highlights">—</div>
+                </div>
+              </section>
+
+              <section class="stack">
+                <h2>TF-IDF baseline</h2>
+                <ul class="topic-list" id="tfidf-results"></ul>
+                <div class="stack">
+                  <h3>TF-IDF highlights</h3>
+                  <div class="highlight-box" id="tfidf-highlights">—</div>
+                </div>
+              </section>
+            </div>
+
+            <section class="stack">
+              <h2>Overlap</h2>
+              <div class="overlap" id="overlap">—</div>
+            </section>
+          </section>
+        </section>
+
         <section class="panel stack">
           <form id="controls" onsubmit="return false;">
-            <div class="controls">
-              <label for="sample">Sample text
-                <select id="sample"></select>
-              </label>
+            <div class="controls config-controls">
               <label for="language">Language
                 <input id="language" value="en" autocomplete="off" />
               </label>
@@ -289,44 +340,7 @@
             <label for="input">Text
               <textarea id="input"></textarea>
             </label>
-
-            <div class="actions">
-              <button id="run" type="button">Compare</button>
-              <span class="status" id="status">Ready.</span>
-            </div>
           </form>
-        </section>
-
-        <section class="results-panel panel stack" id="results-panel">
-          <div class="results-header">
-            <h2>Results</h2>
-            <span class="updated-label" id="updated-label">Updated —</span>
-          </div>
-
-          <div class="comparison">
-            <section class="stack">
-              <h2>Yaket results</h2>
-              <ul class="topic-list" id="yaket-results"></ul>
-              <div class="stack">
-                <h3>Yaket highlights</h3>
-                <div class="highlight-box" id="yaket-highlights">—</div>
-              </div>
-            </section>
-
-            <section class="stack">
-              <h2>TF-IDF baseline</h2>
-              <ul class="topic-list" id="tfidf-results"></ul>
-              <div class="stack">
-                <h3>TF-IDF highlights</h3>
-                <div class="highlight-box" id="tfidf-highlights">—</div>
-              </div>
-            </section>
-          </div>
-
-          <section class="stack">
-            <h2>Overlap</h2>
-            <div class="overlap" id="overlap">—</div>
-          </section>
         </section>
       </section>
     </main>
@@ -369,12 +383,11 @@
         }
       ];
 
-      const sample = document.getElementById("sample");
+      const samplePicker = document.getElementById("sample-picker");
       const input = document.getElementById("input");
       const language = document.getElementById("language");
       const top = document.getElementById("top");
       const ngram = document.getElementById("ngram");
-      const compareButton = document.getElementById("run");
       const status = document.getElementById("status");
       const resultsPanel = document.getElementById("results-panel");
       const updatedLabel = document.getElementById("updated-label");
@@ -383,19 +396,30 @@
       const yaketHighlights = document.getElementById("yaket-highlights");
       const tfidfHighlights = document.getElementById("tfidf-highlights");
       const overlap = document.getElementById("overlap");
+      let renderFrame = 0;
 
-      function populateSampleSelect() {
-        sample.replaceChildren(...SAMPLE_PRESETS.map((item) => {
-          const option = document.createElement("option");
-          option.value = item.id;
-          option.textContent = item.label;
-          return option;
+      function populateSamplePicker() {
+        samplePicker.replaceChildren(...SAMPLE_PRESETS.map((item) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "sample-button";
+          button.dataset.sampleId = item.id;
+          button.textContent = item.label;
+          button.setAttribute("aria-pressed", "false");
+          button.addEventListener("click", () => applySample(item.id));
+          return button;
         }));
+      }
+
+      function setActiveSample(id) {
+        for (const button of samplePicker.querySelectorAll(".sample-button")) {
+          button.setAttribute("aria-pressed", button.dataset.sampleId === id ? "true" : "false");
+        }
       }
 
       function applySample(id) {
         const current = SAMPLE_PRESETS.find((item) => item.id === id) ?? SAMPLE_PRESETS[0];
-        sample.value = current.id;
+        setActiveSample(current.id);
         input.value = current.text;
         language.value = current.language;
         ngram.value = String(current.ngram);
@@ -482,7 +506,6 @@
       }
 
       function render() {
-        compareButton.textContent = "Comparing…";
         status.textContent = "Comparing...";
 
         const topK = Number(top.value) || 10;
@@ -511,13 +534,25 @@
         requestAnimationFrame(() => resultsPanel.classList.add("updated"));
         setTimeout(() => resultsPanel.classList.remove("updated"), 1400);
         status.textContent = `${yaket.length} Yaket topics and ${tfidf.length} TF-IDF topics shown.`;
-        compareButton.textContent = "Compare again";
       }
 
-      sample.addEventListener("change", (event) => applySample(event.target.value));
-      compareButton.addEventListener("click", render);
+      function scheduleRender() {
+        if (renderFrame) {
+          cancelAnimationFrame(renderFrame);
+        }
 
-      populateSampleSelect();
+        renderFrame = requestAnimationFrame(() => {
+          renderFrame = 0;
+          render();
+        });
+      }
+
+      input.addEventListener("input", scheduleRender);
+      language.addEventListener("input", scheduleRender);
+      top.addEventListener("input", scheduleRender);
+      ngram.addEventListener("input", scheduleRender);
+
+      populateSamplePicker();
       applySample(SAMPLE_PRESETS[0].id);
     </script>
   </body>
