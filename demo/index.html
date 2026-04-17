@@ -19,63 +19,62 @@
         --space-lg: 1.5rem;
         --space-xl: 2rem;
         --space-2xl: clamp(2.5rem, 5vw, 4rem);
-        --space-3xl: clamp(3.5rem, 7vw, 6rem);
         --radius-sm: 0.875rem;
         --radius-md: 1.25rem;
-        --radius-lg: 1.75rem;
-        --surface-0: #07111f;
-        --surface-1: rgba(10, 17, 31, 0.8);
-        --surface-2: rgba(18, 28, 48, 0.92);
-        --surface-3: rgba(28, 43, 72, 0.84);
-        --line-soft: rgba(165, 188, 255, 0.14);
-        --line-strong: rgba(165, 188, 255, 0.24);
-        --text-strong: #f5f8ff;
-        --text-base: rgba(226, 235, 255, 0.88);
-        --text-muted: rgba(194, 208, 239, 0.72);
-        --text-subtle: rgba(168, 183, 216, 0.66);
-        --accent-1: #78a8ff;
-        --accent-2: #53e0bd;
-        --accent-3: #ffd779;
-        --shadow-soft: 0 24px 70px rgba(0, 0, 0, 0.28);
+        --surface-0: #0b1220;
+        --surface-1: rgba(14, 22, 36, 0.9);
+        --surface-2: rgba(18, 27, 43, 0.94);
+        --line-soft: rgba(171, 188, 221, 0.16);
+        --line-strong: rgba(171, 188, 221, 0.28);
+        --text-strong: #f7f9fc;
+        --text-base: rgba(230, 236, 246, 0.9);
+        --text-muted: rgba(189, 201, 224, 0.74);
+        --text-subtle: rgba(160, 174, 202, 0.66);
+        --accent: #7aa7ff;
+        --accent-soft: rgba(122, 167, 255, 0.16);
+        --accent-strong: #8ecfbf;
+        --mark: rgba(255, 213, 110, 0.28);
+        --shadow-soft: 0 20px 48px rgba(0, 0, 0, 0.22);
       }
 
       * {
         box-sizing: border-box;
       }
 
-      html {
-        scroll-behavior: smooth;
-      }
-
       body {
         margin: 0;
         min-height: 100vh;
         background:
-          radial-gradient(circle at 0% 0%, rgba(94, 137, 255, 0.26), transparent 32%),
-          radial-gradient(circle at 100% 0%, rgba(70, 217, 182, 0.18), transparent 28%),
-          radial-gradient(circle at 50% 100%, rgba(255, 190, 92, 0.1), transparent 30%),
+          radial-gradient(circle at top, rgba(122, 167, 255, 0.14), transparent 38%),
           var(--surface-0);
         color: var(--text-base);
       }
 
-      body::before {
-        content: "";
-        position: fixed;
-        inset: 0;
-        pointer-events: none;
-        background-image: linear-gradient(rgba(255, 255, 255, 0.02) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(255, 255, 255, 0.02) 1px, transparent 1px);
-        background-size: 36px 36px;
-        mask-image: radial-gradient(circle at center, black 35%, transparent 80%);
-        opacity: 0.35;
+      main {
+        max-width: 1180px;
+        margin: 0 auto;
+        padding: var(--space-2xl) max(20px, 4vw);
       }
 
-      main {
-        position: relative;
-        z-index: 1;
-        max-width: 1260px;
-        margin: 0 auto;
-        padding: var(--space-2xl) max(20px, 4vw) var(--space-3xl);
+      h1,
+      h2,
+      h3,
+      p {
+        margin: 0;
+      }
+
+      h1 {
+        max-width: 10ch;
+        color: var(--text-strong);
+        font-size: clamp(2.7rem, 7vw, 4.9rem);
+        line-height: 0.94;
+        letter-spacing: -0.045em;
+      }
+
+      h2 {
+        color: var(--text-strong);
+        font-size: 1.15rem;
+        letter-spacing: -0.02em;
       }
 
       .eyebrow {
@@ -84,9 +83,9 @@
         gap: var(--space-2xs);
         border: 1px solid var(--line-strong);
         border-radius: 999px;
-        padding: 0.45rem 0.9rem;
-        background: rgba(17, 28, 49, 0.72);
-        color: var(--accent-2);
+        padding: 0.45rem 0.8rem;
+        color: var(--accent);
+        background: rgba(18, 28, 46, 0.76);
         font-size: 0.78rem;
         font-weight: 700;
         letter-spacing: 0.08em;
@@ -95,26 +94,21 @@
 
       .hero {
         display: grid;
-        grid-template-columns: minmax(0, 1.4fr) minmax(300px, 0.9fr);
-        gap: var(--space-2xl);
+        grid-template-columns: minmax(0, 1.35fr) minmax(280px, 0.8fr);
+        gap: var(--space-xl);
         align-items: start;
-        margin-bottom: var(--space-2xl);
+        margin-bottom: var(--space-xl);
       }
 
-      h1 {
-        margin: var(--space-sm) 0 var(--space-md);
-        max-width: 11ch;
-        color: var(--text-strong);
-        font-size: clamp(2.8rem, 7vw, 5.2rem);
-        line-height: 0.95;
-        letter-spacing: -0.05em;
+      .hero-copy {
+        display: grid;
+        gap: var(--space-md);
       }
 
       .lead {
-        max-width: 64ch;
-        margin: 0;
+        max-width: 62ch;
         color: var(--text-muted);
-        font-size: clamp(1rem, 2vw, 1.1rem);
+        font-size: clamp(1rem, 2vw, 1.08rem);
         line-height: 1.7;
       }
 
@@ -123,80 +117,41 @@
         gap: var(--space-sm);
       }
 
-      .callout {
-        border: 1px solid var(--line-soft);
-        border-radius: var(--radius-md);
-        background: linear-gradient(160deg, rgba(14, 24, 43, 0.92), rgba(11, 18, 31, 0.76));
-        padding: var(--space-lg);
-        box-shadow: var(--shadow-soft);
-      }
-
-      .callout h2,
-      .panel h2,
-      .panel h3 {
-        margin: 0 0 var(--space-xs);
-        color: var(--text-strong);
-        letter-spacing: -0.02em;
-      }
-
-      .callout p,
-      .panel p,
-      .panel li,
-      .panel dt,
-      .panel dd {
-        color: var(--text-muted);
-        line-height: 1.6;
-      }
-
-      .feature-list {
-        display: grid;
-        gap: var(--space-xs);
-        margin: 0;
-        padding: 0;
-        list-style: none;
-      }
-
-      .feature-list li::before {
-        content: "•";
-        color: var(--accent-3);
-        margin-right: 0.6rem;
-      }
-
-      .why-grid {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: var(--space-md);
-        margin-bottom: var(--space-2xl);
-      }
-
-      .why-card,
-      .panel {
+      .note {
         border: 1px solid var(--line-soft);
         border-radius: var(--radius-md);
         background: var(--surface-1);
+        padding: var(--space-md);
         box-shadow: var(--shadow-soft);
-        backdrop-filter: blur(16px);
       }
 
-      .why-card {
-        padding: var(--space-lg);
+      .note p,
+      .note li,
+      .panel p,
+      .panel li {
+        color: var(--text-muted);
+        line-height: 1.62;
       }
 
-      .why-card strong {
-        display: block;
-        margin-bottom: var(--space-xs);
-        color: var(--text-strong);
-        font-size: 1.02rem;
+      .note-list {
+        display: grid;
+        gap: var(--space-xs);
+        margin: 0;
+        padding-left: 1rem;
       }
 
       .workspace {
         display: grid;
-        grid-template-columns: minmax(0, 1.35fr) minmax(320px, 0.95fr);
+        grid-template-columns: minmax(0, 1.25fr) minmax(300px, 0.85fr);
         gap: var(--space-xl);
       }
 
       .panel {
+        border: 1px solid var(--line-soft);
+        border-radius: var(--radius-md);
+        background: var(--surface-1);
         padding: var(--space-lg);
+        box-shadow: var(--shadow-soft);
       }
 
       .stack {
@@ -204,9 +159,21 @@
         gap: var(--space-lg);
       }
 
+      .section-header {
+        display: grid;
+        gap: var(--space-xs);
+      }
+
       .sample-row {
         display: grid;
-        gap: var(--space-sm);
+        gap: var(--space-xs);
+      }
+
+      .sample-label,
+      label {
+        color: var(--text-base);
+        font-size: 0.92rem;
+        font-weight: 650;
       }
 
       .sample-buttons {
@@ -217,35 +184,26 @@
 
       .sample-button,
       .run-button,
-      .secondary-button {
+      .ghost-button {
         border: 1px solid transparent;
-        transition: transform 180ms ease, border-color 180ms ease, background-color 180ms ease, color 180ms ease, box-shadow 180ms ease;
+        transition: background-color 180ms ease, border-color 180ms ease, color 180ms ease, transform 180ms ease;
       }
 
       .sample-button {
         border-radius: 999px;
-        padding: 0.65rem 1rem;
-        background: rgba(20, 31, 52, 0.84);
+        background: rgba(20, 31, 47, 0.86);
         color: var(--text-muted);
         cursor: pointer;
+        padding: 0.62rem 0.94rem;
       }
 
       .sample-button:hover,
       .sample-button:focus-visible,
       .sample-button[aria-pressed="true"] {
-        border-color: rgba(120, 168, 255, 0.5);
-        background: rgba(40, 62, 101, 0.92);
+        border-color: rgba(122, 167, 255, 0.44);
+        background: rgba(35, 52, 78, 0.94);
         color: var(--text-strong);
-        transform: translateY(-1px);
         outline: none;
-      }
-
-      label {
-        display: grid;
-        gap: 0.5rem;
-        color: var(--text-base);
-        font-size: 0.95rem;
-        font-weight: 600;
       }
 
       textarea,
@@ -253,37 +211,37 @@
       select {
         width: 100%;
         border-radius: 1rem;
-        border: 1px solid rgba(154, 177, 230, 0.18);
-        background: rgba(10, 18, 32, 0.92);
+        border: 1px solid rgba(171, 188, 221, 0.18);
+        background: rgba(10, 17, 30, 0.96);
         color: var(--text-strong);
         padding: 0.9rem 1rem;
         font: inherit;
-        transition: border-color 180ms ease, box-shadow 180ms ease, background-color 180ms ease;
+        transition: border-color 180ms ease, box-shadow 180ms ease;
+      }
+
+      textarea {
+        min-height: 20rem;
+        resize: vertical;
+        line-height: 1.65;
       }
 
       textarea:focus,
       input:focus,
       select:focus,
+      .sample-button:focus,
       .run-button:focus,
-      .secondary-button:focus,
-      .sample-button:focus {
+      .ghost-button:focus {
         outline: none;
       }
 
       textarea:focus-visible,
       input:focus-visible,
       select:focus-visible,
+      .sample-button:focus-visible,
       .run-button:focus-visible,
-      .secondary-button:focus-visible,
-      .sample-button:focus-visible {
-        border-color: rgba(120, 168, 255, 0.58);
-        box-shadow: 0 0 0 3px rgba(120, 168, 255, 0.18);
-      }
-
-      textarea {
-        min-height: 22rem;
-        resize: vertical;
-        line-height: 1.6;
+      .ghost-button:focus-visible {
+        border-color: rgba(122, 167, 255, 0.56);
+        box-shadow: 0 0 0 3px rgba(122, 167, 255, 0.15);
       }
 
       .control-grid {
@@ -292,69 +250,66 @@
         gap: var(--space-sm);
       }
 
+      .field {
+        display: grid;
+        gap: 0.45rem;
+      }
+
       .button-row {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--space-sm);
         align-items: center;
+        gap: var(--space-sm);
       }
 
       .run-button {
         border-radius: 999px;
-        padding: 0.95rem 1.25rem;
-        background: linear-gradient(135deg, var(--accent-1), var(--accent-2));
-        color: #06111f;
+        background: linear-gradient(135deg, var(--accent), var(--accent-strong));
+        color: #08101b;
+        cursor: pointer;
         font: inherit;
         font-weight: 800;
-        cursor: pointer;
-        box-shadow: 0 18px 35px rgba(83, 224, 189, 0.18);
+        padding: 0.92rem 1.22rem;
       }
 
       .run-button:hover,
-      .run-button:focus-visible {
+      .run-button:focus-visible,
+      .ghost-button:hover,
+      .ghost-button:focus-visible {
         transform: translateY(-1px);
-        box-shadow: 0 20px 42px rgba(83, 224, 189, 0.26);
       }
 
-      .secondary-button {
+      .ghost-button {
         border-radius: 999px;
-        padding: 0.95rem 1.15rem;
-        background: rgba(15, 26, 45, 0.88);
+        background: rgba(19, 29, 47, 0.92);
         color: var(--text-base);
+        cursor: pointer;
         font: inherit;
         font-weight: 700;
-        cursor: pointer;
-      }
-
-      .secondary-button:hover,
-      .secondary-button:focus-visible {
-        border-color: rgba(120, 168, 255, 0.4);
-        transform: translateY(-1px);
+        padding: 0.92rem 1.12rem;
       }
 
       .status {
-        margin: 0;
         color: var(--text-subtle);
-        font-size: 0.95rem;
+        font-size: 0.92rem;
       }
 
-      .stats-grid {
+      .stats {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: var(--space-sm);
       }
 
-      .stat-card {
+      .stat {
+        border: 1px solid rgba(171, 188, 221, 0.13);
         border-radius: var(--radius-sm);
-        border: 1px solid var(--line-soft);
-        background: rgba(14, 22, 39, 0.9);
-        padding: 0.95rem 1rem;
+        background: var(--surface-2);
+        padding: 0.9rem 0.95rem;
       }
 
       .stat-label {
-        display: block;
         color: var(--text-subtle);
-        font-size: 0.8rem;
+        font-size: 0.78rem;
         text-transform: uppercase;
         letter-spacing: 0.06em;
       }
@@ -363,16 +318,23 @@
         display: block;
         margin-top: 0.35rem;
         color: var(--text-strong);
-        font-size: 1.25rem;
-        font-weight: 750;
+        font-size: 1.15rem;
+        font-weight: 760;
       }
 
-      .result-list {
+      .score-note {
+        border-radius: var(--radius-sm);
+        background: rgba(122, 167, 255, 0.08);
+        color: var(--text-muted);
+        padding: 0.82rem 0.9rem;
+      }
+
+      .results {
         display: grid;
         gap: var(--space-xs);
+        list-style: none;
         margin: 0;
         padding: 0;
-        list-style: none;
       }
 
       .result-item {
@@ -380,120 +342,81 @@
         grid-template-columns: minmax(0, 1fr) auto;
         gap: var(--space-sm);
         align-items: start;
+        border: 1px solid rgba(171, 188, 221, 0.13);
         border-radius: var(--radius-sm);
-        border: 1px solid rgba(149, 172, 226, 0.13);
-        background: rgba(14, 24, 41, 0.76);
-        padding: 0.95rem 1rem;
+        background: var(--surface-2);
+        padding: 0.85rem 0.92rem;
       }
 
-      .result-item strong {
+      .result-title {
         color: var(--text-strong);
-        font-size: 1rem;
-        font-weight: 700;
+        font-size: 0.98rem;
+        font-weight: 680;
       }
 
       .result-meta {
-        margin-top: 0.35rem;
+        margin-top: 0.28rem;
         color: var(--text-subtle);
-        font-size: 0.86rem;
+        font-size: 0.84rem;
       }
 
       .score {
         display: inline-flex;
         align-items: center;
         justify-content: center;
-        min-width: 6.4rem;
+        min-width: 6rem;
         border-radius: 999px;
-        background: rgba(83, 224, 189, 0.12);
-        color: #8ff0d8;
+        background: var(--accent-soft);
+        color: #8fd0c2;
         font-size: 0.9rem;
-        font-weight: 750;
+        font-weight: 740;
         font-variant-numeric: tabular-nums;
-        padding: 0.55rem 0.8rem;
-      }
-
-      .note-grid {
-        display: grid;
-        gap: var(--space-sm);
-      }
-
-      .note-card {
-        border-radius: var(--radius-sm);
-        border: 1px solid rgba(149, 172, 226, 0.14);
-        background: rgba(13, 21, 37, 0.84);
-        padding: var(--space-md);
-      }
-
-      .note-card strong {
-        display: block;
-        margin-bottom: 0.4rem;
-        color: var(--text-strong);
+        padding: 0.48rem 0.76rem;
       }
 
       .highlighted {
-        min-height: 17rem;
-        border-radius: var(--radius-md);
-        border: 1px solid rgba(149, 172, 226, 0.14);
-        background: rgba(10, 18, 32, 0.92);
+        min-height: 16rem;
+        border: 1px solid rgba(171, 188, 221, 0.13);
+        border-radius: var(--radius-sm);
+        background: rgba(10, 17, 30, 0.96);
         color: var(--text-base);
-        padding: 1rem 1.1rem;
-        line-height: 1.8;
+        padding: 0.95rem 1rem;
+        line-height: 1.78;
       }
 
       mark {
-        border-radius: 0.45rem;
-        background: rgba(255, 215, 121, 0.3);
+        background: var(--mark);
         color: var(--text-strong);
-        padding: 0.06rem 0.22rem;
-        box-decoration-break: clone;
-        -webkit-box-decoration-break: clone;
+        border-radius: 0.4rem;
+        padding: 0.05rem 0.2rem;
       }
 
       .footer-meta {
         display: flex;
         flex-wrap: wrap;
-        gap: var(--space-sm) var(--space-md);
+        gap: var(--space-xs) var(--space-md);
         color: var(--text-subtle);
         font-size: 0.88rem;
       }
 
+      .footer-meta a {
+        color: #9ec3ff;
+      }
+
       code,
       .kbd {
-        border-radius: 0.55rem;
-        background: rgba(19, 29, 50, 0.84);
-        color: #d8e4ff;
-        padding: 0.15rem 0.45rem;
-        font-family: ui-monospace, SFMono-Regular, SFMonoRegular, Menlo, Consolas, monospace;
+        border-radius: 0.45rem;
+        background: rgba(19, 29, 48, 0.82);
+        color: var(--text-strong);
+        font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
         font-size: 0.92em;
+        padding: 0.12rem 0.42rem;
       }
 
-      a {
-        color: #9fc5ff;
-        text-decoration-color: rgba(159, 197, 255, 0.35);
-      }
-
-      a:hover,
-      a:focus-visible {
-        color: #cde0ff;
-      }
-
-      .muted {
-        color: var(--text-subtle);
-      }
-
-      @media (max-width: 1040px) {
+      @media (max-width: 980px) {
         .hero,
-        .workspace,
-        .why-grid {
+        .workspace {
           grid-template-columns: 1fr;
-        }
-
-        .hero {
-          gap: var(--space-xl);
-        }
-
-        .stats-grid {
-          grid-template-columns: repeat(3, minmax(0, 1fr));
         }
       }
 
@@ -503,7 +426,7 @@
         }
 
         .control-grid,
-        .stats-grid {
+        .stats {
           grid-template-columns: 1fr;
         }
 
@@ -520,10 +443,10 @@
         *,
         *::before,
         *::after {
-          scroll-behavior: auto !important;
-          transition-duration: 0.01ms !important;
           animation-duration: 0.01ms !important;
           animation-iteration-count: 1 !important;
+          scroll-behavior: auto !important;
+          transition-duration: 0.01ms !important;
         }
       }
     </style>
@@ -531,77 +454,67 @@
   <body>
     <main>
       <section class="hero" aria-labelledby="hero-title">
-        <div>
-          <span class="eyebrow">YAKE in the browser</span>
-          <h1 id="hero-title">See what makes Yaket different in under a minute.</h1>
+        <div class="hero-copy">
+          <span class="eyebrow">Yaket in the browser</span>
+          <h1 id="hero-title">A simpler demo of what YAKE is actually good at.</h1>
           <p class="lead">
-            Yaket is a JavaScript port of YAKE: a <strong>single-document</strong>,
-            <strong>collection-independent</strong> keyword extraction approach that uses
-            <strong>local statistical features</strong> instead of embeddings, training data, or external corpora.
+            Yaket is a TypeScript port of YAKE for <strong>Single-document</strong> keyword extraction.
+            It works with <strong>No training corpus</strong> and relies on <strong>Local statistical features</strong>
+            like frequency, position, spread, casing, and co-occurrence instead of embeddings or external corpora.
           </p>
         </div>
-        <aside class="hero-notes">
-          <div class="callout">
-            <h2>Why YAKE feels different</h2>
-            <ul class="feature-list">
-              <li><strong>Single-document:</strong> it works from the text in front of it, not a training set.</li>
-              <li><strong>No training corpus:</strong> no embeddings, no vector store, no model checkpoint.</li>
-              <li><strong>Local statistical features:</strong> frequency, position, spread, casing, and co-occurrence drive the ranking.</li>
+
+        <div class="hero-notes">
+          <div class="note">
+            <h2>Why this page matters</h2>
+            <ul class="note-list">
+              <li>It shows YAKE on samples where phrase extraction is more legible than the old short Kaggle snippet.</li>
+              <li>It explains how to read the ranking instead of assuming users already know the YAKE scoring convention.</li>
+              <li>It keeps the browser story visible without turning the demo into a product landing page.</li>
             </ul>
           </div>
-          <div class="callout">
-            <h2>How to read the output</h2>
+          <div class="note">
+            <h2>What to look for</h2>
             <p>
-              <strong>Lower score means more relevant.</strong> Each result also shows
-              <span class="kbd">occurrences</span> and <span class="kbd">sentence spread</span>
-              so you can judge whether a phrase is specific, repeated, or broadly distributed.
+              Lower score means more relevant. Check the top phrases, their <span class="kbd">occurrences</span>,
+              and their <span class="kbd">sentence spread</span> to decide whether the ranking is surfacing stable
+              concepts or short-lived fragments.
             </p>
           </div>
-        </aside>
-      </section>
-
-      <section class="why-grid" aria-label="What Yaket is good at">
-        <article class="why-card">
-          <strong>Fast enough for client-side use</strong>
-          <p>Runs directly in the browser via the published npm package. Useful for browser extensions, docs tooling, and no-backend tagging flows.</p>
-        </article>
-        <article class="why-card">
-          <strong>Closer to upstream YAKE</strong>
-          <p>Yaket tracks the Python YAKE pipeline and publishes parity benchmarks, rather than just shipping a vague “keyword-ish” heuristic.</p>
-        </article>
-        <article class="why-card">
-          <strong>Good fit for indexing and tagging</strong>
-          <p>Works well for article metadata, search indexing, newsletter topics, and RAG chunk enrichment when you want a deterministic non-LLM baseline.</p>
-        </article>
+        </div>
       </section>
 
       <section class="workspace" aria-label="Interactive Yaket playground">
         <section class="panel stack" aria-labelledby="playground-title">
-          <div>
-            <h2 id="playground-title">Interactive extractor</h2>
-            <p class="muted">Use a better sample than the old Kaggle snippet. Short, fragment-prone text makes YAKE look worse than it is.</p>
+          <div class="section-header">
+            <h2 id="playground-title">Try a sample</h2>
+            <p class="muted">Use a document with enough context. YAKE is single-document, but it still benefits from real prose.</p>
           </div>
 
           <div class="sample-row">
-            <label>Try a sample</label>
             <div class="sample-buttons" id="sample-buttons" role="group" aria-label="Sample texts"></div>
           </div>
 
-          <label for="input">Input text
+          <label class="field" for="input">
+            <span class="sample-label">Input text</span>
             <textarea id="input"></textarea>
           </label>
 
           <div class="control-grid">
-            <label for="language">Language
+            <label class="field" for="language">
+              <span>Language</span>
               <input id="language" value="en" autocomplete="off" />
             </label>
-            <label for="top">Top results
+            <label class="field" for="top">
+              <span>Top results</span>
               <input id="top" type="number" min="1" value="10" />
             </label>
-            <label for="ngram">Max n-gram
+            <label class="field" for="ngram">
+              <span>Max n-gram</span>
               <input id="ngram" type="number" min="1" value="3" />
             </label>
-            <label for="dedupFunc">Dedup function
+            <label class="field" for="dedupFunc">
+              <span>Dedup function</span>
               <select id="dedupFunc">
                 <option value="seqm">seqm</option>
                 <option value="levs">levs</option>
@@ -611,59 +524,51 @@
           </div>
 
           <div class="button-row">
-            <button class="run-button" id="run">Extract keywords</button>
-            <button class="secondary-button" id="copy-results" type="button">Copy top results</button>
+            <button class="run-button" id="run">Extract keyphrases</button>
+            <button class="ghost-button" id="copy-results" type="button">Copy results</button>
             <p class="status" id="status">Ready.</p>
           </div>
         </section>
 
         <aside class="stack">
           <section class="panel stack">
-            <div>
-              <h2>Result summary</h2>
-              <p class="muted">Use this as a sanity check: if the top phrases are awkward, try a longer sample, smaller <code>n</code>, or another dedup function.</p>
+            <div class="section-header">
+              <h2>Results</h2>
+              <p class="score-note">Lower score means more relevant. YAKE returns ranked keyphrases, not named entities.</p>
             </div>
-            <div class="stats-grid" aria-label="Result summary metrics">
-              <div class="stat-card">
+
+            <div class="stats" aria-label="Result summary">
+              <div class="stat">
                 <span class="stat-label">Top phrase</span>
                 <span class="stat-value" id="top-keyword">—</span>
               </div>
-              <div class="stat-card">
+              <div class="stat">
                 <span class="stat-label">Best score</span>
                 <span class="stat-value" id="best-score">—</span>
               </div>
-              <div class="stat-card">
+              <div class="stat">
                 <span class="stat-label">Results</span>
                 <span class="stat-value" id="result-count">—</span>
               </div>
             </div>
-            <ol class="result-list" id="results"></ol>
+
+            <ol class="results" id="results"></ol>
           </section>
 
           <section class="panel stack">
-            <div>
+            <div class="section-header">
               <h2>Highlighted text</h2>
-              <p class="muted">Highlighted phrases show what Yaket actually surfaced in the source text, not just a detached ranked list.</p>
+              <p class="muted">This helps explain why a phrase ranked well: you can see it in context instead of in isolation.</p>
             </div>
             <div class="highlighted" id="highlighted" aria-live="polite"></div>
           </section>
 
           <section class="panel stack">
-            <h2>What this demo proves</h2>
-            <div class="note-grid">
-              <div class="note-card">
-                <strong>Against TF-IDF</strong>
-                <p>YAKE uses richer local features than raw term counts, so it can surface phrases that feel more document-specific.</p>
-              </div>
-              <div class="note-card">
-                <strong>Against RAKE</strong>
-                <p>YAKE is less dependent on stopword chunking and uses a more nuanced scoring pipeline.</p>
-              </div>
-              <div class="note-card">
-                <strong>Against KeyBERT</strong>
-                <p>YAKE avoids embedding-model cost and works as a deterministic, lightweight baseline that can run anywhere.</p>
-              </div>
-            </div>
+            <h2>Where Yaket fits</h2>
+            <p class="muted">
+              Good for article tagging, search indexing, newsletter topic extraction, and lightweight chunk metadata.
+              If you want semantic similarity instead of deterministic phrase extraction, compare it with embedding-heavy tools like KeyBERT.
+            </p>
             <div class="footer-meta">
               <span>Package: <a href="https://www.npmjs.com/package/@ade_oshineye/yaket">npm</a></span>
               <span>Source: <a href="https://github.com/adewale/yaket">GitHub</a></span>
@@ -679,15 +584,6 @@
 
       const SAMPLE_PRESETS = [
         {
-          id: "news",
-          label: "News article",
-          language: "en",
-          ngram: 3,
-          top: 10,
-          dedupFunc: "seqm",
-          text: `Google is acquiring data science community Kaggle. Sources tell us that Google is acquiring Kaggle, a platform that hosts data science and machine learning competitions. Details about the transaction remain somewhat vague, but the acquisition would give Google access to one of the largest communities of practicing data scientists and machine learning competitors.`
-        },
-        {
           id: "abstract",
           label: "Scientific abstract",
           language: "en",
@@ -695,6 +591,15 @@
           top: 10,
           dedupFunc: "seqm",
           text: `We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.`
+        },
+        {
+          id: "news",
+          label: "News article",
+          language: "en",
+          ngram: 3,
+          top: 10,
+          dedupFunc: "seqm",
+          text: `Google is acquiring data science community Kaggle. Sources tell us that Google is acquiring Kaggle, a platform that hosts data science and machine learning competitions. Details about the transaction remain somewhat vague, but the acquisition would give Google access to one of the largest communities of practicing data scientists and machine learning competitors.`
         },
         {
           id: "newsletter",
@@ -733,6 +638,19 @@
 
       let activeSampleId = SAMPLE_PRESETS[0].id;
 
+      function buildSampleButtons() {
+        sampleButtons.replaceChildren(...SAMPLE_PRESETS.map((sample) => {
+          const button = document.createElement("button");
+          button.className = "sample-button";
+          button.type = "button";
+          button.dataset.sample = sample.id;
+          button.textContent = sample.label;
+          button.setAttribute("aria-pressed", String(sample.id === activeSampleId));
+          button.addEventListener("click", () => applySample(sample));
+          return button;
+        }));
+      }
+
       function applySample(sample) {
         activeSampleId = sample.id;
         input.value = sample.text;
@@ -746,19 +664,6 @@
         }
 
         render();
-      }
-
-      function buildSampleButtons() {
-        sampleButtons.replaceChildren(...SAMPLE_PRESETS.map((sample) => {
-          const button = document.createElement("button");
-          button.className = "sample-button";
-          button.type = "button";
-          button.dataset.sample = sample.id;
-          button.textContent = sample.label;
-          button.setAttribute("aria-pressed", String(sample.id === activeSampleId));
-          button.addEventListener("click", () => applySample(sample));
-          return button;
-        }));
       }
 
       function render() {
@@ -780,7 +685,8 @@
           li.className = "result-item";
 
           const content = document.createElement("div");
-          const title = document.createElement("strong");
+          const title = document.createElement("div");
+          title.className = "result-title";
           title.textContent = `${index + 1}. ${item.keyword}`;
           const meta = document.createElement("div");
           meta.className = "result-meta";
@@ -802,8 +708,8 @@
       }
 
       copyResults.addEventListener("click", async () => {
-        const items = Array.from(results.querySelectorAll("strong")).map((node) => node.textContent?.replace(/^\d+\.\s*/, "") ?? "").filter(Boolean);
-        await navigator.clipboard.writeText(items.join("\n"));
+        const lines = Array.from(results.querySelectorAll(".result-title")).map((node) => node.textContent?.replace(/^\d+\.\s*/, "") ?? "").filter(Boolean);
+        await navigator.clipboard.writeText(lines.join("\n"));
         status.textContent = "Top results copied to clipboard.";
       });
 
