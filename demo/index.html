@@ -311,22 +311,6 @@
         padding: 0.45rem 0.75rem;
       }
 
-      .highlighted {
-        min-height: 15rem;
-        border: 1px solid var(--line);
-        border-radius: 0.8rem;
-        background: #0d1422;
-        padding: 0.9rem;
-        line-height: 1.75;
-      }
-
-      mark {
-        border-radius: 0.35rem;
-        background: var(--mark);
-        color: var(--text);
-        padding: 0.04rem 0.18rem;
-      }
-
       .footer-links {
         display: flex;
         flex-wrap: wrap;
@@ -422,7 +406,6 @@
 
           <div class="button-row">
             <button class="primary-button" id="run">Compare</button>
-            <button class="secondary-button" id="copy-results" type="button">Copy Yaket results</button>
             <span class="status" id="status">Ready.</span>
           </div>
         </section>
@@ -430,8 +413,8 @@
         <section class="stack">
           <section class="panel stack">
             <div class="section-header">
-              <h2>Summary</h2>
-              <p class="muted">Use this as a quick read: top phrase, best score, and overlap with the TF-IDF baseline.</p>
+              <h2>At a glance</h2>
+              <p class="muted">Top phrase, best score, and overlap with the TF-IDF baseline.</p>
             </div>
 
             <dl class="summary-grid">
@@ -484,14 +467,6 @@
             </div>
           </section>
 
-          <section class="panel stack">
-            <div class="section-header">
-              <h2>Highlighted text</h2>
-              <p class="muted">This helps show why Yaket surfaced a phrase instead of leaving it as an abstract list item.</p>
-            </div>
-            <div class="highlighted" id="highlighted" aria-live="polite"></div>
-          </section>
-
           <section class="panel footer-links">
             <span>Package: <a href="https://www.npmjs.com/package/@ade_oshineye/yaket">npm</a></span>
             <span>Source: <a href="https://github.com/adewale/yaket">GitHub</a></span>
@@ -502,13 +477,7 @@
     </main>
 
     <script type="module">
-      import {
-        TextHighlighter,
-        extractKeywordDetails,
-        loadStopwords,
-        splitSentences,
-        tokenizeWords,
-      } from "https://esm.sh/@ade_oshineye/yaket@0.4.0?bundle";
+      import { extractKeywordDetails, loadStopwords, splitSentences, tokenizeWords } from "https://esm.sh/@ade_oshineye/yaket@0.4.0?bundle";
 
       const SAMPLE_PRESETS = [
         {
@@ -570,9 +539,7 @@
       const yaketResults = document.getElementById("yaket-results");
       const tfidfResults = document.getElementById("tfidf-results");
       const overlap = document.getElementById("overlap");
-      const highlighted = document.getElementById("highlighted");
       const sampleButtons = document.getElementById("sample-buttons");
-      const copyResults = document.getElementById("copy-results");
       const run = document.getElementById("run");
 
       let activeSampleId = SAMPLE_PRESETS[0].id;
@@ -706,16 +673,8 @@
           : [Object.assign(document.createElement("span"), { className: "pill", textContent: "No overlap in the current top results" })]
         ));
 
-        const highlighter = new TextHighlighter({ maxNgramSize: maxNgram });
-        highlighted.innerHTML = highlighter.highlight(text, yaket.slice(0, Math.min(yaket.length, 8)));
-        status.textContent = `${yaket.length} Yaket keyphrases and ${tfidf.length} TF-IDF phrases compared. Lower score means more relevant.`;
+         status.textContent = `${yaket.length} Yaket keyphrases and ${tfidf.length} TF-IDF phrases compared. Lower score means more relevant.`;
       }
-
-      copyResults.addEventListener("click", async () => {
-        const lines = Array.from(yaketResults.querySelectorAll(".result-title")).map((node) => node.textContent?.replace(/^\d+\.\s*/, "") ?? "").filter(Boolean);
-        await navigator.clipboard.writeText(lines.join("\n"));
-        status.textContent = "Yaket results copied to clipboard.";
-      });
 
       run.addEventListener("click", render);
       buildSampleButtons();

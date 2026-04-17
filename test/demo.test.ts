@@ -12,13 +12,14 @@ describe("demo page", () => {
     expect(demoHtml).toContain("Local statistical features");
   });
 
-  it("includes curated example presets and a highlighted-text view", () => {
-    expect(demoHtml).toContain("Try a sample");
+  it("uses a single simple sample picker and conventional controls", () => {
+    expect(demoHtml).toContain("Sample text");
+    expect(demoHtml).toContain("select id=");
     expect(demoHtml).toContain("News article");
     expect(demoHtml).toContain("Scientific abstract");
     expect(demoHtml).toContain("Newsletter");
     expect(demoHtml).toContain("Product docs");
-    expect(demoHtml).toContain("Highlighted text");
+    expect(demoHtml).toContain("Compare");
   });
 
   it("shows a direct Yaket versus TF-IDF comparison", () => {
@@ -33,12 +34,15 @@ describe("demo page", () => {
 
   it("documents how to read the ranking and score", () => {
     expect(demoHtml).toContain("Lower score means more relevant");
-    expect(demoHtml).toContain("occurrences");
-    expect(demoHtml).toContain("sentence spread");
+    expect(demoHtml).toContain("Compare Yaket and TF-IDF on the same text");
   });
 
-  it("drops the old meta-commentary panels", () => {
+  it("drops extra chrome and secondary sections", () => {
     expect(demoHtml).not.toContain("Why this page matters");
     expect(demoHtml).not.toContain("What this demo proves");
+    expect(demoHtml).not.toContain("Highlighted text");
+    expect(demoHtml).not.toContain("Copy Yaket results");
+    expect(demoHtml).not.toContain("Summary");
+    expect(demoHtml).not.toContain("Where Yaket fits");
   });
 });
