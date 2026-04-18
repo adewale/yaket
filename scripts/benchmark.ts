@@ -292,7 +292,7 @@ function renderReport(input: {
     "",
     "## Notes",
     "",
-    "- Yaket should be judged primarily by closeness to Python YAKE plus downstream Bobbin topic quality.",
+    "- Yaket is best judged primarily by closeness to Python YAKE plus downstream Bobbin topic quality.",
     "- The TF-IDF baseline uses the same stopword list and up-to-3-gram candidate generation for a cleaner comparison.",
     "- The Bobbin baseline is derived from the original `src/services/yake.ts` implementation.",
   ].join("\n");
