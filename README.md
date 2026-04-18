@@ -24,6 +24,7 @@ Yaket aims to preserve the core YAKE behavior where practical, while adapting th
 - **Upstream-shaped YAKE core**: `KeywordExtractor`, `DataCore`, `SingleWord`, `ComposedWord`, and the core scoring/dedup flow are implemented in TypeScript.
 - **Edge-safe extraction path**: stopwords are bundled, and the extraction core avoids Node-only runtime dependencies.
 - **Pipeline-friendly API**: one-shot extraction, reusable extractor instances, [Bobbin](https://github.com/adewale/bobbin)-compatible adapter output, and document-oriented helpers are all available.
+- **Surface-form preserving results**: returned `keyword` values keep the observed case from the source text, while `normalizedKeyword` carries the normalized matching form for downstream logic.
 - **Verification-heavy**: regression fixtures, Python parity checks, property-based tests, Cloudflare runtime tests, and a benchmark harness are checked in.
 
 ## 30-Second Summary
@@ -160,6 +161,8 @@ type KeywordResult = {
   sentenceIds: number[];
 };
 ```
+
+`keyword` preserves the source-text surface form; `normalizedKeyword` is the normalized comparison key used for deduplication and downstream matching.
 
 ### Document-oriented pipelines
 

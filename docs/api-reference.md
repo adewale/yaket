@@ -18,6 +18,8 @@ type KeywordScore = [keyword: string, score: number]
 
 Use this when you want the simplest YAKE-style output.
 
+Returned `keyword` strings preserve the observed surface case from the input text.
+
 ### `extractKeywordDetails(text, options?)`
 
 Returns richer keyword metadata:
@@ -34,6 +36,9 @@ type YakeResult = {
 ```
 
 Use this when you need normalized forms, sentence spread, or downstream weighting logic.
+
+- `keyword`: original surface form as it appeared in the input text
+- `normalizedKeyword`: normalized lowercase form used for matching, deduplication, and downstream comparison
 
 ### `KeywordExtractor`
 

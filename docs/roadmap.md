@@ -66,7 +66,8 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
    - mixed alphanumeric tokens
    - quoted text and parentheticals
 3. Tighten the remaining `seqm` edge cases where heuristic similarity can still drift from Python YAKE.
-4. Add more parity checks for near-tie ranking stability and floating-point tolerance handling.
+4. Continue expanding parity checks for floating-point tolerance handling and multilingual ranking stability.
+   Note: the tracked English near-tie ordering regressions are now covered by regression tests.
 5. Expand multilingual validation beyond the current smoke/regression cases.
    Status: deferred to `TODO.md`.
 

@@ -264,9 +264,33 @@ function toKeywordResult(candidate: ComposedWord): KeywordResult {
 }
 
 function compareCandidates(left: ComposedWord, right: ComposedWord): number {
-  if (left.h !== right.h) {
-    return left.h - right.h;
+  const scoreDelta = left.h - right.h;
+  if (Math.abs(scoreDelta) > 1e-15) {
+    return scoreDelta;
+  }
+
+  if (isSlidingNgramTie(left, right)) {
+    return right.order - left.order;
   }
 
   return left.order - right.order;
+}
+
+function isSlidingNgramTie(left: ComposedWord, right: ComposedWord): boolean {
+  if (left.size !== right.size || left.size < 3) {
+    return false;
+  }
+
+  const leftWords = left.uniqueKw.split(" ");
+  const rightWords = right.uniqueKw.split(" ");
+  if (leftWords.length !== rightWords.length || leftWords.length < 3) {
+    return false;
+  }
+
+  const leftTail = leftWords.slice(1).join(" ");
+  const rightHead = rightWords.slice(0, -1).join(" ");
+  const rightTail = rightWords.slice(1).join(" ");
+  const leftHead = leftWords.slice(0, -1).join(" ");
+
+  return leftTail === rightHead || rightTail === leftHead;
 }

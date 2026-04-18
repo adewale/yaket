@@ -54,6 +54,19 @@ describe("edge cases", () => {
     expect(tokenizeSentences("Mr. and Mrs. Doe arrived. They stayed.")).toHaveLength(2);
     expect(tokenizeSentences("The U.S. economy grew. Markets rose.")).toHaveLength(2);
   });
+
+  it("splits sentences even when the next sentence starts lowercase", () => {
+    expect(tokenizeSentences("Python is great. python tutorial.")).toHaveLength(2);
+  });
+
+  it("matches upstream ordering for near-tie ngrams", () => {
+    const actual = new KeywordExtractor({ lan: "en" }).extractKeywords("Google Kaggle data science");
+
+    expect(actual.slice(0, 2).map(([keyword]) => keyword)).toEqual([
+      "Kaggle data science",
+      "Google Kaggle data",
+    ]);
+  });
 });
 
 describe("similarity helpers", () => {

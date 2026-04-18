@@ -2,6 +2,26 @@
 
 All notable changes to this project will be documented in this file.
 
+## Unreleased
+
+Parity, ordering, and documentation consistency update.
+
+### Changed
+
+- clarified that `keyword` preserves source-text surface case while `normalizedKeyword` remains the normalized comparison key
+- updated README, API reference, algorithm-drift notes, and TODO tracking so the current parity position is described consistently
+
+### Fixed
+
+- sentence splitting drift that incorrectly merged sentences when the next sentence started with a lowercase token
+- near-tie ordering for adjacent sliding 3-gram candidates such as `Kaggle data science` vs `Google Kaggle data`
+- documentation drift around known ordering issues, which are now fixed for the tracked English parity cases
+
+### Notes
+
+- the remaining tracked multilingual parity gap is the Portuguese ranking drift captured in upstream `test_n3_PT`
+- preserving original keyword case is intentional behavior in Yaket, even where upstream YAKE lowercases output in some no-dedup paths
+
 ## 0.4.0 - 2026-04-16
 
 Extensibility, documentation, and benchmark expansion release.

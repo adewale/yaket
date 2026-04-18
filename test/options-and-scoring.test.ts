@@ -41,6 +41,18 @@ describe("canonical options surface", () => {
     const result = extractKeywordDetails("Machine learning improves retrieval.", options);
     expect(result.length).toBeGreaterThan(0);
   });
+
+  it("preserves surface case separately from normalized keywords", () => {
+    const result = extractKeywordDetails("Google Google Kaggle", {
+      language: "en",
+      n: 1,
+      top: 3,
+      dedupLim: 1,
+    });
+
+    expect(result[0]?.keyword).toBe("Kaggle");
+    expect(result[0]?.normalizedKeyword).toBe("kaggle");
+  });
 });
 
 describe("first-class scoring hooks", () => {

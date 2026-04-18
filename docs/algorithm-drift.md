@@ -17,8 +17,7 @@ However, `seqm` is still the biggest dedup parity risk because it is heuristic r
 Known consequences:
 
 1. near-threshold dedup decisions can still differ in edge cases
-2. result ordering can still shift for near-tie candidates
-3. mutation testing shows this area is still more brittle than the core scoring path
+2. mutation testing shows this area is still more brittle than the core scoring path
 
 ### 2. `segtok` replacement
 
@@ -32,6 +31,8 @@ Known consequences:
 2. multilingual and Unicode-heavy texts may drift more than English prose
 3. exact token boundaries can differ even when high-level results remain close
 
+Recent parity work closed one concrete sentence-boundary gap for lowercase sentence starts, but broader tokenizer parity with `segtok` is still not finished.
+
 ### 3. Floating-point differences
 
 Yaket and Python YAKE can differ in tiny score rounding details across runtimes.
@@ -39,6 +40,10 @@ Yaket and Python YAKE can differ in tiny score rounding details across runtimes.
 This is why some tests use a very small score tolerance instead of strict equality.
 
 ## What Is Not A Drift Point
+
+Yaket intentionally preserves the observed surface form in `keyword` while exposing `normalizedKeyword` for deduplication and downstream matching.
+
+This is a documented API choice, not an accidental parity gap, even though some upstream YAKE paths return lowercased keywords.
 
 The current Yaket implementation does **not** use the old Bobbin-style substring-only dedup approach.
 
@@ -57,6 +62,7 @@ When Yaket differs from upstream Python YAKE, interpret the difference in this o
 1. tokenization or sentence-boundary drift
 2. `seqm` dedup drift
 3. tiny floating-point drift
+4. intentional API differences such as surface-form preservation
 
 ## Current Position
 
@@ -64,6 +70,11 @@ On the checked-in Komoroske benchmark:
 
 - Yaket and Python YAKE overlap strongly
 - Yaket is materially closer to upstream YAKE than the old Bobbin baseline
+
+On the currently tracked upstream unit-test examples:
+
+- the previously identified English near-tie ordering cases are fixed
+- a Portuguese ranking drift remains in `test_n3_PT`
 
 ## Deferred Follow-up
 

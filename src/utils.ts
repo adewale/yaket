@@ -155,11 +155,6 @@ function shouldSplitSentence(text: string, punctuationIndex: number, nextIndex: 
     return false;
   }
 
-  const nextWord = getNextWord(text, nextIndex);
-  if (nextWord.length > 0 && isLower(nextWord[0]!)) {
-    return false;
-  }
-
   return nextIndex > punctuationIndex + 1;
 }
 
@@ -196,10 +191,6 @@ function getNextWord(text: string, startIndex: number): string {
 
 function isWordChar(char: string): boolean {
   return /^[\p{L}\p{M}\p{Nd}]$/u.test(char);
-}
-
-function isLower(char: string): boolean {
-  return char.toLowerCase() === char && char.toUpperCase() !== char;
 }
 
 function skipWhitespace(text: string, index: number): number {

@@ -10,3 +10,4 @@ Deferred items tracked here intentionally remain outside the current implementat
 4. Continue reducing tokenizer and sentence-splitting drift from Python YAKE's `segtok`-based behavior, especially for Unicode punctuation, contractions, abbreviations, and multilingual texts.
 5. Add broader fuzzing and edge-case coverage for Unicode, emoji, CJK text, and very long documents.
 6. Expand multilingual verification and benchmark coverage beyond the current regression suite, especially across the bundled stopword languages.
+7. Investigate the remaining Portuguese ranking drift seen in upstream `test_n3_PT`, where Yaket still surfaces `plataforma` and reorders lower-ranked named phrases versus Python YAKE.
