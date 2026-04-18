@@ -8,78 +8,60 @@ const demoHtml = readFileSync(join(process.cwd(), "demo/index.html"), "utf8");
 describe("demo page", () => {
   it("uses the Yaket versus TF-IDF title", () => {
     expect(demoHtml).toContain("<title>Yaket vs TF-IDF</title>");
-    expect(demoHtml).toContain("<h1>Yaket vs TF-IDF</h1>");
+    expect(demoHtml).toContain("<h1>Yaket vs TF-IDF, without the wait.</h1>");
   });
 
-  it("explains what differentiates YAKE", () => {
-    expect(demoHtml).toContain("Single-document");
-    expect(demoHtml).toContain("No training corpus");
-    expect(demoHtml).toContain("Local statistical features");
+  it("uses a richer scene-gallery layout inspired by the Garten demo language", () => {
+    expect(demoHtml).toContain("Sample Scenes");
+    expect(demoHtml).toContain("Results Snapshot");
+    expect(demoHtml).toContain('class="scene-grid"');
+    expect(demoHtml).toContain('class="scene-card"');
+    expect(demoHtml).toContain('class="signal-grid"');
+    expect(demoHtml).toContain('class="metric-strip"');
   });
 
-  it("uses a tabbed sample chooser with an attached sample panel", () => {
+  it("ships meaningful content in the initial HTML instead of waiting for a remote module", () => {
+    expect(demoHtml).toContain('id="sample-title">Scientific abstract<');
+    expect(demoHtml).toContain('id="results-body"');
+    expect(demoHtml).toContain("keyword extraction");
+    expect(demoHtml).not.toContain("esm.sh");
+    expect(demoHtml).not.toContain("type=\"module\"");
+  });
+
+  it("uses a tabbed sample chooser with pre-rendered scene cards", () => {
     expect(demoHtml).toContain('role="tablist"');
+    expect(demoHtml).toContain('role="tab"');
     expect(demoHtml).toContain('role="tabpanel"');
-    expect(demoHtml).toContain('id="sample-tabs"');
-    expect(demoHtml).toContain('id="sample-title"');
-    expect(demoHtml).toContain('id="sample-text"');
-    expect(demoHtml).toContain('button.setAttribute("role", "tab")');
-    expect(demoHtml).toContain("Scientific abstract");
-    expect(demoHtml).toContain("News article");
-    expect(demoHtml).toContain("Newsletter");
-    expect(demoHtml).toContain("Product docs");
+    expect(demoHtml).toContain('id="tab-abstract"');
+    expect(demoHtml).toContain('id="tab-news"');
+    expect(demoHtml).toContain('id="tab-newsletter"');
+    expect(demoHtml).toContain('id="tab-product-docs"');
   });
 
-  it("shows only a simple two-column keyword comparison table", () => {
+  it("keeps the comparison as a two-column keyword table", () => {
     expect(demoHtml).toContain("<th scope=\"col\">Yaket</th>");
     expect(demoHtml).toContain("<th scope=\"col\">TF-IDF</th>");
     expect(demoHtml).toContain('class="results-table"');
-    expect(demoHtml).toContain('id="results-body"');
     expect(demoHtml).not.toContain("Yaket highlights");
     expect(demoHtml).not.toContain("TF-IDF highlights");
-    expect(demoHtml).not.toContain("Overlap");
+    expect(demoHtml).not.toContain("Overlap section");
   });
 
-  it("puts the results panel below the sample chooser", () => {
-    const sampleTabsIndex = demoHtml.indexOf('id="sample-tabs"');
-    const samplePanelIndex = demoHtml.indexOf('id="sample-panel"');
-    const resultsPanelIndex = demoHtml.indexOf('id="results-panel"');
-
-    expect(sampleTabsIndex).toBeGreaterThanOrEqual(0);
-    expect(samplePanelIndex).toBeGreaterThan(sampleTabsIndex);
-    expect(resultsPanelIndex).toBeGreaterThan(samplePanelIndex);
+  it("makes the comparison philosophy explicit", () => {
+    expect(demoHtml).toContain("Alphabetized output");
+    expect(demoHtml).toContain("Sorted for quick visual scanning");
+    expect(demoHtml).toContain("The point here is surfacing, not score drama");
   });
 
-  it("uses a grid shell and reserved panel heights to reduce layout shift", () => {
-    expect(demoHtml).toContain('class="sample-shell"');
-    expect(demoHtml).toContain("grid-template-columns: minmax(0, 14rem) minmax(0, 1fr)");
-    expect(demoHtml).toContain("min-height: 16rem");
-    expect(demoHtml).toContain("min-height: 23rem");
+  it("precomputes sample outputs for instant scene switching", () => {
+    expect(demoHtml).toContain("const SAMPLE_RESULTS = {");
+    expect(demoHtml).toContain("renderSample(tab.dataset.sampleId)");
+    expect(demoHtml).toContain("Shared terms:");
+    expect(demoHtml).toContain("currentSampleId = \"abstract\"");
   });
 
-  it("uses the current published package line in the browser import", () => {
-    expect(demoHtml).toContain("@ade_oshineye/yaket@0.5.3");
-  });
-
-  it("sorts displayed keywords alphabetically for easier comparison", () => {
-    expect(demoHtml).toContain("function sortKeywords");
-    expect(demoHtml).toContain('localeCompare(right, undefined, { sensitivity: "base" })');
-  });
-
-  it("updates the sample panel and results immediately when a tab is clicked", () => {
-    expect(demoHtml).toContain('button.addEventListener("click", () => applySample(item.id))');
-    expect(demoHtml).toContain('sampleTitle.textContent = sample.label');
-    expect(demoHtml).toContain('sampleText.textContent = sample.text');
-    expect(demoHtml).toContain("renderResults(sample)");
-  });
-
-  it("drops the old config and extra comparison chrome", () => {
-    expect(demoHtml).not.toContain('id="controls"');
-    expect(demoHtml).not.toContain('id="language"');
-    expect(demoHtml).not.toContain('id="top"');
-    expect(demoHtml).not.toContain('id="ngram"');
-    expect(demoHtml).not.toContain('id="input"');
-    expect(demoHtml).not.toContain("Compare again");
-    expect(demoHtml).not.toContain("Updated");
+  it("keeps the mobile layout responsive", () => {
+    expect(demoHtml).toContain("@media (max-width: 920px)");
+    expect(demoHtml).toContain("@media (max-width: 680px)");
   });
 });

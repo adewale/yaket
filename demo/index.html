@@ -6,22 +6,26 @@
     <title>Yaket vs TF-IDF</title>
     <meta
       name="description"
-      content="Compare Yaket and TF-IDF on the same text in a minimal browser demo."
+      content="Compare Yaket and TF-IDF on the same text in an instant-loading browser demo."
     />
     <style>
       :root {
         color-scheme: dark;
         font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --bg: #10151d;
-        --panel: #171d27;
-        --field: #1c2330;
-        --line: rgba(205, 214, 231, 0.14);
-        --line-strong: rgba(205, 214, 231, 0.24);
-        --text: rgba(242, 245, 249, 0.92);
-        --muted: rgba(196, 205, 220, 0.74);
-        --subtle: rgba(163, 174, 193, 0.68);
-        --accent: #8fb1ff;
-        --shadow: 0 16px 36px rgba(0, 0, 0, 0.16);
+        --bg: #0f1713;
+        --bg-glow: rgba(120, 191, 141, 0.16);
+        --panel: rgba(18, 30, 24, 0.88);
+        --panel-strong: rgba(24, 42, 33, 0.94);
+        --field: rgba(26, 39, 32, 0.9);
+        --line: rgba(194, 220, 202, 0.12);
+        --line-strong: rgba(194, 220, 202, 0.22);
+        --text: rgba(242, 246, 243, 0.95);
+        --muted: rgba(203, 214, 206, 0.72);
+        --subtle: rgba(166, 184, 173, 0.74);
+        --accent: #9ee3b3;
+        --accent-strong: #7cd694;
+        --amber: #f1c87d;
+        --shadow: 0 24px 60px rgba(0, 0, 0, 0.26);
       }
 
       * {
@@ -31,46 +35,48 @@
       body {
         margin: 0;
         min-height: 100vh;
-        background: var(--bg);
+        background:
+          radial-gradient(circle at top left, var(--bg-glow), transparent 28%),
+          radial-gradient(circle at 82% 8%, rgba(241, 200, 125, 0.08), transparent 24%),
+          var(--bg);
         color: var(--text);
       }
 
       main {
-        max-width: 980px;
+        max-width: 1140px;
         margin: 0 auto;
-        padding: 1.5rem max(20px, 4vw) 2.5rem;
+        padding: 1.75rem max(20px, 4vw) 3rem;
         display: grid;
         gap: 1.25rem;
       }
 
       h1,
       h2,
+      h3,
       p,
       table {
         margin: 0;
       }
 
       h1 {
-        font-size: clamp(1.8rem, 4vw, 2.4rem);
-        font-weight: 650;
-        letter-spacing: -0.02em;
+        font-size: clamp(2.1rem, 4.4vw, 3.2rem);
+        font-weight: 680;
+        letter-spacing: -0.03em;
+        line-height: 1.04;
       }
 
       h2 {
-        font-size: 0.95rem;
+        font-size: 1rem;
         font-weight: 650;
       }
 
-      .intro {
-        display: grid;
-        gap: 0.6rem;
-        margin-bottom: 1rem;
+      h3 {
+        font-size: 0.92rem;
+        font-weight: 600;
       }
 
-      .intro p {
-        max-width: 70ch;
-        color: var(--muted);
-        line-height: 1.55;
+      p {
+        line-height: 1.6;
       }
 
       .stack {
@@ -80,73 +86,218 @@
 
       .panel {
         border: 1px solid var(--line);
-        border-radius: 0.85rem;
+        border-radius: 1.25rem;
         background: var(--panel);
         box-shadow: var(--shadow);
-        padding: 1rem;
+        backdrop-filter: blur(10px);
       }
 
-      .sample-shell {
+      .hero {
+        padding: 1.35rem;
         display: grid;
-        grid-template-columns: minmax(0, 14rem) minmax(0, 1fr);
+        gap: 1.25rem;
+      }
+
+      .eyebrow {
+        color: var(--accent);
+        font-size: 0.78rem;
+        font-weight: 700;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      .hero-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.95fr);
+        gap: 1.25rem;
+      }
+
+      .hero-copy {
+        display: grid;
+        gap: 0.85rem;
+      }
+
+      .hero-copy p {
+        max-width: 66ch;
+        color: var(--muted);
+      }
+
+      .signal-grid {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 0.85rem;
+      }
+
+      .signal-card {
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, rgba(28, 45, 36, 0.88), rgba(17, 28, 22, 0.92));
+        padding: 0.9rem;
+        display: grid;
+        gap: 0.35rem;
+      }
+
+      .signal-card strong {
+        font-size: 1.05rem;
+      }
+
+      .signal-label {
+        color: var(--subtle);
+        font-size: 0.77rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .section-panel {
+        padding: 1.15rem;
+        display: grid;
         gap: 1rem;
-        align-items: start;
+      }
+
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: end;
+        gap: 1rem;
+      }
+
+      .section-header p {
+        color: var(--subtle);
+        font-size: 0.92rem;
+      }
+
+      .scene-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.85rem;
       }
 
       button {
         font: inherit;
       }
 
-      button:focus {
-        outline: none;
-      }
-
-      button:focus-visible {
-        border-color: rgba(143, 177, 255, 0.58);
-        box-shadow: 0 0 0 3px rgba(143, 177, 255, 0.12);
-      }
-
-      .tab-list {
-        display: grid;
-        gap: 0.6rem;
-        align-content: start;
-      }
-
-      .sample-tab {
-        border: 1px solid var(--line-strong);
-        border-radius: 0.8rem;
-        background: #202a39;
-        color: var(--text);
-        cursor: pointer;
-        padding: 0.7rem 0.95rem;
-        text-align: left;
+      .scene-card {
         width: 100%;
+        text-align: left;
+        border: 1px solid var(--line-strong);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, rgba(30, 43, 35, 0.74), rgba(18, 27, 22, 0.82));
+        color: var(--text);
+        padding: 0.95rem;
+        cursor: pointer;
+        display: grid;
+        gap: 0.5rem;
+        transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
       }
 
-      .sample-tab:hover,
-      .sample-tab:focus-visible {
-        border-color: rgba(143, 177, 255, 0.48);
-        background: #263245;
+      .scene-card:hover,
+      .scene-card:focus-visible {
+        transform: translateY(-1px);
+        border-color: rgba(158, 227, 179, 0.52);
       }
 
-      .sample-tab[aria-selected="true"] {
-        border-color: rgba(143, 177, 255, 0.58);
-        background: rgba(143, 177, 255, 0.16);
+      .scene-card[aria-selected="true"] {
+        border-color: rgba(158, 227, 179, 0.62);
+        background: linear-gradient(180deg, rgba(43, 74, 58, 0.95), rgba(24, 43, 34, 0.98));
+        box-shadow: inset 0 0 0 1px rgba(158, 227, 179, 0.08);
       }
 
-      .sample-content {
-        border: 1px solid rgba(205, 214, 231, 0.08);
-        border-radius: 0.8rem;
-        background: var(--field);
-        padding: 1rem;
-        min-height: 16rem;
-        align-content: start;
+      .scene-title {
+        font-weight: 640;
+        font-size: 0.98rem;
+      }
+
+      .scene-note {
+        color: var(--subtle);
+        font-size: 0.87rem;
+      }
+
+      .scene-meta {
+        color: var(--accent);
+        font-size: 0.74rem;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+      }
+
+      .sample-stage {
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: linear-gradient(180deg, rgba(24, 38, 30, 0.98), rgba(18, 27, 22, 0.98));
+        padding: 1.15rem;
+        display: grid;
+        gap: 0.9rem;
+        min-height: 18rem;
+      }
+
+      .pill-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.55rem;
+      }
+
+      .pill {
+        border: 1px solid var(--line-strong);
+        border-radius: 999px;
+        padding: 0.35rem 0.7rem;
+        color: var(--muted);
+        background: rgba(255, 255, 255, 0.03);
+        font-size: 0.82rem;
+      }
+
+      .pill strong {
+        color: var(--text);
+      }
+
+      .sample-summary {
+        color: var(--accent);
+        font-size: 0.95rem;
       }
 
       .sample-copy {
         color: var(--muted);
-        line-height: 1.65;
         white-space: pre-wrap;
+      }
+
+      .results-top {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 1rem;
+        align-items: start;
+      }
+
+      .results-top p {
+        color: var(--subtle);
+        font-size: 0.92rem;
+      }
+
+      .metric-strip {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 0.75rem;
+        min-width: min(100%, 330px);
+      }
+
+      .metric-card {
+        border: 1px solid var(--line);
+        border-radius: 1rem;
+        background: var(--panel-strong);
+        padding: 0.8rem 0.85rem;
+        display: grid;
+        gap: 0.3rem;
+      }
+
+      .metric-card strong {
+        font-size: 1.15rem;
+      }
+
+      .results-hint,
+      .overlap-note {
+        color: var(--muted);
+        font-size: 0.93rem;
+      }
+
+      .overlap-note strong {
+        color: var(--amber);
       }
 
       .results-table {
@@ -155,32 +306,60 @@
         table-layout: fixed;
       }
 
-      #results-panel {
-        min-height: 23rem;
+      .results-table thead th {
+        color: var(--muted);
+        font-size: 0.82rem;
+        font-weight: 650;
+        letter-spacing: 0.08em;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--line);
+        padding: 0 0.95rem 0.8rem;
+        text-align: left;
       }
 
-      .results-table th,
-      .results-table td {
-        padding: 0.8rem 0.9rem;
-        text-align: left;
-        vertical-align: top;
+      .results-table tbody tr {
         border-top: 1px solid var(--line);
       }
 
-      .results-table thead th {
-        color: var(--muted);
-        font-size: 0.88rem;
-        font-weight: 650;
-        border-top: 0;
+      .results-table td {
+        padding: 0.75rem 0.95rem;
+        vertical-align: top;
       }
 
-      .results-table tbody td {
-        color: var(--text);
-        word-break: break-word;
+      .keyword-chip {
+        display: inline-flex;
+        align-items: center;
+        min-height: 2.1rem;
+        border: 1px solid rgba(158, 227, 179, 0.16);
+        border-radius: 0.85rem;
+        background: rgba(255, 255, 255, 0.035);
+        padding: 0.45rem 0.7rem;
       }
 
-      @media (max-width: 760px) {
-        .sample-shell {
+      .keyword-chip.muted {
+        border-color: rgba(194, 220, 202, 0.08);
+        color: var(--subtle);
+      }
+
+      @media (max-width: 920px) {
+        .hero-grid,
+        .results-top {
+          grid-template-columns: 1fr;
+        }
+
+        .scene-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+
+      @media (max-width: 680px) {
+        main {
+          padding-inline: 1rem;
+        }
+
+        .signal-grid,
+        .metric-strip,
+        .scene-grid {
           grid-template-columns: 1fr;
         }
 
@@ -198,40 +377,126 @@
         }
 
         .results-table tr {
-          border-top: 1px solid var(--line);
-          padding: 0.6rem 0;
+          padding: 0.45rem 0;
         }
 
         .results-table td {
+          padding: 0.45rem 0;
           border-top: 0;
-          padding: 0.35rem 0;
         }
       }
     </style>
   </head>
   <body>
     <main>
-      <section class="intro">
-        <h1>Yaket vs TF-IDF</h1>
-        <p>
-          Compare Yaket and TF-IDF on the same text. Yaket is <strong>Single-document</strong>, uses
-          <strong>Local statistical features</strong>, and needs <strong>No training corpus</strong>.
-        </p>
-      </section>
+      <section class="panel hero">
+        <p class="eyebrow">Instant Sample Compare</p>
+        <div class="hero-grid">
+          <div class="hero-copy">
+            <h1>Yaket vs TF-IDF, without the wait.</h1>
+            <p>
+              This demo now behaves like a sample gallery, not a mini app runtime. The first view is already
+              rendered, switching samples is instant, and the page stays focused on what each extractor actually
+              surfaces.
+            </p>
+          </div>
 
-      <section class="panel stack">
-        <h2>Sample text</h2>
-        <div class="sample-shell">
-          <div class="tab-list" id="sample-tabs" role="tablist" aria-label="Sample texts"></div>
-          <section class="sample-content stack" id="sample-panel" role="tabpanel" aria-live="polite">
-            <h2 id="sample-title">—</h2>
-            <p class="sample-copy" id="sample-text">—</p>
-          </section>
+          <div class="signal-grid">
+            <article class="signal-card">
+              <span class="signal-label">Mode</span>
+              <strong>Single-document</strong>
+              <span class="scene-note">Yaket ranks phrases from one text, not a trained corpus.</span>
+            </article>
+            <article class="signal-card">
+              <span class="signal-label">Features</span>
+              <strong>Local statistical signals</strong>
+              <span class="scene-note">Position, spread, casing, context, and term relationships.</span>
+            </article>
+            <article class="signal-card">
+              <span class="signal-label">Load</span>
+              <strong>Precomputed scenes</strong>
+              <span class="scene-note">No remote runtime import before the page becomes useful.</span>
+            </article>
+            <article class="signal-card">
+              <span class="signal-label">Compare</span>
+              <strong>Alphabetized output</strong>
+              <span class="scene-note">Sorted for quick visual scanning instead of score-order theatrics.</span>
+            </article>
+          </div>
         </div>
       </section>
 
-      <section class="panel stack" id="results-panel">
-        <h2>Results</h2>
+      <section class="panel section-panel">
+        <div class="section-header">
+          <div class="stack" style="gap: 0.3rem">
+            <p class="eyebrow">Sample Scenes</p>
+            <h2>Pick a text and the comparison updates instantly.</h2>
+          </div>
+          <p>Design cue: compact scene cards, one active stage, and a single comparison surface below.</p>
+        </div>
+
+        <div class="scene-grid" id="sample-tabs" role="tablist" aria-label="Sample scenes">
+          <button class="scene-card" type="button" id="tab-abstract" data-sample-id="abstract" role="tab" aria-controls="sample-panel" aria-selected="true">
+            <span class="scene-meta">dense research</span>
+            <span class="scene-title">Scientific abstract</span>
+            <span class="scene-note">Algorithm language, feature-heavy phrasing, low corpus bias.</span>
+          </button>
+          <button class="scene-card" type="button" id="tab-news" data-sample-id="news" role="tab" aria-controls="sample-panel" aria-selected="false">
+            <span class="scene-meta">news brief</span>
+            <span class="scene-title">News article</span>
+            <span class="scene-note">Named entities, repeated acquisition framing, short report style.</span>
+          </button>
+          <button class="scene-card" type="button" id="tab-newsletter" data-sample-id="newsletter" role="tab" aria-controls="sample-panel" aria-selected="false">
+            <span class="scene-meta">opinionated note</span>
+            <span class="scene-title">Newsletter</span>
+            <span class="scene-note">Mixed abstractions, product names, and repeated AI motifs.</span>
+          </button>
+          <button class="scene-card" type="button" id="tab-product-docs" data-sample-id="product-docs" role="tab" aria-controls="sample-panel" aria-selected="false">
+            <span class="scene-meta">product docs</span>
+            <span class="scene-title">Product docs</span>
+            <span class="scene-note">Retrieval vocabulary, infrastructure nouns, and implementation detail.</span>
+          </button>
+        </div>
+
+        <section class="sample-stage" id="sample-panel" role="tabpanel" aria-labelledby="tab-abstract">
+          <div class="pill-row">
+            <span class="pill"><strong id="sample-language">EN</strong> language</span>
+            <span class="pill">top <strong id="sample-top">10</strong></span>
+            <span class="pill">max n-gram <strong id="sample-ngram">3</strong></span>
+            <span class="pill">shared terms <strong id="sample-overlap-count">0</strong></span>
+          </div>
+          <h2 id="sample-title">Scientific abstract</h2>
+          <p class="sample-summary" id="sample-summary">Algorithm language, feature-heavy phrasing, low corpus bias.</p>
+          <p class="sample-copy" id="sample-text">We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.</p>
+        </section>
+      </section>
+
+      <section class="panel section-panel" id="results-panel">
+        <div class="results-top">
+          <div class="stack" style="gap: 0.35rem">
+            <p class="eyebrow">Results Snapshot</p>
+            <h2>Keyword table</h2>
+            <p class="results-hint">Both columns are alphabetized to make comparison easier. The point here is surfacing, not score drama.</p>
+          </div>
+
+          <div class="metric-strip">
+            <article class="metric-card">
+              <span class="signal-label">Shared</span>
+              <strong id="metric-overlap">0</strong>
+            </article>
+            <article class="metric-card">
+              <span class="signal-label">Yaket only</span>
+              <strong id="metric-yaket-only">10</strong>
+            </article>
+            <article class="metric-card">
+              <span class="signal-label">TF-IDF only</span>
+              <strong id="metric-tfidf-only">10</strong>
+            </article>
+          </div>
+        </div>
+
+        <p class="overlap-note" id="overlap-note"><strong>Shared terms:</strong> none on this sample.</p>
+
         <table class="results-table">
           <thead>
             <tr>
@@ -239,178 +504,255 @@
               <th scope="col">TF-IDF</th>
             </tr>
           </thead>
-          <tbody id="results-body"></tbody>
+          <tbody id="results-body">
+            <tr><td><span class="keyword-chip">keyword extraction</span></td><td><span class="keyword-chip">based</span></td></tr>
+            <tr><td><span class="keyword-chip">keyword extraction method</span></td><td><span class="keyword-chip">based on multiple</span></td></tr>
+            <tr><td><span class="keyword-chip">lightweight keyword</span></td><td><span class="keyword-chip">benchmark</span></td></tr>
+            <tr><td><span class="keyword-chip">lightweight keyword extraction</span></td><td><span class="keyword-chip">benchmark datasets</span></td></tr>
+            <tr><td><span class="keyword-chip">local statistical features</span></td><td><span class="keyword-chip">benchmark datasets show</span></td></tr>
+            <tr><td><span class="keyword-chip">multiple local statistical</span></td><td><span class="keyword-chip">browser</span></td></tr>
+            <tr><td><span class="keyword-chip">present a lightweight</span></td><td><span class="keyword-chip">browser and edge</span></td></tr>
+            <tr><td><span class="keyword-chip">single documents</span></td><td><span class="keyword-chip">candidates</span></td></tr>
+            <tr><td><span class="keyword-chip">single documents based</span></td><td><span class="keyword-chip">method</span></td></tr>
+            <tr><td><span class="keyword-chip">statistical features</span></td><td><span class="keyword-chip">term</span></td></tr>
+          </tbody>
         </table>
       </section>
     </main>
 
-    <script type="module">
-      import { extractKeywordDetails, loadStopwords, splitSentences, tokenizeWords } from "https://esm.sh/@ade_oshineye/yaket@0.5.3?bundle";
-
-      const SAMPLE_PRESETS = [
-        {
+    <script>
+      const SAMPLE_PRESETS = {
+        abstract: {
           id: "abstract",
           label: "Scientific abstract",
-          language: "en",
+          note: "Algorithm language, feature-heavy phrasing, low corpus bias.",
+          language: "EN",
           ngram: 3,
           top: 10,
-          text: `We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.`
+          text: "We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.",
         },
-        {
+        news: {
           id: "news",
           label: "News article",
-          language: "en",
+          note: "Named entities, repeated acquisition framing, short report style.",
+          language: "EN",
           ngram: 3,
           top: 10,
-          text: `Google is acquiring data science community Kaggle. Sources tell us that Google is acquiring Kaggle, a platform that hosts data science and machine learning competitions. Details about the transaction remain somewhat vague, but the acquisition would give Google access to one of the largest communities of practicing data scientists and machine learning competitors.`
+          text: "Google is acquiring data science community Kaggle. Sources tell us that Google is acquiring Kaggle, a platform that hosts data science and machine learning competitions. Details about the transaction remain somewhat vague, but the acquisition would give Google access to one of the largest communities of practicing data scientists and machine learning competitors.",
         },
-        {
+        newsletter: {
           id: "newsletter",
           label: "Newsletter",
-          language: "en",
+          note: "Mixed abstractions, product names, and repeated AI motifs.",
+          language: "EN",
           ngram: 3,
           top: 10,
-          text: `Consumer AI is being absorbed by platforms. Enterprise AI converges around a few vendors. Vertical AI is the third path. If consumer gets absorbed by incumbents and enterprise consolidates around platforms, vertical AI carves out domain-specific value. The APIs become commodities. Meta just acqui-hired both Gizmo and Dreamer. Karpathy's software model evolves. The ecosystem grows through network effects.`
+          text: "Consumer AI is being absorbed by platforms. Enterprise AI converges around a few vendors. Vertical AI is the third path. If consumer gets absorbed by incumbents and enterprise consolidates around platforms, vertical AI carves out domain-specific value. The APIs become commodities. Meta just acqui-hired both Gizmo and Dreamer. Karpathy's software model evolves. The ecosystem grows through network effects.",
         },
-        {
+        "product-docs": {
           id: "product-docs",
           label: "Product docs",
-          language: "en",
+          note: "Retrieval vocabulary, infrastructure nouns, and implementation detail.",
+          language: "EN",
           ngram: 2,
           top: 10,
-          text: `The indexing service creates hybrid retrieval metadata for each chunk. It stores BM25 text fields, dense embeddings, chunk-level filters, and weighted keywords. Incremental reindexing reuses previous vectors, but always refreshes keyword metadata so search results stay explainable and debuggable.`
-        }
-      ];
+          text: "The indexing service creates hybrid retrieval metadata for each chunk. It stores BM25 text fields, dense embeddings, chunk-level filters, and weighted keywords. Incremental reindexing reuses previous vectors, but always refreshes keyword metadata so search results stay explainable and debuggable.",
+        },
+      };
 
-      const sampleTabs = document.getElementById("sample-tabs");
+      const SAMPLE_RESULTS = {
+        abstract: {
+          yaket: [
+            "keyword extraction",
+            "keyword extraction method",
+            "lightweight keyword",
+            "lightweight keyword extraction",
+            "local statistical features",
+            "multiple local statistical",
+            "present a lightweight",
+            "single documents",
+            "single documents based",
+            "statistical features",
+          ],
+          tfidf: [
+            "based",
+            "based on multiple",
+            "benchmark",
+            "benchmark datasets",
+            "benchmark datasets show",
+            "browser",
+            "browser and edge",
+            "candidates",
+            "method",
+            "term",
+          ],
+        },
+        news: {
+          yaket: [
+            "acquiring data science",
+            "acquiring Kaggle",
+            "community Kaggle",
+            "data science",
+            "data science community",
+            "Google",
+            "Google is acquiring",
+            "Kaggle",
+            "science community",
+            "science community Kaggle",
+          ],
+          tfidf: [
+            "acquiring",
+            "data",
+            "data science",
+            "google",
+            "google is acquiring",
+            "kaggle",
+            "learning",
+            "machine",
+            "machine learning",
+            "science",
+          ],
+        },
+        newsletter: {
+          yaket: [
+            "absorbed",
+            "absorbed by platforms",
+            "Consumer",
+            "Dreamer",
+            "Enterprise",
+            "Gizmo and Dreamer",
+            "platforms",
+            "vendors",
+            "Vertical",
+            "vertical AI carves",
+          ],
+          tfidf: [
+            "absorbed",
+            "absorbed by incumbents",
+            "absorbed by platforms",
+            "acqui-hired",
+            "acqui-hired both gizmo",
+            "consumer",
+            "enterprise",
+            "platforms",
+            "vertical",
+            "vertical ai",
+          ],
+        },
+        "product-docs": {
+          yaket: [
+            "chunk",
+            "chunk-level filters",
+            "creates hybrid",
+            "dense embeddings",
+            "hybrid retrieval",
+            "indexing",
+            "indexing service",
+            "retrieval metadata",
+            "service creates",
+            "text fields",
+          ],
+          tfidf: [
+            "bm25",
+            "bm25 text",
+            "chunk",
+            "chunk-level",
+            "chunk-level filters",
+            "creates",
+            "creates hybrid",
+            "debuggable",
+            "dense",
+            "metadata",
+          ],
+        },
+      };
+
+      for (const sampleId of Object.keys(SAMPLE_RESULTS)) {
+        const result = SAMPLE_RESULTS[sampleId];
+        result.overlap = result.yaket.filter((keyword) => result.tfidf.includes(keyword));
+        result.yaketOnly = result.yaket.filter((keyword) => !result.tfidf.includes(keyword));
+        result.tfidfOnly = result.tfidf.filter((keyword) => !result.yaket.includes(keyword));
+      }
+
+      const tabs = [...document.querySelectorAll(".scene-card")];
       const samplePanel = document.getElementById("sample-panel");
       const sampleTitle = document.getElementById("sample-title");
+      const sampleSummary = document.getElementById("sample-summary");
       const sampleText = document.getElementById("sample-text");
+      const sampleLanguage = document.getElementById("sample-language");
+      const sampleTop = document.getElementById("sample-top");
+      const sampleNgram = document.getElementById("sample-ngram");
+      const sampleOverlapCount = document.getElementById("sample-overlap-count");
+      const metricOverlap = document.getElementById("metric-overlap");
+      const metricYaketOnly = document.getElementById("metric-yaket-only");
+      const metricTfidfOnly = document.getElementById("metric-tfidf-only");
+      const overlapNote = document.getElementById("overlap-note");
       const resultsBody = document.getElementById("results-body");
-      let currentSampleId = SAMPLE_PRESETS[0].id;
+      let currentSampleId = "abstract";
 
-      function populateSampleTabs() {
-        sampleTabs.replaceChildren(...SAMPLE_PRESETS.map((item) => {
-          const button = document.createElement("button");
-          button.type = "button";
-          button.id = `tab-${item.id}`;
-          button.className = "sample-tab";
-          button.dataset.sampleId = item.id;
-          button.setAttribute("role", "tab");
-          button.setAttribute("aria-controls", "sample-panel");
-          button.setAttribute("aria-selected", "false");
-          button.textContent = item.label;
-          button.addEventListener("click", () => applySample(item.id));
-          return button;
-        }));
-      }
-
-      function setActiveSample(id) {
-        currentSampleId = id;
-
-        for (const button of sampleTabs.querySelectorAll(".sample-tab")) {
-          const isActive = button.dataset.sampleId === id;
-          button.setAttribute("aria-selected", isActive ? "true" : "false");
-          button.tabIndex = isActive ? 0 : -1;
-        }
-
-        samplePanel.setAttribute("aria-labelledby", `tab-${id}`);
-      }
-
-      function countCandidates(text, stopwords, maxNgram) {
-        const counts = new Map();
-
-        for (const sentence of splitSentences(text)) {
-          const words = tokenizeWords(sentence)
-            .map((word) => word.toLowerCase())
-            .filter((word) => word.length > 0 && !((word.startsWith("'") || word.startsWith("’")) && word.length > 1));
-
-          for (let size = 1; size <= maxNgram; size += 1) {
-            for (let index = 0; index <= words.length - size; index += 1) {
-              const candidateWords = words.slice(index, index + size);
-              if (candidateWords.length === 0) continue;
-              if (stopwords.has(candidateWords[0]) || stopwords.has(candidateWords[candidateWords.length - 1])) continue;
-              if (size === 1 && candidateWords[0].length < 3) continue;
-
-              const candidate = candidateWords.join(" ");
-              counts.set(candidate, (counts.get(candidate) ?? 0) + 1);
-            }
-          }
-        }
-
-        return counts;
-      }
-
-      function extractTfidf(text, corpus, stopwords, maxNgram, topK) {
-        const corpusCounts = corpus.map((document) => countCandidates(document, stopwords, maxNgram));
-        const targetCounts = countCandidates(text, stopwords, maxNgram);
-        const totalDocuments = corpusCounts.length;
-
-        return [...targetCounts.entries()]
-          .map(([keyword, tf]) => {
-            const df = corpusCounts.reduce((count, counts) => count + (counts.has(keyword) ? 1 : 0), 0);
-            const idf = Math.log((1 + totalDocuments) / (1 + df)) + 1;
-            return { keyword, score: tf * idf };
-          })
-          .sort((left, right) => right.score - left.score || left.keyword.localeCompare(right.keyword))
-          .slice(0, topK);
-      }
-
-      function sortKeywords(keywords) {
-        return [...new Set(keywords.filter(Boolean))]
-          .sort((left, right) => left.localeCompare(right, undefined, { sensitivity: "base" }));
-      }
-
-      function renderResults(sample) {
-        const yaketKeywords = sortKeywords(
-          extractKeywordDetails(sample.text, {
-            language: sample.language,
-            top: sample.top,
-            n: sample.ngram,
-          }).map(({ keyword }) => keyword)
-        );
-
-        const stopwords = loadStopwords(sample.language);
-        const tfidfKeywords = sortKeywords(
-          extractTfidf(sample.text, SAMPLE_PRESETS.map((item) => item.text), stopwords, sample.ngram, sample.top)
-            .map(({ keyword }) => keyword)
-        );
-
-        const rowCount = Math.max(yaketKeywords.length, tfidfKeywords.length, 1);
+      function renderRows(result) {
+        const rowCount = Math.max(result.yaket.length, result.tfidf.length, 1);
         resultsBody.replaceChildren(...Array.from({ length: rowCount }, (_, index) => {
           const row = document.createElement("tr");
-          const yaketCell = document.createElement("td");
-          const tfidfCell = document.createElement("td");
-          yaketCell.textContent = yaketKeywords[index] ?? "—";
-          tfidfCell.textContent = tfidfKeywords[index] ?? "—";
-          row.append(yaketCell, tfidfCell);
+          row.append(createKeywordCell(result.yaket[index]), createKeywordCell(result.tfidf[index]));
           return row;
         }));
       }
 
-      function applySample(id) {
-        const sample = SAMPLE_PRESETS.find((item) => item.id === id) ?? SAMPLE_PRESETS[0];
-        setActiveSample(sample.id);
-        sampleTitle.textContent = sample.label;
-        sampleText.textContent = sample.text;
-        renderResults(sample);
+      function createKeywordCell(keyword) {
+        const cell = document.createElement("td");
+        const chip = document.createElement("span");
+        chip.className = `keyword-chip${keyword == null ? " muted" : ""}`;
+        chip.textContent = keyword ?? "—";
+        cell.append(chip);
+        return cell;
       }
 
-      sampleTabs.addEventListener("keydown", (event) => {
+      function renderSample(id) {
+        const sample = SAMPLE_PRESETS[id] ?? SAMPLE_PRESETS.abstract;
+        const result = SAMPLE_RESULTS[sample.id];
+        currentSampleId = sample.id;
+
+        for (const tab of tabs) {
+          const isActive = tab.dataset.sampleId === sample.id;
+          tab.setAttribute("aria-selected", isActive ? "true" : "false");
+          tab.tabIndex = isActive ? 0 : -1;
+        }
+
+        samplePanel.setAttribute("aria-labelledby", `tab-${sample.id}`);
+        sampleTitle.textContent = sample.label;
+        sampleSummary.textContent = sample.note;
+        sampleText.textContent = sample.text;
+        sampleLanguage.textContent = sample.language;
+        sampleTop.textContent = String(sample.top);
+        sampleNgram.textContent = String(sample.ngram);
+        sampleOverlapCount.textContent = String(result.overlap.length);
+        metricOverlap.textContent = String(result.overlap.length);
+        metricYaketOnly.textContent = String(result.yaketOnly.length);
+        metricTfidfOnly.textContent = String(result.tfidfOnly.length);
+        overlapNote.innerHTML = result.overlap.length > 0
+          ? `<strong>Shared terms:</strong> ${result.overlap.join(", ")}`
+          : "<strong>Shared terms:</strong> none on this sample.";
+
+        renderRows(result);
+      }
+
+      for (const tab of tabs) {
+        tab.addEventListener("click", () => renderSample(tab.dataset.sampleId));
+      }
+
+      document.getElementById("sample-tabs").addEventListener("keydown", (event) => {
         if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") {
           return;
         }
 
+        const currentIndex = tabs.findIndex((tab) => tab.dataset.sampleId === currentSampleId);
         const direction = event.key === "ArrowRight" ? 1 : -1;
-        const currentIndex = SAMPLE_PRESETS.findIndex((item) => item.id === currentSampleId);
-        const nextIndex = (currentIndex + direction + SAMPLE_PRESETS.length) % SAMPLE_PRESETS.length;
-        const nextSample = SAMPLE_PRESETS[nextIndex];
-        applySample(nextSample.id);
-        document.getElementById(`tab-${nextSample.id}`)?.focus();
+        const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
+        const nextTab = tabs[nextIndex];
+        renderSample(nextTab.dataset.sampleId);
+        nextTab.focus();
       });
-
-      populateSampleTabs();
-      applySample(currentSampleId);
     </script>
   </body>
 </html>
