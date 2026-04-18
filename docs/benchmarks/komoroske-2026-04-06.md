@@ -10,10 +10,10 @@
 
 | System | Duration (ms) | Heap Delta (KB) | Notes |
 |---|---:|---:|---|
-| Yaket | 45.31 | 9724.50 | ok |
-| Bobbin | 72.19 | 0.00 | ok |
-| TF-IDF | 647.32 | 23041.91 | ok |
-| Python YAKE | 356.27 | 157.13 | ok |
+| Yaket | 42.97 | 9842.05 | ok |
+| Bobbin | 72.43 | 0.00 | ok |
+| TF-IDF | 638.89 | 0.00 | ok |
+| Python YAKE | 257.80 | 157.99 | ok |
 
 ## Top Keywords
 

@@ -71,7 +71,7 @@ On every tag push matching `v*.*.*`, it will:
 
 ## npm Publishing
 
-The release workflow also includes an npm publish job, but it only runs if `NPM_TOKEN` is configured in GitHub Actions secrets.
+The release workflow includes an npm publish path, but publishing only happens when `NPM_TOKEN` is configured in GitHub Actions secrets.
 
 That means there are two supported modes:
 
@@ -86,7 +86,7 @@ Then the workflow will publish the same version that was tagged.
 
 ### Mode B: manual npm publish
 
-If `NPM_TOKEN` is not configured, the workflow will still verify and create the GitHub release, but npm publishing must be done manually.
+If `NPM_TOKEN` is not configured, the workflow still verifies the tag and creates the GitHub release, but the npm publish steps are skipped and publishing must be done manually.
 
 In that case, publish from the exact tagged commit:
 

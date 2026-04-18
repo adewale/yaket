@@ -4,6 +4,23 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.5.3 - 2026-04-18
+
+Release workflow and documentation alignment update.
+
+### Changed
+
+- aligned release-facing docs with the current Bobbin validation and npm publish behavior
+- kept the browser demo pinned to the current published package version
+
+### Fixed
+
+- release workflow npm-token gating so tag pushes can complete the GitHub release flow without workflow-definition failures
+
+### Notes
+
+- npm publishing continues to depend on `NPM_TOKEN` being configured in GitHub Actions secrets
+
 ## 0.5.2 - 2026-04-18
 
 Parity, ordering, and documentation consistency update.
