@@ -1,5 +1,8 @@
 name: Release
 
+env:
+  HAS_NPM_TOKEN: ${{ secrets.NPM_TOKEN != '' }}
+
 on:
   push:
     tags:
@@ -46,7 +49,7 @@ jobs:
 
   npm-publish:
     needs: verify-release
-    if: ${{ secrets.NPM_TOKEN != '' }}
+    if: ${{ env.HAS_NPM_TOKEN == 'true' }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
