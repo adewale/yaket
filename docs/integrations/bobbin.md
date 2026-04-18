@@ -53,9 +53,9 @@ Recommended adoption sequence:
 3. Add regression tests for any topic-quality regressions discovered in newsletter-style text.
 4. Only after the wrapper is stable, consider using richer Yaket APIs directly.
 
-The full Bobbin repo integration test pass is intentionally deferred and tracked in `TODO.md`.
+Yaket has now been run through Bobbin's YAKE, topic-extractor, topic-system, and extraction-quality tests in the Bobbin reference checkout via the Bobbin adapter path.
 
-Update: Yaket has now been run through Bobbin's YAKE, topic-extractor, topic-system, and extraction-quality tests in the Bobbin reference checkout via the Bobbin adapter path.
+Remaining follow-up: keep that validation current as Bobbin evolves.
 
 ## Example integration
 

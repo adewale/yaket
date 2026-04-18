@@ -385,7 +385,7 @@ npm run benchmark
 - The tokenizer is close to YAKE, but still not a literal `segtok` port.
 - Dedup `seqm` behavior is still approximate rather than a byte-for-byte Python clone.
 - Multilingual support exists through bundled stopwords, but broad multilingual parity coverage is deferred.
-- [Bobbin's](https://github.com/adewale/bobbin) full topic-layer integration test suite is deferred and tracked in `TODO.md`.
+- Bobbin adapter validation now covers the Bobbin YAKE, topic-extractor, topic-system, and extraction-quality tests in the reference Bobbin checkout, but that validation still needs to be kept current as Bobbin evolves.
 
 ## Comparison To Alternatives
 
