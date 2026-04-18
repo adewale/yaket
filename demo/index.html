@@ -4,755 +4,206 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Yaket vs TF-IDF</title>
-    <meta
-      name="description"
-      content="Compare Yaket and TF-IDF on the same text in an instant-loading browser demo."
-    />
+    <meta name="description" content="Keyword extraction comparison across four sample texts." />
     <style>
       :root {
         color-scheme: dark;
-        font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-        --bg: #0f1713;
-        --bg-glow: rgba(120, 191, 141, 0.16);
-        --panel: rgba(18, 30, 24, 0.88);
-        --panel-strong: rgba(24, 42, 33, 0.94);
-        --field: rgba(26, 39, 32, 0.9);
-        --line: rgba(194, 220, 202, 0.12);
-        --line-strong: rgba(194, 220, 202, 0.22);
-        --text: rgba(242, 246, 243, 0.95);
-        --muted: rgba(203, 214, 206, 0.72);
-        --subtle: rgba(166, 184, 173, 0.74);
-        --accent: #9ee3b3;
-        --accent-strong: #7cd694;
-        --amber: #f1c87d;
-        --shadow: 0 24px 60px rgba(0, 0, 0, 0.26);
+        --bg: #111;
+        --text: #e8e8e8;
+        --muted: #999;
+        --line: #333;
+        --active: #e8e8e8;
       }
 
-      * {
-        box-sizing: border-box;
-      }
+      * { box-sizing: border-box; margin: 0; }
 
       body {
-        margin: 0;
-        min-height: 100vh;
-        background:
-          radial-gradient(circle at top left, var(--bg-glow), transparent 28%),
-          radial-gradient(circle at 82% 8%, rgba(241, 200, 125, 0.08), transparent 24%),
-          var(--bg);
+        font: 15px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
+        background: var(--bg);
         color: var(--text);
-      }
-
-      main {
-        max-width: 1140px;
+        max-width: 720px;
         margin: 0 auto;
-        padding: 1.75rem max(20px, 4vw) 3rem;
-        display: grid;
-        gap: 1.25rem;
+        padding: 2.5rem 1.5rem 4rem;
       }
 
-      h1,
-      h2,
-      h3,
-      p,
-      table {
-        margin: 0;
+      header {
+        margin-bottom: 2rem;
       }
 
       h1 {
-        font-size: clamp(2.1rem, 4.4vw, 3.2rem);
-        font-weight: 680;
-        letter-spacing: -0.03em;
-        line-height: 1.04;
-      }
-
-      h2 {
-        font-size: 1rem;
-        font-weight: 650;
-      }
-
-      h3 {
-        font-size: 0.92rem;
+        font-size: 1.1rem;
         font-weight: 600;
+        letter-spacing: -0.01em;
       }
 
-      p {
-        line-height: 1.6;
-      }
-
-      .stack {
-        display: grid;
-        gap: 1rem;
-      }
-
-      .panel {
-        border: 1px solid var(--line);
-        border-radius: 1.25rem;
-        background: var(--panel);
-        box-shadow: var(--shadow);
-        backdrop-filter: blur(10px);
-      }
-
-      .hero {
-        padding: 1.35rem;
-        display: grid;
-        gap: 1.25rem;
-      }
-
-      .eyebrow {
-        color: var(--accent);
-        font-size: 0.78rem;
-        font-weight: 700;
-        letter-spacing: 0.14em;
-        text-transform: uppercase;
-      }
-
-      .hero-grid {
-        display: grid;
-        grid-template-columns: minmax(0, 1.3fr) minmax(300px, 0.95fr);
-        gap: 1.25rem;
-      }
-
-      .hero-copy {
-        display: grid;
-        gap: 0.85rem;
-      }
-
-      .hero-copy p {
-        max-width: 66ch;
+      .subtitle {
         color: var(--muted);
+        font-size: 0.88rem;
+        margin-top: 0.3rem;
       }
 
-      .signal-grid {
-        display: grid;
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-        gap: 0.85rem;
-      }
-
-      .signal-card {
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        background: linear-gradient(180deg, rgba(28, 45, 36, 0.88), rgba(17, 28, 22, 0.92));
-        padding: 0.9rem;
-        display: grid;
-        gap: 0.35rem;
-      }
-
-      .signal-card strong {
-        font-size: 1.05rem;
-      }
-
-      .signal-label {
-        color: var(--subtle);
-        font-size: 0.77rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .section-panel {
-        padding: 1.15rem;
-        display: grid;
-        gap: 1rem;
-      }
-
-      .section-header {
+      nav {
         display: flex;
-        justify-content: space-between;
-        align-items: end;
-        gap: 1rem;
+        gap: 0.15rem;
+        border-bottom: 1px solid var(--line);
+        margin-bottom: 1.75rem;
       }
 
-      .section-header p {
-        color: var(--subtle);
-        font-size: 0.92rem;
-      }
-
-      .scene-grid {
-        display: grid;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        gap: 0.85rem;
-      }
-
-      button {
+      nav button {
         font: inherit;
-      }
-
-      .scene-card {
-        width: 100%;
-        text-align: left;
-        border: 1px solid var(--line-strong);
-        border-radius: 1rem;
-        background: linear-gradient(180deg, rgba(30, 43, 35, 0.74), rgba(18, 27, 22, 0.82));
-        color: var(--text);
-        padding: 0.95rem;
+        font-size: 0.88rem;
+        background: none;
+        border: none;
+        color: var(--muted);
+        padding: 0.55rem 0.85rem;
         cursor: pointer;
-        display: grid;
-        gap: 0.5rem;
-        transition: transform 140ms ease, border-color 140ms ease, background 140ms ease;
+        border-bottom: 2px solid transparent;
+        margin-bottom: -1px;
       }
 
-      .scene-card:hover,
-      .scene-card:focus-visible {
-        transform: translateY(-1px);
-        border-color: rgba(158, 227, 179, 0.52);
+      nav button:hover { color: var(--text); }
+      nav button[aria-selected="true"] {
+        color: var(--active);
+        border-bottom-color: var(--active);
       }
 
-      .scene-card[aria-selected="true"] {
-        border-color: rgba(158, 227, 179, 0.62);
-        background: linear-gradient(180deg, rgba(43, 74, 58, 0.95), rgba(24, 43, 34, 0.98));
-        box-shadow: inset 0 0 0 1px rgba(158, 227, 179, 0.08);
-      }
-
-      .scene-title {
-        font-weight: 640;
-        font-size: 0.98rem;
-      }
-
-      .scene-note {
-        color: var(--subtle);
+      .source {
+        color: var(--muted);
         font-size: 0.87rem;
+        line-height: 1.6;
+        margin-bottom: 1.75rem;
       }
 
-      .scene-meta {
-        color: var(--accent);
-        font-size: 0.74rem;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .sample-stage {
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        background: linear-gradient(180deg, rgba(24, 38, 30, 0.98), rgba(18, 27, 22, 0.98));
-        padding: 1.15rem;
-        display: grid;
-        gap: 0.9rem;
-        min-height: 18rem;
-      }
-
-      .pill-row {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 0.55rem;
-      }
-
-      .pill {
-        border: 1px solid var(--line-strong);
-        border-radius: 999px;
-        padding: 0.35rem 0.7rem;
+      .overlap-line {
         color: var(--muted);
-        background: rgba(255, 255, 255, 0.03);
-        font-size: 0.82rem;
+        font-size: 0.87rem;
+        margin-bottom: 0.75rem;
       }
 
-      .pill strong {
-        color: var(--text);
-      }
+      .overlap-line strong { color: var(--text); }
 
-      .sample-summary {
-        color: var(--accent);
-        font-size: 0.95rem;
-      }
-
-      .sample-copy {
-        color: var(--muted);
-        white-space: pre-wrap;
-      }
-
-      .results-top {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) auto;
-        gap: 1rem;
-        align-items: start;
-      }
-
-      .results-top p {
-        color: var(--subtle);
-        font-size: 0.92rem;
-      }
-
-      .metric-strip {
-        display: grid;
-        grid-template-columns: repeat(3, minmax(0, 1fr));
-        gap: 0.75rem;
-        min-width: min(100%, 330px);
-      }
-
-      .metric-card {
-        border: 1px solid var(--line);
-        border-radius: 1rem;
-        background: var(--panel-strong);
-        padding: 0.8rem 0.85rem;
-        display: grid;
-        gap: 0.3rem;
-      }
-
-      .metric-card strong {
-        font-size: 1.15rem;
-      }
-
-      .results-hint,
-      .overlap-note {
-        color: var(--muted);
-        font-size: 0.93rem;
-      }
-
-      .overlap-note strong {
-        color: var(--amber);
-      }
-
-      .results-table {
+      table {
         width: 100%;
         border-collapse: collapse;
-        table-layout: fixed;
       }
 
-      .results-table thead th {
+      th {
+        font-size: 0.78rem;
+        font-weight: 600;
         color: var(--muted);
-        font-size: 0.82rem;
-        font-weight: 650;
-        letter-spacing: 0.08em;
+        text-align: left;
+        padding: 0 0 0.5rem;
+        letter-spacing: 0.04em;
         text-transform: uppercase;
         border-bottom: 1px solid var(--line);
-        padding: 0 0.95rem 0.8rem;
-        text-align: left;
       }
 
-      .results-table tbody tr {
-        border-top: 1px solid var(--line);
-      }
-
-      .results-table td {
-        padding: 0.75rem 0.95rem;
+      td {
+        padding: 0.45rem 0;
+        font-size: 0.92rem;
         vertical-align: top;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.04);
       }
 
-      .keyword-chip {
-        display: inline-flex;
-        align-items: center;
-        min-height: 2.1rem;
-        border: 1px solid rgba(158, 227, 179, 0.16);
-        border-radius: 0.85rem;
-        background: rgba(255, 255, 255, 0.035);
-        padding: 0.45rem 0.7rem;
+      td:first-child { padding-right: 1.5rem; }
+
+      .shared { color: var(--text); font-weight: 500; }
+      .unique { color: var(--muted); }
+
+      footer {
+        margin-top: 3rem;
+        color: var(--muted);
+        font-size: 0.78rem;
+        line-height: 1.5;
       }
 
-      .keyword-chip.muted {
-        border-color: rgba(194, 220, 202, 0.08);
-        color: var(--subtle);
-      }
-
-      @media (max-width: 920px) {
-        .hero-grid,
-        .results-top {
-          grid-template-columns: 1fr;
-        }
-
-        .scene-grid {
-          grid-template-columns: repeat(2, minmax(0, 1fr));
-        }
-      }
-
-      @media (max-width: 680px) {
-        main {
-          padding-inline: 1rem;
-        }
-
-        .signal-grid,
-        .metric-strip,
-        .scene-grid {
-          grid-template-columns: 1fr;
-        }
-
-        .results-table,
-        .results-table thead,
-        .results-table tbody,
-        .results-table tr,
-        .results-table th,
-        .results-table td {
-          display: block;
-        }
-
-        .results-table thead {
-          display: none;
-        }
-
-        .results-table tr {
-          padding: 0.45rem 0;
-        }
-
-        .results-table td {
-          padding: 0.45rem 0;
-          border-top: 0;
-        }
-      }
+      footer a { color: var(--muted); }
     </style>
   </head>
   <body>
-    <main>
-      <section class="panel hero">
-        <p class="eyebrow">Instant Sample Compare</p>
-        <div class="hero-grid">
-          <div class="hero-copy">
-            <h1>Yaket vs TF-IDF, without the wait.</h1>
-            <p>
-              This demo now behaves like a sample gallery, not a mini app runtime. The first view is already
-              rendered, switching samples is instant, and the page stays focused on what each extractor actually
-              surfaces.
-            </p>
-          </div>
+    <header>
+      <h1>Yaket vs TF-IDF</h1>
+      <p class="subtitle">Top 10 keywords from the same text, sorted alphabetically. Shared terms in white.</p>
+    </header>
 
-          <div class="signal-grid">
-            <article class="signal-card">
-              <span class="signal-label">Mode</span>
-              <strong>Single-document</strong>
-              <span class="scene-note">Yaket ranks phrases from one text, not a trained corpus.</span>
-            </article>
-            <article class="signal-card">
-              <span class="signal-label">Features</span>
-              <strong>Local statistical signals</strong>
-              <span class="scene-note">Position, spread, casing, context, and term relationships.</span>
-            </article>
-            <article class="signal-card">
-              <span class="signal-label">Load</span>
-              <strong>Precomputed scenes</strong>
-              <span class="scene-note">No remote runtime import before the page becomes useful.</span>
-            </article>
-            <article class="signal-card">
-              <span class="signal-label">Compare</span>
-              <strong>Alphabetized output</strong>
-              <span class="scene-note">Sorted for quick visual scanning instead of score-order theatrics.</span>
-            </article>
-          </div>
-        </div>
-      </section>
+    <nav id="tabs" role="tablist" aria-label="Sample texts">
+      <button role="tab" data-id="abstract" aria-selected="true">Abstract</button>
+      <button role="tab" data-id="news" aria-selected="false">News</button>
+      <button role="tab" data-id="newsletter" aria-selected="false">Newsletter</button>
+      <button role="tab" data-id="product-docs" aria-selected="false">Product docs</button>
+    </nav>
 
-      <section class="panel section-panel">
-        <div class="section-header">
-          <div class="stack" style="gap: 0.3rem">
-            <p class="eyebrow">Sample Scenes</p>
-            <h2>Pick a text and the comparison updates instantly.</h2>
-          </div>
-          <p>Design cue: compact scene cards, one active stage, and a single comparison surface below.</p>
-        </div>
+    <p class="source" id="source">We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.</p>
 
-        <div class="scene-grid" id="sample-tabs" role="tablist" aria-label="Sample scenes">
-          <button class="scene-card" type="button" id="tab-abstract" data-sample-id="abstract" role="tab" aria-controls="sample-panel" aria-selected="true">
-            <span class="scene-meta">dense research</span>
-            <span class="scene-title">Scientific abstract</span>
-            <span class="scene-note">Algorithm language, feature-heavy phrasing, low corpus bias.</span>
-          </button>
-          <button class="scene-card" type="button" id="tab-news" data-sample-id="news" role="tab" aria-controls="sample-panel" aria-selected="false">
-            <span class="scene-meta">news brief</span>
-            <span class="scene-title">News article</span>
-            <span class="scene-note">Named entities, repeated acquisition framing, short report style.</span>
-          </button>
-          <button class="scene-card" type="button" id="tab-newsletter" data-sample-id="newsletter" role="tab" aria-controls="sample-panel" aria-selected="false">
-            <span class="scene-meta">opinionated note</span>
-            <span class="scene-title">Newsletter</span>
-            <span class="scene-note">Mixed abstractions, product names, and repeated AI motifs.</span>
-          </button>
-          <button class="scene-card" type="button" id="tab-product-docs" data-sample-id="product-docs" role="tab" aria-controls="sample-panel" aria-selected="false">
-            <span class="scene-meta">product docs</span>
-            <span class="scene-title">Product docs</span>
-            <span class="scene-note">Retrieval vocabulary, infrastructure nouns, and implementation detail.</span>
-          </button>
-        </div>
+    <p class="overlap-line" id="overlap-line"><strong>0</strong> of 10 terms shared</p>
 
-        <section class="sample-stage" id="sample-panel" role="tabpanel" aria-labelledby="tab-abstract">
-          <div class="pill-row">
-            <span class="pill"><strong id="sample-language">EN</strong> language</span>
-            <span class="pill">top <strong id="sample-top">10</strong></span>
-            <span class="pill">max n-gram <strong id="sample-ngram">3</strong></span>
-            <span class="pill">shared terms <strong id="sample-overlap-count">0</strong></span>
-          </div>
-          <h2 id="sample-title">Scientific abstract</h2>
-          <p class="sample-summary" id="sample-summary">Algorithm language, feature-heavy phrasing, low corpus bias.</p>
-          <p class="sample-copy" id="sample-text">We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.</p>
-        </section>
-      </section>
+    <table>
+      <thead><tr><th>Yaket</th><th>TF-IDF</th></tr></thead>
+      <tbody id="tbody">
+        <tr><td class="unique">keyword extraction</td><td class="unique">based</td></tr>
+        <tr><td class="unique">keyword extraction method</td><td class="unique">based on multiple</td></tr>
+        <tr><td class="unique">lightweight keyword</td><td class="unique">benchmark</td></tr>
+        <tr><td class="unique">lightweight keyword extraction</td><td class="unique">benchmark datasets</td></tr>
+        <tr><td class="unique">local statistical features</td><td class="unique">benchmark datasets show</td></tr>
+        <tr><td class="unique">multiple local statistical</td><td class="unique">browser</td></tr>
+        <tr><td class="unique">present a lightweight</td><td class="unique">browser and edge</td></tr>
+        <tr><td class="unique">single documents</td><td class="unique">candidates</td></tr>
+        <tr><td class="unique">single documents based</td><td class="unique">method</td></tr>
+        <tr><td class="unique">statistical features</td><td class="unique">term</td></tr>
+      </tbody>
+    </table>
 
-      <section class="panel section-panel" id="results-panel">
-        <div class="results-top">
-          <div class="stack" style="gap: 0.35rem">
-            <p class="eyebrow">Results Snapshot</p>
-            <h2>Keyword table</h2>
-            <p class="results-hint">Both columns are alphabetized to make comparison easier. The point here is surfacing, not score drama.</p>
-          </div>
-
-          <div class="metric-strip">
-            <article class="metric-card">
-              <span class="signal-label">Shared</span>
-              <strong id="metric-overlap">0</strong>
-            </article>
-            <article class="metric-card">
-              <span class="signal-label">Yaket only</span>
-              <strong id="metric-yaket-only">10</strong>
-            </article>
-            <article class="metric-card">
-              <span class="signal-label">TF-IDF only</span>
-              <strong id="metric-tfidf-only">10</strong>
-            </article>
-          </div>
-        </div>
-
-        <p class="overlap-note" id="overlap-note"><strong>Shared terms:</strong> none on this sample.</p>
-
-        <table class="results-table">
-          <thead>
-            <tr>
-              <th scope="col">Yaket</th>
-              <th scope="col">TF-IDF</th>
-            </tr>
-          </thead>
-          <tbody id="results-body">
-            <tr><td><span class="keyword-chip">keyword extraction</span></td><td><span class="keyword-chip">based</span></td></tr>
-            <tr><td><span class="keyword-chip">keyword extraction method</span></td><td><span class="keyword-chip">based on multiple</span></td></tr>
-            <tr><td><span class="keyword-chip">lightweight keyword</span></td><td><span class="keyword-chip">benchmark</span></td></tr>
-            <tr><td><span class="keyword-chip">lightweight keyword extraction</span></td><td><span class="keyword-chip">benchmark datasets</span></td></tr>
-            <tr><td><span class="keyword-chip">local statistical features</span></td><td><span class="keyword-chip">benchmark datasets show</span></td></tr>
-            <tr><td><span class="keyword-chip">multiple local statistical</span></td><td><span class="keyword-chip">browser</span></td></tr>
-            <tr><td><span class="keyword-chip">present a lightweight</span></td><td><span class="keyword-chip">browser and edge</span></td></tr>
-            <tr><td><span class="keyword-chip">single documents</span></td><td><span class="keyword-chip">candidates</span></td></tr>
-            <tr><td><span class="keyword-chip">single documents based</span></td><td><span class="keyword-chip">method</span></td></tr>
-            <tr><td><span class="keyword-chip">statistical features</span></td><td><span class="keyword-chip">term</span></td></tr>
-          </tbody>
-        </table>
-      </section>
-    </main>
+    <footer>
+      <a href="https://github.com/adewale/yaket">github.com/adewale/yaket</a>
+      &middot; Precomputed results, no runtime dependencies.
+    </footer>
 
     <script>
-      const SAMPLE_PRESETS = {
+      var D = {
         abstract: {
-          id: "abstract",
-          label: "Scientific abstract",
-          note: "Algorithm language, feature-heavy phrasing, low corpus bias.",
-          language: "EN",
-          ngram: 3,
-          top: 10,
           text: "We present a lightweight keyword extraction method for single documents based on multiple local statistical features. The method combines term frequency, sentence position, spread, casing patterns, and term co-occurrence to rank both single-word and multi-word candidates without using an external corpus or supervised training data. Experimental results on benchmark datasets show strong overlap with reference YAKE outputs while remaining practical for browser and edge runtimes.",
+          yaket: ["keyword extraction","keyword extraction method","lightweight keyword","lightweight keyword extraction","local statistical features","multiple local statistical","present a lightweight","single documents","single documents based","statistical features"],
+          tfidf: ["based","based on multiple","benchmark","benchmark datasets","benchmark datasets show","browser","browser and edge","candidates","method","term"]
         },
         news: {
-          id: "news",
-          label: "News article",
-          note: "Named entities, repeated acquisition framing, short report style.",
-          language: "EN",
-          ngram: 3,
-          top: 10,
           text: "Google is acquiring data science community Kaggle. Sources tell us that Google is acquiring Kaggle, a platform that hosts data science and machine learning competitions. Details about the transaction remain somewhat vague, but the acquisition would give Google access to one of the largest communities of practicing data scientists and machine learning competitors.",
+          yaket: ["acquiring data science","acquiring Kaggle","community Kaggle","data science","data science community","Google","Google is acquiring","Kaggle","science community","science community Kaggle"],
+          tfidf: ["acquiring","data","data science","google","google is acquiring","kaggle","learning","machine","machine learning","science"]
         },
         newsletter: {
-          id: "newsletter",
-          label: "Newsletter",
-          note: "Mixed abstractions, product names, and repeated AI motifs.",
-          language: "EN",
-          ngram: 3,
-          top: 10,
           text: "Consumer AI is being absorbed by platforms. Enterprise AI converges around a few vendors. Vertical AI is the third path. If consumer gets absorbed by incumbents and enterprise consolidates around platforms, vertical AI carves out domain-specific value. The APIs become commodities. Meta just acqui-hired both Gizmo and Dreamer. Karpathy's software model evolves. The ecosystem grows through network effects.",
+          yaket: ["absorbed","absorbed by platforms","Consumer","Dreamer","Enterprise","Gizmo and Dreamer","platforms","vendors","Vertical","vertical AI carves"],
+          tfidf: ["absorbed","absorbed by incumbents","absorbed by platforms","acqui-hired","acqui-hired both gizmo","consumer","enterprise","platforms","vertical","vertical ai"]
         },
         "product-docs": {
-          id: "product-docs",
-          label: "Product docs",
-          note: "Retrieval vocabulary, infrastructure nouns, and implementation detail.",
-          language: "EN",
-          ngram: 2,
-          top: 10,
           text: "The indexing service creates hybrid retrieval metadata for each chunk. It stores BM25 text fields, dense embeddings, chunk-level filters, and weighted keywords. Incremental reindexing reuses previous vectors, but always refreshes keyword metadata so search results stay explainable and debuggable.",
-        },
+          yaket: ["chunk","chunk-level filters","creates hybrid","dense embeddings","hybrid retrieval","indexing","indexing service","retrieval metadata","service creates","text fields"],
+          tfidf: ["bm25","bm25 text","chunk","chunk-level","chunk-level filters","creates","creates hybrid","debuggable","dense","metadata"]
+        }
       };
 
-      const SAMPLE_RESULTS = {
-        abstract: {
-          yaket: [
-            "keyword extraction",
-            "keyword extraction method",
-            "lightweight keyword",
-            "lightweight keyword extraction",
-            "local statistical features",
-            "multiple local statistical",
-            "present a lightweight",
-            "single documents",
-            "single documents based",
-            "statistical features",
-          ],
-          tfidf: [
-            "based",
-            "based on multiple",
-            "benchmark",
-            "benchmark datasets",
-            "benchmark datasets show",
-            "browser",
-            "browser and edge",
-            "candidates",
-            "method",
-            "term",
-          ],
-        },
-        news: {
-          yaket: [
-            "acquiring data science",
-            "acquiring Kaggle",
-            "community Kaggle",
-            "data science",
-            "data science community",
-            "Google",
-            "Google is acquiring",
-            "Kaggle",
-            "science community",
-            "science community Kaggle",
-          ],
-          tfidf: [
-            "acquiring",
-            "data",
-            "data science",
-            "google",
-            "google is acquiring",
-            "kaggle",
-            "learning",
-            "machine",
-            "machine learning",
-            "science",
-          ],
-        },
-        newsletter: {
-          yaket: [
-            "absorbed",
-            "absorbed by platforms",
-            "Consumer",
-            "Dreamer",
-            "Enterprise",
-            "Gizmo and Dreamer",
-            "platforms",
-            "vendors",
-            "Vertical",
-            "vertical AI carves",
-          ],
-          tfidf: [
-            "absorbed",
-            "absorbed by incumbents",
-            "absorbed by platforms",
-            "acqui-hired",
-            "acqui-hired both gizmo",
-            "consumer",
-            "enterprise",
-            "platforms",
-            "vertical",
-            "vertical ai",
-          ],
-        },
-        "product-docs": {
-          yaket: [
-            "chunk",
-            "chunk-level filters",
-            "creates hybrid",
-            "dense embeddings",
-            "hybrid retrieval",
-            "indexing",
-            "indexing service",
-            "retrieval metadata",
-            "service creates",
-            "text fields",
-          ],
-          tfidf: [
-            "bm25",
-            "bm25 text",
-            "chunk",
-            "chunk-level",
-            "chunk-level filters",
-            "creates",
-            "creates hybrid",
-            "debuggable",
-            "dense",
-            "metadata",
-          ],
-        },
-      };
+      var tabs = document.getElementById("tabs");
+      var source = document.getElementById("source");
+      var overlapLine = document.getElementById("overlap-line");
+      var tbody = document.getElementById("tbody");
 
-      for (const sampleId of Object.keys(SAMPLE_RESULTS)) {
-        const result = SAMPLE_RESULTS[sampleId];
-        result.overlap = result.yaket.filter((keyword) => result.tfidf.includes(keyword));
-        result.yaketOnly = result.yaket.filter((keyword) => !result.tfidf.includes(keyword));
-        result.tfidfOnly = result.tfidf.filter((keyword) => !result.yaket.includes(keyword));
-      }
-
-      const tabs = [...document.querySelectorAll(".scene-card")];
-      const samplePanel = document.getElementById("sample-panel");
-      const sampleTitle = document.getElementById("sample-title");
-      const sampleSummary = document.getElementById("sample-summary");
-      const sampleText = document.getElementById("sample-text");
-      const sampleLanguage = document.getElementById("sample-language");
-      const sampleTop = document.getElementById("sample-top");
-      const sampleNgram = document.getElementById("sample-ngram");
-      const sampleOverlapCount = document.getElementById("sample-overlap-count");
-      const metricOverlap = document.getElementById("metric-overlap");
-      const metricYaketOnly = document.getElementById("metric-yaket-only");
-      const metricTfidfOnly = document.getElementById("metric-tfidf-only");
-      const overlapNote = document.getElementById("overlap-note");
-      const resultsBody = document.getElementById("results-body");
-      let currentSampleId = "abstract";
-
-      function renderRows(result) {
-        const rowCount = Math.max(result.yaket.length, result.tfidf.length, 1);
-        resultsBody.replaceChildren(...Array.from({ length: rowCount }, (_, index) => {
-          const row = document.createElement("tr");
-          row.append(createKeywordCell(result.yaket[index]), createKeywordCell(result.tfidf[index]));
-          return row;
-        }));
-      }
-
-      function createKeywordCell(keyword) {
-        const cell = document.createElement("td");
-        const chip = document.createElement("span");
-        chip.className = `keyword-chip${keyword == null ? " muted" : ""}`;
-        chip.textContent = keyword ?? "—";
-        cell.append(chip);
-        return cell;
-      }
-
-      function renderSample(id) {
-        const sample = SAMPLE_PRESETS[id] ?? SAMPLE_PRESETS.abstract;
-        const result = SAMPLE_RESULTS[sample.id];
-        currentSampleId = sample.id;
-
-        for (const tab of tabs) {
-          const isActive = tab.dataset.sampleId === sample.id;
-          tab.setAttribute("aria-selected", isActive ? "true" : "false");
-          tab.tabIndex = isActive ? 0 : -1;
+      function show(id) {
+        var d = D[id]; if (!d) return;
+        for (var b of tabs.querySelectorAll("button")) b.setAttribute("aria-selected", b.dataset.id === id ? "true" : "false");
+        source.textContent = d.text;
+        var rows = "";
+        for (var i = 0; i < Math.max(d.yaket.length, d.tfidf.length); i++) {
+          var y = d.yaket[i] || ""; var t = d.tfidf[i] || "";
+          var ys = d.tfidf.includes(y) ? "shared" : "unique";
+          var ts = d.yaket.includes(t) ? "shared" : "unique";
+          rows += "<tr><td class=\"" + ys + "\">" + y + "</td><td class=\"" + ts + "\">" + t + "</td></tr>";
         }
-
-        samplePanel.setAttribute("aria-labelledby", `tab-${sample.id}`);
-        sampleTitle.textContent = sample.label;
-        sampleSummary.textContent = sample.note;
-        sampleText.textContent = sample.text;
-        sampleLanguage.textContent = sample.language;
-        sampleTop.textContent = String(sample.top);
-        sampleNgram.textContent = String(sample.ngram);
-        sampleOverlapCount.textContent = String(result.overlap.length);
-        metricOverlap.textContent = String(result.overlap.length);
-        metricYaketOnly.textContent = String(result.yaketOnly.length);
-        metricTfidfOnly.textContent = String(result.tfidfOnly.length);
-        overlapNote.innerHTML = result.overlap.length > 0
-          ? `<strong>Shared terms:</strong> ${result.overlap.join(", ")}`
-          : "<strong>Shared terms:</strong> none on this sample.";
-
-        renderRows(result);
+        tbody.innerHTML = rows;
+        var shared = d.yaket.filter(function(k) { return d.tfidf.includes(k); }).length;
+        overlapLine.innerHTML = "<strong>" + shared + "</strong> of " + Math.max(d.yaket.length, d.tfidf.length) + " terms shared";
       }
 
-      for (const tab of tabs) {
-        tab.addEventListener("click", () => renderSample(tab.dataset.sampleId));
-      }
-
-      document.getElementById("sample-tabs").addEventListener("keydown", (event) => {
-        if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") {
-          return;
-        }
-
-        const currentIndex = tabs.findIndex((tab) => tab.dataset.sampleId === currentSampleId);
-        const direction = event.key === "ArrowRight" ? 1 : -1;
-        const nextIndex = (currentIndex + direction + tabs.length) % tabs.length;
-        const nextTab = tabs[nextIndex];
-        renderSample(nextTab.dataset.sampleId);
-        nextTab.focus();
-      });
+      tabs.addEventListener("click", function(e) { var b = e.target.closest("button"); if (b) show(b.dataset.id); });
     </script>
   </body>
 </html>
