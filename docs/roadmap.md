@@ -24,9 +24,10 @@ Yaket already includes the core YAKE pipeline:
 - dedup helpers and deterministic ordering
 - bundled stopwords
 - regression fixtures plus Python differential tests on frozen samples
+- broader property coverage for Unicode, emoji, CJK, long-document, and dedup invariants
 - pluggable hooks for text processing, normalization, similarity, scoring, and filtering
 - Bobbin-compatible adapter output
-- document-oriented extraction helpers for ingestion pipelines
+- document-oriented extraction helpers for ingestion pipelines, including pre/post hooks and stable serialization helpers
 - CLI support
 - text highlighting support
 - optional lemmatization hooks
@@ -75,35 +76,34 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
 
 1. Evaluate whether the current CLI needs closer parity with upstream ergonomics or richer publishing examples.
 2. Compare the current `TextHighlighter` behavior against upstream and extend it only if concrete gaps matter to adopters.
-3. Move lemmatization from a hook-only extension point to a real optional implementation if a concrete consumer needs it.
+3. Keep lemmatization hook-only unless a concrete consumer justifies bundled optional backends.
 4. Keep cache statistics and related diagnostics aligned with actual API needs.
 5. Port any remaining public utility APIs that downstream users would reasonably expect from YAKE.
 
 ### Tier 3: Packaging and runtime completeness
 
-1. Treat Cloudflare Worker compatibility as a release gate, not as a later enhancement.
-2. Ensure the extraction path requires no Node-only runtime APIs such as `fs`, `path`, `child_process`, native addons, or process-dependent asset loading.
-3. Add browser and worker-focused entry points if the project needs multi-runtime support.
-4. Publish ESM+CJS compatibility if there is downstream demand, but never at the expense of Worker safety.
-5. Document language asset loading and custom stopword overrides more explicitly.
+1. Keep Cloudflare Worker compatibility as a release gate, not a best-effort target.
+2. Keep the extraction path free of Node-only runtime APIs such as `fs`, `path`, `child_process`, native addons, or process-dependent asset loading.
+3. Revisit ESM+CJS compatibility only if downstream demand appears, and never at the expense of Worker safety.
+4. Keep language asset loading and custom stopword override docs aligned with the real runtime behavior.
 
 ### Tier 4: Bobbin adoption and safe reuse
 
-1. Add a Bobbin compatibility wrapper for the current `extractYakeKeywords(text, n?, maxNgram?)` calling convention.
+1. Keep the existing Bobbin compatibility wrapper for `extractYakeKeywords(text, n?, maxNgram?)` stable as adoption continues.
 2. Keep Bobbin integration incremental so `topic-extractor.ts` can adopt Yaket without a large rewrite.
 3. Add a migration path that preserves Bobbin's current topic-layer responsibilities:
    - entity detection
    - topic normalization
    - noise filtering
    - topic merge policy
-4. Add a second adoption track for generic consumers such as `flux-search` so Yaket does not assume a topic system exists.
-5. Document which APIs are extraction-core APIs versus adoption-layer adapters.
+4. Keep the existing generic-consumer adoption track healthy so Yaket does not assume a topic system exists.
+5. Keep documentation clear about which APIs are extraction-core APIs versus adoption-layer adapters.
 
-The Bobbin repo integration test pass is deferred to `TODO.md`.
+The remaining Bobbin work is to keep that integration validation current as Bobbin evolves.
 
 ## Pluggable Architecture Plan
 
-To make Yaket useful in ingestion pipelines, the implementation should evolve from a direct port into a typed, composable pipeline without losing the default YAKE behavior.
+Yaket already exposes a typed, composable pipeline surface. The remaining work here is to keep that surface coherent without losing the default YAKE behavior.
 
 ### Design goals
 
@@ -114,35 +114,37 @@ To make Yaket useful in ingestion pipelines, the implementation should evolve fr
 5. Keep the extraction core runtime-portable across Node, browsers, and Cloudflare Workers.
 6. Avoid coupling the extraction core to Bobbin's topic model so future consumers can adopt Yaket independently.
 
-### Proposed interfaces
+### Implemented interfaces and remaining gaps
 
-Introduce a small set of strategy interfaces around the existing core:
+Yaket already exposes most of the intended strategy surface around the existing core:
 
-1. `SentenceSplitter`
-   - `split(text: string): string[]`
-2. `Tokenizer`
-   - `tokenize(sentence: string): string[]`
-3. `StopwordProvider`
+1. `TextProcessor`
+   - covers sentence splitting and tokenization in one Worker-safe interface
+2. `StopwordProvider`
    - `load(language: string): Set<string>`
-4. `CandidateNormalizer`
+3. `CandidateNormalizer`
    - lowercasing, plural normalization, punctuation handling
-5. `SimilarityStrategy`
+4. `SimilarityStrategy`
    - `compare(a: string, b: string): number`
-6. `KeywordScorer`
-    - default YAKE scorer plus optional alternates for experiments
-7. `SingleWordScorer`
-   - replaces the internal YAKE single-word score formula directly
-8. `MultiWordScorer`
-   - replaces the internal YAKE multi-word score formula directly
-9. `CandidateFilter`
-   - boundary, stopword, and tag filtering as replaceable policies
+5. `KeywordScorer`
+     - default YAKE scorer plus optional alternates for experiments
+6. `SingleWordScorer`
+    - replaces the internal YAKE single-word score formula directly
+7. `MultiWordScorer`
+    - replaces the internal YAKE multi-word score formula directly
+8. `CandidateFilter`
+    - boundary, stopword, and tag filtering as replaceable policies
+
+Remaining follow-up: split `TextProcessor` into separate `SentenceSplitter` and `Tokenizer` interfaces only if a real consumer needs that extra granularity.
 
 ### Recommended API shape
 
-1. Keep `new KeywordExtractor(options)` as the main API.
-2. Add `createKeywordExtractor({ ...strategies })` for composition-heavy users.
-3. Add pure functions `extract(text, options)` and `extractKeywords(text, options)` for one-shot use.
-4. Add a richer result type:
+The current public shape already includes:
+
+1. `new KeywordExtractor(options)` as the main API.
+2. `createKeywordExtractor({ ...strategies })` for composition-heavy users.
+3. pure functions `extract(text, options)` and `extractKeywords(text, options)` for one-shot use.
+4. a richer result type:
 
 ```ts
 interface KeywordResult {
@@ -155,41 +157,45 @@ interface KeywordResult {
 }
 ```
 
-5. Keep metadata optional so the simple API stays lightweight.
+5. metadata kept optional so the simple API stays lightweight.
+
+Remaining follow-up: simplify alias-heavy option handling when backwards-compatibility pressure is lower.
 
 ### Adoption layers
 
-To stay useful for Bobbin without overfitting to Bobbin, the plan should explicitly separate core APIs from consumer adapters.
+To stay useful for Bobbin without overfitting to Bobbin, Yaket already separates core APIs from consumer adapters.
 
 1. Core library layer
-   - `KeywordExtractor`
-   - `extractKeywords`
-   - strategy interfaces
-   - stopword and tokenization utilities
+    - `KeywordExtractor`
+    - `extractKeywords`
+    - strategy interfaces
+    - stopword and tokenization utilities
 2. Consumer adapter layer
-   - `createBobbinKeywordAdapter()` or equivalent example wrapper
-   - document-oriented helpers for pipeline consumers
-   - optional presets for Worker-safe defaults
+    - `extractYakeKeywords()` for Bobbin-shaped extraction output
+    - document-oriented helpers for pipeline consumers
+    - Worker-safe default extraction path
 3. Documentation layer
-   - Bobbin integration guide
-   - generic ingestion pipeline guide
-   - future `flux-search` usage guidance built around documents and metadata, not topics
+    - Bobbin integration guide
+    - generic ingestion pipeline guide
+    - future `flux-search` usage guidance built around documents and metadata, not topics
 
 The key rule is that Bobbin should consume Yaket through a thin adapter, while the extractor core remains generic enough for reuse in systems that only need keyword extraction.
 
 ### Ingestion pipeline integration
 
-To fit common data pipelines, add adapters around the core extractor rather than baking ingestion logic into it.
+Yaket already includes document-oriented adapters around the core extractor rather than baking ingestion logic into it.
 
 1. `extractFromDocument(document)` helpers where `document` includes `id`, `language`, `title`, `body`, and metadata.
 2. Batch helpers for arrays and async iterables.
 3. Backpressure-friendly async APIs for stream ingestion.
 4. Hook points for pre-normalization and post-ranking enrichment.
-5. First-class support for deterministic serialization of outputs so they can be cached or diffed in ETL runs.
+5. Stable serialization support so outputs can be cached or diffed in ETL runs.
+
+Remaining follow-up: add richer memory-footprint reporting for pipeline adopters only if real users need it.
 
 ### Bobbin-specific adoption plan
 
-The roadmap should include a concrete Bobbin adoption track.
+Bobbin remains a concrete adoption track for Yaket.
 
 1. Preserve Bobbin's current call shape and result shape during migration.
 2. Add Yaket-backed drop-in helpers that can replace the current `src/services/yake.ts` behavior behind the same interface.
@@ -201,14 +207,16 @@ The roadmap should include a concrete Bobbin adoption track.
    - topic scoring merges
 5. Do not move Bobbin-specific newsletter heuristics into Yaket core.
 
-### Future-consumer plan
+### Future-consumer track
 
-The roadmap should also include a non-Bobbin reuse track so Yaket does not corrupt surrounding projects.
+Yaket already supports a non-Bobbin reuse track so it does not corrupt surrounding projects.
 
 1. Document Yaket as a standalone keyword extractor that can be used without any topic system.
 2. Provide document-centric examples that fit search/indexing systems such as `flux-search`.
 3. Avoid requiring entity extraction, taxonomy layers, or corpus stats in the main API.
 4. Keep optional adapters additive so future projects can adopt Yaket without pulling in Bobbin assumptions.
+
+Remaining follow-up: keep these standalone and search/indexing-oriented examples current as new adopters arrive.
 
 ### Internal refactors that support this
 
@@ -221,6 +229,8 @@ The roadmap should also include a non-Bobbin reuse track so Yaket does not corru
 ## Testing And Verification Plan
 
 This plan follows the strongest patterns from `adewale/testing-best-practices/research`.
+
+Much of this plan is already implemented. The remaining work is mostly about broadening corpus coverage, multilingual depth, Bobbin adoption validation, and mutation/property coverage.
 
 ### Principles to follow
 
@@ -285,11 +295,11 @@ Following the `NOVEL_TESTING_TYPES.md` differential testing guidance:
    - an intentional documented deviation
    - an ambiguity requiring a regression fixture
 
-This should become a standard CI job, not just a local optional test.
+This already exists as a checked-in verification path. Remaining work is broader corpus coverage and more multilingual differential checks.
 
 #### 4. Property-based tests
 
-Following `LESSONS_FROM_ADEWALE_REPOS.md`, `LESSONS_FROM_NPRYCE.md`, and `DECISION_TREE.md`, add `fast-check` properties for:
+Following `LESSONS_FROM_ADEWALE_REPOS.md`, `LESSONS_FROM_NPRYCE.md`, and `DECISION_TREE.md`, keep expanding `fast-check` properties around:
 
 1. never throws on arbitrary Unicode text
 2. deterministic repeated runs on the same input
@@ -328,17 +338,17 @@ Following `DECISION_TREE.md`:
 
 #### 7. Cloudflare Worker compatibility tests
 
-Because Worker compatibility is a hard requirement, add explicit runtime checks for it.
+Because Worker compatibility is a hard requirement, Yaket already includes explicit runtime checks for it.
 
 1. smoke test Yaket inside a Cloudflare Worker-style runtime
 2. verify there are no runtime filesystem reads
 3. verify the default extraction path does not depend on Node built-ins
 4. verify bundled stopwords and assets work under Worker constraints
-5. add bundle-size awareness if Yaket is going to ship into edge workloads repeatedly
+5. remaining follow-up: add bundle-size awareness if Yaket is going to ship into edge workloads repeatedly
 
 #### 8. Documentation-code sync tests
 
-Following the documentation sync pattern in `DECISION_TREE.md`:
+Yaket already includes documentation-code sync tests. Remaining work is to keep them broad enough as the API and docs evolve:
 
 1. verify README examples compile
 2. verify documented public exports exist
@@ -348,7 +358,7 @@ Following the documentation sync pattern in `DECISION_TREE.md`:
 
 #### 9. Mutation testing for test-quality audits
 
-Following `NOVEL_TESTING_TYPES.md` and the anti-pattern guidance:
+Current support exists through `Stryker` configuration. Remaining work:
 
 1. run `Stryker` periodically on the scoring and dedup modules
 2. use survived mutants to find weak assertions
@@ -356,16 +366,16 @@ Following `NOVEL_TESTING_TYPES.md` and the anti-pattern guidance:
 
 #### 10. Bobbin adoption tests
 
-Bobbin should be a first-class integration target in the roadmap.
+Bobbin remains a first-class integration target in the roadmap.
 
-1. run Yaket through Bobbin's existing `extractTopics`-level tests
-2. add explicit compatibility tests for Bobbin's current YAKE wrapper shape
+1. keep running Yaket through Bobbin's existing `extractTopics`-level tests as Bobbin evolves
+2. keep explicit compatibility tests for Bobbin's current YAKE wrapper shape
 3. compare topic outputs on Bobbin-style newsletter/article text
 4. add regression tests for any Bobbin-specific ranking or filtering bugs discovered during adoption
 
 #### 11. Future-consumer tests
 
-To avoid overfitting Yaket to Bobbin, add tests that exercise Yaket in a generic document pipeline shape.
+To avoid overfitting Yaket to Bobbin, keep expanding tests that exercise Yaket in a generic document pipeline shape.
 
 1. document-oriented extraction tests without topic taxonomy
 2. indexing/search-oriented tests that validate stable keyword extraction from plain documents
@@ -381,74 +391,16 @@ From `ANTIPATTERNS.md`, explicitly avoid:
 4. snapshotting unreadable output that no one reviews
 5. letting docs drift away from the real API
 
-## Benchmark Plan: Yaket vs TF-IDF On Komoroske
+## Benchmark Continuation
 
-The benchmark should compare Yaket against a straightforward TF-IDF baseline on one episode from the Komoroske dataset.
+Yaket already includes benchmark scripts and checked-in reports for Komoroske and dataset-oriented comparisons.
 
-### Goal
+Remaining benchmark work:
 
-Measure whether Yaket produces more useful top keywords than a simpler statistical baseline while preserving acceptable runtime.
-
-Because Bobbin is the first adopter, the benchmark plan should also prove that Yaket is a practical replacement for Bobbin's current YAKE-like implementation without reducing topic quality.
-
-### Dataset slice
-
-1. Select one episode transcript from the Komoroske dataset.
-2. Record the exact episode identifier in the benchmark fixture.
-3. Preserve the raw source text and any normalization step so runs are reproducible.
-
-### Baseline definition
-
-Implement a simple, explicit TF-IDF baseline in TypeScript.
-
-Recommended baseline setup:
-
-1. tokenize using the same sentence/token normalization used by Yaket where practical
-2. generate candidate n-grams up to the same `n`
-3. remove stopwords using the same stopword set
-4. compute TF-IDF scores over the Komoroske corpus if multiple documents are available
-
-If only one episode is available locally, use transcript chunks as pseudo-documents and label that benchmark as provisional.
-
-### Metrics
-
-Compare both systems on:
-
-1. top-10 keyword list
-2. top-20 keyword list
-3. overlap with upstream Python YAKE top-k
-4. qualitative relevance review against the episode title, description, and transcript themes
-5. runtime per extraction
-6. peak memory or rough heap growth if practical
-
-For adoption decisions, also compare:
-
-1. current Bobbin `extractYakeKeywords`
-2. Yaket
-3. TF-IDF baseline
-4. upstream Python YAKE
-
-### Evaluation method
-
-1. Run upstream Python YAKE on the same episode and treat it as the behavioral reference.
-2. Run Yaket.
-3. Run the current Bobbin implementation.
-4. Run TF-IDF baseline.
-5. Produce a benchmark report containing:
-   - the four ranked outputs
-   - score normalization notes
-   - overlap metrics
-   - timing numbers
-   - a short qualitative analysis
-
-### Success criteria
-
-Yaket should:
-
-1. match or exceed TF-IDF on qualitative relevance
-2. remain close to upstream Python YAKE ordering for the same text
-3. keep runtime within a practical ingestion-pipeline budget
-4. not materially degrade Bobbin-style downstream topic quality
+1. expand multilingual benchmark coverage
+2. keep comparing Yaket against upstream Python YAKE, TF-IDF, and the Bobbin baseline on new corpora
+3. add more adoption-focused benchmark notes when Bobbin integration validation is run
+4. add more explicit memory and bundle-size reporting if edge adopters need it
 
 ## Remaining Sequence
 
@@ -462,13 +414,9 @@ Recommended next implementation order:
 6. evaluate whether a fuller optional lemmatization implementation is justified
 7. add any remaining package/runtime hardening that real adopters need
 
-## Suggested Deliverables
+## Remaining Deliverables
 
-1. `docs/roadmap.md` kept current as scope evolves
-2. `test/fixtures/` corpus with reviewed baselines
-3. `docs/integrations/bobbin.md` or equivalent section documenting Bobbin adoption
-4. `docs/integrations/pipelines.md` or equivalent section documenting generic ingestion-pipeline adoption
-5. `scripts/benchmark.ts` for Yaket vs TF-IDF vs Python YAKE vs current Bobbin implementation
-6. CI jobs for unit, fixture, differential, Worker compatibility, and packaging tests
-7. benchmark report checked into `docs/benchmarks/`
-8. mutation-testing score tracking for scoring and dedup modules
+1. broader reviewed fixture corpus, especially for multilingual and tokenizer-edge texts
+2. keep Bobbin repo integration validation current as Bobbin changes
+3. additional multilingual benchmark reports
+4. stronger mutation/property coverage reporting for scoring and dedup modules

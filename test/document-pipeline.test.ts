@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { extractFromDocument, extractFromDocuments, extractFromDocumentStream } from "../src/index.js";
+import { estimateSerializedBytes, extractFromDocument, extractFromDocuments, extractFromDocumentStream, serializeDocumentKeywordResult, serializeDocumentKeywordResults } from "../src/index.js";
 
 describe("document pipeline helpers", () => {
   it("extracts keyword details from a single document", () => {
@@ -72,5 +72,48 @@ describe("document pipeline helpers", () => {
 
     expect(result.language).toBe("en");
     expect(result.keywords.some((item) => item.keyword.includes("Cloudflare"))).toBe(false);
+  });
+
+  it("supports document text and keyword post-processing hooks", () => {
+    const result = extractFromDocument({
+      id: "doc-hooks",
+      title: "Cloudflare Workers",
+      body: "Search indexing improves relevance.",
+      language: "en",
+    }, {
+      top: 10,
+      n: 2,
+      beforeExtractText(text) {
+        return `${text}\n\nEdge runtime diagnostics improve visibility.`;
+      },
+      afterExtractKeywords(keywords) {
+        return keywords.filter((item) => item.ngramSize === 2);
+      },
+    });
+
+    expect(result.keywords.every((item) => item.ngramSize === 2)).toBe(true);
+    expect(result.keywords.some((item) => item.normalizedKeyword.includes("runtime"))).toBe(true);
+  });
+
+  it("serializes document keyword results deterministically", () => {
+    const first = extractFromDocument({
+      id: "stable",
+      body: "Search indexing improves relevance.",
+      language: "en",
+      metadata: { b: 2, a: 1 },
+    }, { top: 3, n: 2 });
+    const second = extractFromDocument({
+      id: "stable",
+      body: "Search indexing improves relevance.",
+      language: "en",
+      metadata: { a: 1, b: 2 },
+    }, { top: 3, n: 2 });
+
+    const firstSerialized = serializeDocumentKeywordResult(first);
+    const secondSerialized = serializeDocumentKeywordResult(second);
+
+    expect(firstSerialized).toBe(secondSerialized);
+    expect(serializeDocumentKeywordResults([first])).toBe(`[${firstSerialized}]`);
+    expect(estimateSerializedBytes(first)).toBeGreaterThan(0);
   });
 });

@@ -1,7 +1,19 @@
 export { ComposedWord } from "./ComposedWord.js";
 export { extractYakeKeywords, type BobbinYakeResult } from "./bobbin.js";
 export { DataCore } from "./DataCore.js";
-export { extractFromDocument, extractFromDocuments, extractFromDocumentStream, type DocumentExtractionOptions, type DocumentKeywordResult, type InputDocument } from "./document.js";
+export {
+  estimateSerializedBytes,
+  extractFromDocument,
+  extractFromDocuments,
+  extractFromDocumentStream,
+  serializeDocumentKeywordResult,
+  serializeDocumentKeywordResults,
+  type DocumentExtractionOptions,
+  type DocumentKeywordHookContext,
+  type DocumentKeywordResult,
+  type DocumentTextHookContext,
+  type InputDocument,
+} from "./document.js";
 export { TextHighlighter, type TextHighlighterOptions } from "./highlight.js";
 export { KeywordExtractor, createKeywordExtractor, extract, extractKeywordDetails, extractKeywords, type KeywordExtractorOptions, type KeywordScore, type YakeOptions, Levenshtein } from "./KeywordExtractor.js";
 export { SingleWord } from "./SingleWord.js";

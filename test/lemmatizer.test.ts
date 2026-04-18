@@ -90,4 +90,13 @@ describe("lemmatizer hook", () => {
       { token: "systems", original: "systems", language: "en" },
     ]);
   });
+
+  it("rejects unsupported upstream-style string lemmatizer backends clearly", () => {
+    expect(() => extractKeywordDetails("models model models", {
+      top: 10,
+      n: 1,
+      lan: "en",
+      lemmatizer: "spacy" as unknown as Lemmatizer,
+    })).toThrow(/not implemented in Yaket/i);
+  });
 });

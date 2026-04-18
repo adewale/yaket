@@ -167,7 +167,7 @@ type KeywordResult = {
 ### Document-oriented pipelines
 
 ```ts
-import { extractFromDocument } from "@ade_oshineye/yaket";
+import { extractFromDocument, serializeDocumentKeywordResult } from "@ade_oshineye/yaket";
 
 const result = extractFromDocument({
   id: "doc-1",
@@ -175,7 +175,14 @@ const result = extractFromDocument({
   title: "Edge runtimes",
   body: "Cloudflare Workers process requests close to users.",
 });
+
+const serialized = serializeDocumentKeywordResult(result);
 ```
+
+Document helpers also support lightweight pipeline hooks:
+
+- `beforeExtractText(text, context)` for pre-normalization before extraction
+- `afterExtractKeywords(keywords, context)` for post-ranking pipeline shaping
 
 ### [Bobbin](https://github.com/adewale/bobbin)-compatible adapter
 
@@ -229,6 +236,8 @@ Available extension points:
 - `MultiWordScorer`
 - `KeywordScorer`
 - `candidateFilter`
+
+`lemmatizer` stays hook-based in Yaket. Upstream-style string backends such as `"spacy"` or `"nltk"` are intentionally not implemented in the extraction core.
 
 Yaket also exports:
 

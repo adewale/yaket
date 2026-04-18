@@ -55,6 +55,8 @@ Recommended adoption sequence:
 
 The full Bobbin repo integration test pass is intentionally deferred and tracked in `TODO.md`.
 
+Update: Yaket has now been run through Bobbin's YAKE, topic-extractor, topic-system, and extraction-quality tests in the Bobbin reference checkout via the Bobbin adapter path.
+
 ## Example integration
 
 Bobbin's `extractTopics()` flow can stay structurally the same:

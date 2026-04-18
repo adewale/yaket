@@ -10,15 +10,26 @@ Parity, ordering, and documentation consistency update.
 
 - clarified that `keyword` preserves source-text surface case while `normalizedKeyword` remains the normalized comparison key
 - updated README, API reference, algorithm-drift notes, and TODO tracking so the current parity position is described consistently
+- kept lemmatization hook-only by design and documented unsupported upstream-style string backend selectors more clearly
 
 ### Fixed
 
 - sentence splitting drift that incorrectly merged sentences when the next sentence started with a lowercase token
 - near-tie ordering for adjacent sliding 3-gram candidates such as `Kaggle data science` vs `Google Kaggle data`
 - documentation drift around known ordering issues, which are now fixed for the tracked English parity cases
+- tokenizer drift around abbreviation tokens, ellipses, and parenthetical sentence endings
+- Bobbin adapter leakage where unigram components of stronger multi-word entity phrases could survive into Bobbin topic extraction
+
+### Added
+
+- document pipeline `beforeExtractText` and `afterExtractKeywords` hooks
+- stable serialization helpers for document keyword results plus serialized-byte estimation
+- broader property coverage for Unicode, emoji, CJK, long-document, and dedup/similarity invariants
+- lightweight heap-delta reporting in benchmark scripts
 
 ### Notes
 
+- Yaket now passes the Bobbin YAKE, topic-extractor, topic-system, and extraction-quality tests in the Bobbin reference checkout when wired in through the Bobbin adapter
 - the remaining tracked multilingual parity gap is the Portuguese ranking drift captured in upstream `test_n3_PT`
 - preserving original keyword case is intentional behavior in Yaket, even where upstream YAKE lowercases output in some no-dedup paths
 

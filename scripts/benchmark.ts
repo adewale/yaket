@@ -58,6 +58,7 @@ type RankedKeyword = { keyword: string; score: number };
 type BenchmarkResult = {
   label: string;
   durationMs: number;
+  heapDeltaBytes: number;
   keywords: RankedKeyword[];
   error?: string;
 };
@@ -70,18 +71,21 @@ type Episode = {
 
 function benchmark(label: string, run: () => RankedKeyword[]): BenchmarkResult {
   const start = performance.now();
+  const heapStart = process.memoryUsage().heapUsed;
 
   try {
     const keywords = run();
     return {
       label,
       durationMs: performance.now() - start,
+      heapDeltaBytes: Math.max(process.memoryUsage().heapUsed - heapStart, 0),
       keywords,
     };
   } catch (error) {
     return {
       label,
       durationMs: performance.now() - start,
+      heapDeltaBytes: Math.max(process.memoryUsage().heapUsed - heapStart, 0),
       keywords: [],
       error: error instanceof Error ? error.message : String(error),
     };
@@ -253,8 +257,8 @@ function renderReport(input: {
     "",
     "## Runtime",
     "",
-    "| System | Duration (ms) | Notes |",
-    "|---|---:|---|",
+    "| System | Duration (ms) | Heap Delta (KB) | Notes |",
+    "|---|---:|---:|---|",
     runtimeRow(input.yaket),
     runtimeRow(input.bobbin),
     runtimeRow(input.tfidf),
@@ -295,7 +299,7 @@ function renderReport(input: {
 }
 
 function runtimeRow(result: BenchmarkResult): string {
-  return `| ${result.label} | ${result.durationMs.toFixed(2)} | ${result.error ?? "ok"} |`;
+  return `| ${result.label} | ${result.durationMs.toFixed(2)} | ${(result.heapDeltaBytes / 1024).toFixed(2)} | ${result.error ?? "ok"} |`;
 }
 
 function renderKeywords(keywords: RankedKeyword[]): string {

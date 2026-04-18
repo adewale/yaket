@@ -32,4 +32,17 @@ describe("Bobbin adapter", () => {
       expect(item.keyword.split(/\s+/)).toHaveLength(1);
     }
   });
+
+  it("suppresses unigram components of stronger multi-word phrases for Bobbin", () => {
+    const result = extractYakeKeywords(
+      "Jeremie Miller said that resonant computing challenges extraction. Jeremie Miller is an interesting thinker.",
+      10,
+      3,
+    );
+
+    const keywords = result.map((item) => item.keyword);
+    expect(keywords).toContain("jeremie miller");
+    expect(keywords).not.toContain("jeremie");
+    expect(keywords).not.toContain("miller");
+  });
 });

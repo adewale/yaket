@@ -110,6 +110,18 @@ type BobbinYakeResult = {
 
 Use these for ingestion pipelines, indexing jobs, and ETL-style processing.
 
+`DocumentExtractionOptions` also supports:
+
+- `includeTitleInText`
+- `beforeExtractText(text, context)`
+- `afterExtractKeywords(keywords, context)`
+
+### `serializeDocumentKeywordResult(result)`
+### `serializeDocumentKeywordResults(results)`
+### `estimateSerializedBytes(value)`
+
+Use these when pipeline consumers need deterministic caching, diffing, or lightweight payload-size estimation.
+
 ## Stopwords
 
 ### `supportedLanguages`
@@ -170,6 +182,8 @@ Yaket exports the main extension interfaces directly:
 - `MultiWordScorer`
 - `KeywordScorer`
 - `CandidateFilterInput`
+
+Lemmatization remains hook-only. Yaket does not implement upstream-style string backend selectors such as `"spacy"` or `"nltk"` inside the extraction core.
 
 ## Choosing an API
 

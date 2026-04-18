@@ -4,10 +4,9 @@ Deferred items tracked here intentionally remain outside the current implementat
 
 ## Deferred
 
-1. Run Yaket through Bobbin's real `extractTopics` and topic-quality test suite in the Bobbin repository.
-2. Expand multilingual support and multilingual parity validation beyond the current smoke and regression coverage.
-3. Tighten `seqm` parity with upstream YAKE's optimized similarity path, especially around threshold behavior, early rejection, and near-tie dedup ordering.
-4. Continue reducing tokenizer and sentence-splitting drift from Python YAKE's `segtok`-based behavior, especially for Unicode punctuation, contractions, abbreviations, and multilingual texts.
-5. Add broader fuzzing and edge-case coverage for Unicode, emoji, CJK text, and very long documents.
-6. Expand multilingual verification and benchmark coverage beyond the current regression suite, especially across the bundled stopword languages.
-7. Investigate the remaining Portuguese ranking drift seen in upstream `test_n3_PT`, where Yaket still surfaces `plataforma` and reorders lower-ranked named phrases versus Python YAKE.
+1. Expand multilingual support and multilingual parity validation beyond the current smoke and regression coverage.
+2. Tighten `seqm` parity with upstream YAKE's optimized similarity path, especially around threshold behavior, early rejection, and harder edge-case dedup decisions.
+3. Continue reducing tokenizer and sentence-splitting drift from Python YAKE's `segtok`-based behavior, especially for multilingual texts and harder Unicode punctuation cases.
+4. Extend differential fuzzing beyond the current Unicode, emoji, CJK, and long-document property coverage.
+5. Expand multilingual verification and benchmark coverage beyond the current regression suite, especially across the bundled stopword languages.
+6. Investigate the remaining Portuguese ranking drift seen in upstream `test_n3_PT`, where Yaket still surfaces `plataforma` and reorders lower-ranked named phrases versus Python YAKE.

@@ -57,7 +57,25 @@ export function tokenizeWords(text: string): string[] {
   const tokens = text.match(TOKEN_PATTERN) ?? [];
   const expanded: string[] = [];
 
-  for (const token of tokens) {
+  for (let index = 0; index < tokens.length; index += 1) {
+    const token = tokens[index]!;
+
+    if (token === ".") {
+      const ellipsis = consumeEllipsis(tokens, index);
+      if (ellipsis != null) {
+        expanded.push(ellipsis.value);
+        index = ellipsis.endIndex;
+        continue;
+      }
+    }
+
+    const nextToken = tokens[index + 1];
+    if (nextToken === "." && shouldAttachTrailingPeriod(token)) {
+      expanded.push(...splitContractions(`${token}.`));
+      index += 1;
+      continue;
+    }
+
     expanded.push(...splitContractions(token));
   }
 
@@ -86,7 +104,13 @@ export function splitSentences(text: string): string[] {
     }
 
     let end = index;
+    while (end + 1 < text.length && text[end + 1] === text[end]) {
+      end += 1;
+    }
     while (end + 1 < text.length && SENTENCE_CLOSERS.has(text[end + 1]!)) {
+      end += 1;
+    }
+    if (end + 1 < text.length && text[end + 1] === "." && text[end] !== ".") {
       end += 1;
     }
 
@@ -130,6 +154,28 @@ function splitContractions(token: string): string[] {
 
 function startsWithApostrophe(token: string): boolean {
   return token.startsWith("'") || token.startsWith("’");
+}
+
+function consumeEllipsis(tokens: string[], startIndex: number): { value: string; endIndex: number } | null {
+  let endIndex = startIndex;
+  while (tokens[endIndex + 1] === ".") {
+    endIndex += 1;
+  }
+
+  const dotCount = endIndex - startIndex + 1;
+  if (dotCount < 3) {
+    return null;
+  }
+
+  return {
+    value: ".".repeat(dotCount),
+    endIndex,
+  };
+}
+
+function shouldAttachTrailingPeriod(token: string): boolean {
+  const normalized = token.toLowerCase();
+  return token.includes(".") || COMMON_ABBREVIATIONS.has(normalized);
 }
 
 function isSentenceTerminal(char: string): boolean {
@@ -178,15 +224,6 @@ function getPreviousWord(text: string, punctuationIndex: number): string {
   }
 
   return text.slice(start + 1, punctuationIndex);
-}
-
-function getNextWord(text: string, startIndex: number): string {
-  let end = startIndex;
-  while (end < text.length && isWordChar(text[end]!)) {
-    end += 1;
-  }
-
-  return text.slice(startIndex, end);
 }
 
 function isWordChar(char: string): boolean {

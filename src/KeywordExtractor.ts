@@ -76,6 +76,10 @@ export class KeywordExtractor {
    * Creates a reusable keyword extractor with normalized options.
    */
   constructor(options: KeywordExtractorOptions = {}) {
+    if (typeof options.lemmatizer === "string") {
+      throw new TypeError("String lemmatizer backends such as 'spacy' or 'nltk' are not implemented in Yaket; provide a hook object with a lemmatize() method instead.");
+    }
+
     this.config = {
       lan: options.language ?? options.lan ?? "en",
       n: options.n ?? 3,

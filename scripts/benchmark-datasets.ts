@@ -39,6 +39,8 @@ for (const dataset of datasets) {
   const avgPythonPrecisionAt10 = average(results.map((result) => precisionAtK(result.python, result.example.gold, 10)));
   const yaketDuration = average(results.map((result) => result.yaketMs));
   const pythonDuration = average(results.map((result) => result.pythonMs));
+  const yaketHeapKb = average(results.map((result) => result.yaketHeapDeltaBytes / 1024));
+  const pythonHeapKb = average(results.map((result) => result.pythonHeapDeltaBytes / 1024));
 
   reportParts.push(
     `## ${dataset}`,
@@ -48,7 +50,9 @@ for (const dataset of datasets) {
     `- Yaket precision@10 against gold keyphrases: ${avgPrecisionAt10.toFixed(3)}`,
     `- Python YAKE precision@10 against gold keyphrases: ${avgPythonPrecisionAt10.toFixed(3)}`,
     `- average Yaket runtime per document (ms): ${yaketDuration.toFixed(2)}`,
+    `- average Yaket heap delta per document (KB): ${yaketHeapKb.toFixed(2)}`,
     `- average Python YAKE runtime per document (ms): ${pythonDuration.toFixed(2)}`,
+    `- average Python YAKE heap delta per document (KB): ${pythonHeapKb.toFixed(2)}`,
     "",
     "### Sample document",
     "",
@@ -106,17 +110,21 @@ async function loadDatasetExamples(dataset: DatasetName, limit: number): Promise
   });
 }
 
-function benchmarkExample(example: Example): { example: Example; yaket: RankedKeyword[]; python: RankedKeyword[]; yaketMs: number; pythonMs: number } {
+function benchmarkExample(example: Example): { example: Example; yaket: RankedKeyword[]; python: RankedKeyword[]; yaketMs: number; pythonMs: number; yaketHeapDeltaBytes: number; pythonHeapDeltaBytes: number } {
   const yaketStart = performance.now();
+  const yaketHeapStart = process.memoryUsage().heapUsed;
   const yaket = extractKeywordDetails(example.text, { lan: "en", n: 3, top: 10 })
     .map(({ normalizedKeyword, score }) => ({ keyword: normalizedKeyword, score }));
   const yaketMs = performance.now() - yaketStart;
+  const yaketHeapDeltaBytes = Math.max(process.memoryUsage().heapUsed - yaketHeapStart, 0);
 
   const pythonStart = performance.now();
+  const pythonHeapStart = process.memoryUsage().heapUsed;
   const python = extractPythonYake(example.text, 10, 3);
   const pythonMs = performance.now() - pythonStart;
+  const pythonHeapDeltaBytes = Math.max(process.memoryUsage().heapUsed - pythonHeapStart, 0);
 
-  return { example, yaket, python, yaketMs, pythonMs };
+  return { example, yaket, python, yaketMs, pythonMs, yaketHeapDeltaBytes, pythonHeapDeltaBytes };
 }
 
 function extractPythonYake(text: string, top: number, maxNgram: number): RankedKeyword[] {

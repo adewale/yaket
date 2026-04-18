@@ -31,7 +31,7 @@ Known consequences:
 2. multilingual and Unicode-heavy texts may drift more than English prose
 3. exact token boundaries can differ even when high-level results remain close
 
-Recent parity work closed one concrete sentence-boundary gap for lowercase sentence starts, but broader tokenizer parity with `segtok` is still not finished.
+Recent parity work closed concrete gaps around lowercase sentence starts, abbreviation token handling, ellipsis splitting, and parenthetical sentence endings, but broader tokenizer parity with `segtok` is still not finished.
 
 ### 3. Floating-point differences
 

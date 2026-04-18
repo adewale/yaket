@@ -1,6 +1,6 @@
 # Using Yaket In Ingestion Pipelines
 
-Yaket should be usable in systems that do not have Bobbin's topic layer.
+Yaket is usable in systems that do not have Bobbin's topic layer.
 
 Examples:
 
@@ -50,6 +50,8 @@ function extractDocumentKeywords(document: InputDocument) {
 }
 ```
 
+If your pipeline needs deterministic cache keys or diffable outputs, use the built-in serialization helpers instead of ad-hoc `JSON.stringify()` on mutable objects.
+
 ## Guidance for future consumers like flux-search
 
 To keep Yaket reusable:
@@ -82,6 +84,12 @@ const searchRecord = {
   keywords: enriched.keywords.map((item) => item.normalizedKeyword),
 };
 ```
+
+You can also shape pipeline behavior without changing the core extractor:
+
+1. `beforeExtractText(text, context)` for pre-normalization or title/body rewriting
+2. `afterExtractKeywords(keywords, context)` for pipeline-local filtering or reshaping
+3. `serializeDocumentKeywordResult()` / `serializeDocumentKeywordResults()` for deterministic caching and ETL diffs
 
 ## Cloudflare Worker guidance
 

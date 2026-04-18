@@ -16,12 +16,29 @@ export function extractYakeKeywords(
   n = 5,
   maxNgram = 3,
 ): BobbinYakeResult[] {
-  return extractKeywordDetails(text, {
+  const ranked = extractKeywordDetails(text, {
     lan: "en",
-    top: n,
+    top: Math.max(n * 3, n),
     n: maxNgram,
   }).map(({ keyword, score }) => ({
     keyword: keyword.toLowerCase(),
     score,
   }));
+
+  const results: BobbinYakeResult[] = [];
+  for (const candidate of ranked) {
+    if (candidate.keyword.split(/\s+/).length === 1) {
+      const unigram = candidate.keyword;
+      if (results.some((item) => item.keyword.includes(" ") && item.keyword.split(/\s+/).includes(unigram))) {
+        continue;
+      }
+    }
+
+    results.push(candidate);
+    if (results.length === n) {
+      break;
+    }
+  }
+
+  return results;
 }
