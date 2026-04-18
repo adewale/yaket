@@ -66,7 +66,9 @@ export class Levenshtein {
  * Normalized Levenshtein similarity helper for deduplication.
  */
 export function levenshteinSimilarity(cand1: string, cand2: string): number {
-  const maxLength = Math.max(cand1.length, cand2.length);
+  const cand1Chars = [...cand1];
+  const cand2Chars = [...cand2];
+  const maxLength = Math.max(cand1Chars.length, cand2Chars.length);
   if (maxLength === 0) {
     return 1;
   }
@@ -94,13 +96,15 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
     return 0;
   }
 
-  const maxLength = Math.max(cand1.length, cand2.length);
+  const cand1Chars = [...cand1];
+  const cand2Chars = [...cand2];
+  const maxLength = Math.max(cand1Chars.length, cand2Chars.length);
   if (maxLength === 0) {
     setBoundedCache(sequenceCache, key, 0);
     return 0;
   }
 
-  const lengthRatio = Math.min(cand1.length, cand2.length) / maxLength;
+  const lengthRatio = Math.min(cand1Chars.length, cand2Chars.length) / maxLength;
   if (lengthRatio < 0.3) {
     setBoundedCache(sequenceCache, key, 0);
     return 0;
@@ -139,8 +143,8 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
     }
   }
 
-  const trigrams1 = trigrams(s1);
-  const trigrams2 = trigrams(s2);
+  const trigrams1 = trigrams([...s1]);
+  const trigrams2 = trigrams([...s2]);
   const trigramUnion = new Set([...trigrams1, ...trigrams2]);
   const trigramOverlap = trigramUnion.size === 0 ? 0 : [...trigrams1].filter((trigram) => trigrams2.has(trigram)).length / trigramUnion.size;
   const result = Math.min((0.3 * lengthRatio) + (0.2 * overlap) + (0.5 * trigramOverlap), 1);
@@ -250,11 +254,11 @@ function matrixDistance(seq1: string, seq2: string): number {
   return previousRow[seq2.length]!;
 }
 
-function trigrams(value: string): Set<string> {
+function trigrams(chars: string[]): Set<string> {
   const result = new Set<string>();
 
-  for (let index = 0; index <= value.length - 3; index += 1) {
-    result.add(value.slice(index, index + 3));
+  for (let index = 0; index <= chars.length - 3; index += 1) {
+    result.add(chars.slice(index, index + 3).join(""));
   }
 
   return result;
@@ -265,8 +269,10 @@ function aggressivePreFilter(cand1: string, cand2: string): boolean {
     return true;
   }
 
-  const len1 = cand1.length;
-  const len2 = cand2.length;
+  const chars1 = [...cand1];
+  const chars2 = [...cand2];
+  const len1 = chars1.length;
+  const len2 = chars2.length;
   const maxLength = Math.max(len1, len2);
 
   if (Math.abs(len1 - len2) > maxLength * 0.6) {
@@ -274,11 +280,11 @@ function aggressivePreFilter(cand1: string, cand2: string): boolean {
   }
 
   if (maxLength > 3) {
-    if (cand1[0] !== cand2[0] || cand1[cand1.length - 1] !== cand2[cand2.length - 1]) {
+    if (chars1[0] !== chars2[0] || chars1[len1 - 1] !== chars2[len2 - 1]) {
       return false;
     }
 
-    if (Math.min(len1, len2) >= 3 && cand1.slice(0, 2).toLowerCase() !== cand2.slice(0, 2).toLowerCase()) {
+    if (Math.min(len1, len2) >= 3 && chars1.slice(0, 2).join("").toLowerCase() !== chars2.slice(0, 2).join("").toLowerCase()) {
       return false;
     }
   }

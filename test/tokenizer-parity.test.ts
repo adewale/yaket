@@ -21,6 +21,13 @@ describe("tokenizer and sentence splitting parity", () => {
       "examples",
       ".",
     ]);
+    expect(tokenizeWords("No. 5 is ready.")).toEqual([
+      "No.",
+      "5",
+      "is",
+      "ready",
+      ".",
+    ]);
   });
 
   it("splits ellipsis-delimited sentences like segtok", () => {
@@ -36,6 +43,35 @@ describe("tokenizer and sentence splitting parity", () => {
     expect(splitSentences("Quoted parenthetical (really?). Next sentence.")).toEqual([
       "Quoted parenthetical (really?).",
       "Next sentence.",
+    ]);
+    expect(tokenizeWords("He said [wow.].")).toEqual([
+      "He",
+      "said",
+      "[",
+      "wow.",
+      "]",
+      ".",
+    ]);
+  });
+
+  it("handles multilingual punctuation more like segtok", () => {
+    expect(splitSentences("«Bonjour.» Ensuite.")).toEqual([
+      "«Bonjour.» Ensuite.",
+    ]);
+    expect(splitSentences("Dra. Maria escreveu. Outra frase.")).toEqual([
+      "Dra.",
+      "Maria escreveu.",
+      "Outra frase.",
+    ]);
+    expect(tokenizeWords("مرحبا. كيف الحال؟")).toEqual([
+      "مرحبا",
+      ".",
+      "كيف",
+      "الحال؟",
+    ]);
+    expect(tokenizeWords("你好……再见。")).toEqual([
+      "你好……再见",
+      "。",
     ]);
   });
 });

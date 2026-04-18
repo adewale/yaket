@@ -10,14 +10,13 @@ This document makes the known drift points explicit.
 
 The upstream YAKE default dedup function is `seqm`.
 
-Yaket now regression-tests representative `seqm` examples against the current upstream optimized similarity path.
+Yaket now regression-tests representative `seqm` examples and randomized candidate pairs against the current upstream optimized similarity path.
 
-However, `seqm` is still the biggest dedup parity risk because it is heuristic rather than a simple canonical metric.
+`seqm` is no longer the main actively tracked drift item, but it remains worth watching because it is heuristic rather than a simple canonical metric.
 
-Known consequences:
+Known consequence:
 
-1. near-threshold dedup decisions can still differ in edge cases
-2. mutation testing shows this area is still more brittle than the core scoring path
+1. mutation testing still shows this area is more brittle than the core scoring path, so regressions here are worth guarding carefully
 
 ### 2. `segtok` replacement
 
@@ -31,7 +30,7 @@ Known consequences:
 2. multilingual and Unicode-heavy texts may drift more than English prose
 3. exact token boundaries can differ even when high-level results remain close
 
-Recent parity work closed concrete gaps around lowercase sentence starts, abbreviation token handling, ellipsis splitting, and parenthetical sentence endings, but broader tokenizer parity with `segtok` is still not finished.
+Recent parity work closed concrete gaps around lowercase sentence starts, abbreviation token handling, ellipsis splitting, guillemet boundaries, Arabic question-mark attachment, and parenthetical sentence endings, but broader multilingual/tokenizer parity with `segtok` is still not finished.
 
 ### 3. Floating-point differences
 
@@ -53,14 +52,14 @@ It exposes:
 - `levs`
 - `jaro`
 
-The real remaining dedup risk is `seqm`, not substring dedup.
+The remaining dedup work is mostly regression-hardening, not a known standing behavior gap like the older substring-only approach.
 
 ## How To Read Benchmark Results
 
 When Yaket differs from upstream Python YAKE, interpret the difference in this order:
 
 1. tokenization or sentence-boundary drift
-2. `seqm` dedup drift
+2. multilingual ranking drift
 3. tiny floating-point drift
 4. intentional API differences such as surface-form preservation
 
@@ -74,6 +73,7 @@ On the checked-in Komoroske benchmark:
 On the currently tracked upstream unit-test examples:
 
 - the previously identified English near-tie ordering cases are fixed
+- randomized `seqm` differential checks now match the upstream optimized path on the tracked parity corpus
 - a Portuguese ranking drift remains in `test_n3_PT`
 
 ## Deferred Follow-up

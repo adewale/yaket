@@ -17,14 +17,16 @@ Parity, ordering, and documentation consistency update.
 - sentence splitting drift that incorrectly merged sentences when the next sentence started with a lowercase token
 - near-tie ordering for adjacent sliding 3-gram candidates such as `Kaggle data science` vs `Google Kaggle data`
 - documentation drift around known ordering issues, which are now fixed for the tracked English parity cases
-- tokenizer drift around abbreviation tokens, ellipses, and parenthetical sentence endings
+- tokenizer drift around abbreviation tokens, ellipses, guillemet boundaries, Arabic question-mark attachment, and parenthetical sentence endings
 - Bobbin adapter leakage where unigram components of stronger multi-word entity phrases could survive into Bobbin topic extraction
+- Unicode-sensitive `seqm` drift on emoji-containing candidate pairs caused by UTF-16 length/slice differences
 
 ### Added
 
 - document pipeline `beforeExtractText` and `afterExtractKeywords` hooks
 - stable serialization helpers for document keyword results plus serialized-byte estimation
 - broader property coverage for Unicode, emoji, CJK, long-document, and dedup/similarity invariants
+- Python-backed differential fuzz coverage for mutated fixture texts
 - lightweight heap-delta reporting in benchmark scripts
 
 ### Notes

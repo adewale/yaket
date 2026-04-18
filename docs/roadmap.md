@@ -60,16 +60,9 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
 ### Tier 1: Core behavior fidelity
 
 1. Port more of the upstream corpus into fixture tests.
-2. Tighten tokenization and sentence splitting until behavior is closer to `segtok` across:
-   - abbreviations and honorifics
-   - contractions
-   - Unicode punctuation
-   - mixed alphanumeric tokens
-   - quoted text and parentheticals
-3. Tighten the remaining `seqm` edge cases where heuristic similarity can still drift from Python YAKE.
-4. Continue expanding parity checks for floating-point tolerance handling and multilingual ranking stability.
-   Note: the tracked English near-tie ordering regressions are now covered by regression tests.
-5. Expand multilingual validation beyond the current smoke/regression cases.
+2. Continue expanding parity checks for floating-point tolerance handling and multilingual ranking stability.
+   Note: tracked `seqm` differential parity, harder Unicode punctuation/tokenizer cases, and the English near-tie ordering regressions are now covered by regression tests.
+3. Expand multilingual validation beyond the current smoke/regression cases.
    Status: deferred to `TODO.md`.
 
 ### Tier 2: Remaining upstream-facing feature gaps
@@ -191,7 +184,7 @@ Yaket already includes document-oriented adapters around the core extractor rath
 4. Hook points for pre-normalization and post-ranking enrichment.
 5. Stable serialization support so outputs can be cached or diffed in ETL runs.
 
-Remaining follow-up: add richer memory-footprint reporting for pipeline adopters only if real users need it.
+Remaining follow-up: keep pipeline/runtime diagnostics proportional to real adopter needs.
 
 ### Bobbin-specific adoption plan
 
@@ -400,19 +393,18 @@ Remaining benchmark work:
 1. expand multilingual benchmark coverage
 2. keep comparing Yaket against upstream Python YAKE, TF-IDF, and the Bobbin baseline on new corpora
 3. add more adoption-focused benchmark notes when Bobbin integration validation is run
-4. add more explicit memory and bundle-size reporting if edge adopters need it
+4. add more explicit bundle-size reporting if edge adopters need it
 
 ## Remaining Sequence
 
 Recommended next implementation order:
 
 1. expand fixture corpus and Python differential testing
-2. tighten `seqm` parity with upstream optimized similarity behavior
-3. deepen mutation-survival in scoring and dedup modules
-4. run the deferred Bobbin repo integration test pass
-5. expand multilingual parity and tokenizer coverage
-6. evaluate whether a fuller optional lemmatization implementation is justified
-7. add any remaining package/runtime hardening that real adopters need
+2. deepen mutation-survival in scoring and dedup modules
+3. keep Bobbin integration validation current as Bobbin evolves
+4. expand multilingual parity coverage
+5. evaluate whether a fuller optional lemmatization implementation is justified
+6. add any remaining package/runtime hardening that real adopters need
 
 ## Remaining Deliverables
 

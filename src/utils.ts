@@ -1,9 +1,8 @@
 const CAPITAL_LETTER_PATTERN = /^(\s*([A-Z]))/;
-const TOKEN_PATTERN = /\p{L}[\p{L}\p{M}\p{Nd}]*(?:[.'’\-][\p{L}\p{M}\p{Nd}]+)*|\p{Nd}+(?:[.,]\p{Nd}+)*|[^\s]/gu;
+const TOKEN_PATTERN = /\p{L}[\p{L}\p{M}\p{Nd}]*(?:(?:[.'’\-]+|…+)[\p{L}\p{M}\p{Nd}]+)*|\p{Nd}+(?:[.,]\p{Nd}+)*|[^\s]/gu;
 const ASCII_PUNCTUATION = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 const COMMON_ABBREVIATIONS = new Set([
   "dr",
-  "dra",
   "mr",
   "mrs",
   "ms",
@@ -22,6 +21,7 @@ const COMMON_ABBREVIATIONS = new Set([
   "nos",
 ]);
 const SENTENCE_CLOSERS = new Set([`"`, `'`, ")", "]", "}", "»", "”", "’"]);
+const ATTACHED_TRAILING_PUNCTUATION = new Set(["؟"]);
 
 export const STOPWORD_WEIGHT = "bi" as const;
 export const DEFAULT_EXCLUDE = new Set(ASCII_PUNCTUATION.split(""));
@@ -70,8 +70,21 @@ export function tokenizeWords(text: string): string[] {
     }
 
     const nextToken = tokens[index + 1];
-    if (nextToken === "." && shouldAttachTrailingPeriod(token)) {
+    const nextNextToken = tokens[index + 2];
+    if (token === "…" && nextToken != null && SENTENCE_CLOSERS.has(nextToken)) {
+      expanded.push(`${token}${nextToken}`);
+      index += 1;
+      continue;
+    }
+
+    if (nextToken === "." && shouldAttachTrailingPeriod(token, nextNextToken)) {
       expanded.push(...splitContractions(`${token}.`));
+      index += 1;
+      continue;
+    }
+
+    if (nextToken != null && ATTACHED_TRAILING_PUNCTUATION.has(nextToken) && shouldAttachTrailingPunctuation(token)) {
+      expanded.push(...splitContractions(`${token}${nextToken}`));
       index += 1;
       continue;
     }
@@ -115,7 +128,7 @@ export function splitSentences(text: string): string[] {
     }
 
     const next = skipWhitespace(text, end + 1);
-    if (shouldSplitSentence(text, index, next)) {
+    if (shouldSplitSentence(text, start, index, next)) {
       pushSentence(sentences, text.slice(start, end + 1));
       start = next;
       index = next;
@@ -173,16 +186,20 @@ function consumeEllipsis(tokens: string[], startIndex: number): { value: string;
   };
 }
 
-function shouldAttachTrailingPeriod(token: string): boolean {
+function shouldAttachTrailingPeriod(token: string, nextNextToken?: string): boolean {
   const normalized = token.toLowerCase();
-  return token.includes(".") || COMMON_ABBREVIATIONS.has(normalized);
+  return token.includes(".") || COMMON_ABBREVIATIONS.has(normalized) || (nextNextToken != null && SENTENCE_CLOSERS.has(nextNextToken));
+}
+
+function shouldAttachTrailingPunctuation(token: string): boolean {
+  return /[\p{L}\p{M}\p{Nd}]$/u.test(token);
 }
 
 function isSentenceTerminal(char: string): boolean {
   return char === "." || char === "!" || char === "?";
 }
 
-function shouldSplitSentence(text: string, punctuationIndex: number, nextIndex: number): boolean {
+function shouldSplitSentence(text: string, sentenceStart: number, punctuationIndex: number, nextIndex: number): boolean {
   if (nextIndex >= text.length) {
     return true;
   }
@@ -201,7 +218,19 @@ function shouldSplitSentence(text: string, punctuationIndex: number, nextIndex: 
     return false;
   }
 
+  if (text[punctuationIndex + 1] === "»" && leadingSentenceChar(text, sentenceStart) === "«") {
+    return false;
+  }
+
   return nextIndex > punctuationIndex + 1;
+}
+
+function leadingSentenceChar(text: string, sentenceStart: number): string {
+  let cursor = sentenceStart;
+  while (cursor < text.length && /\s/u.test(text[cursor]!)) {
+    cursor += 1;
+  }
+  return text[cursor] ?? "";
 }
 
 function isDecimalPoint(text: string, punctuationIndex: number): boolean {
