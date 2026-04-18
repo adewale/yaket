@@ -58,7 +58,7 @@ describe("demo page", () => {
   });
 
   it("uses the current published package line in the browser import", () => {
-    expect(demoHtml).toContain("@ade_oshineye/yaket@0.5.1");
+    expect(demoHtml).toContain("@ade_oshineye/yaket@0.5.2");
   });
 
   it("sorts displayed keywords alphabetically for easier comparison", () => {
