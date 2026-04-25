@@ -8,7 +8,11 @@ import { splitSentences as defaultSplitSentences, tokenizeWords as defaultTokeni
 type DedupFunction = (cand1: string, cand2: string) => number;
 
 /**
- * Canonical public configuration for Yaket extraction.
+ * Public configuration for Yaket extraction.
+ *
+ * Only canonical camelCase names are accepted. The legacy snake_case aliases
+ * (`lan`, `dedup_lim`, `dedup_func`, `windowsSize`, `window_size`) and the
+ * `extract_keywords()` method that mirrored Python YAKE were removed in 0.6.
  */
 export interface YakeOptions {
   language?: string;
@@ -34,20 +38,12 @@ export interface YakeOptions {
 }
 
 /**
- * Backward-compatible option surface including deprecated alias keys.
+ * Backwards-compatible alias for the public option type.
+ *
+ * In 0.6 this is identical to `YakeOptions`; the alias remains so that
+ * existing imports keep compiling while the documentation transitions.
  */
-export interface KeywordExtractorOptions extends YakeOptions {
-  /** @deprecated Use `language`. */
-  lan?: string;
-  /** @deprecated Use `dedupLim`. */
-  dedup_lim?: number;
-  /** @deprecated Use `dedupFunc`. */
-  dedup_func?: string;
-  /** @deprecated Use `windowSize`. */
-  windowsSize?: number;
-  /** @deprecated Use `windowSize`. */
-  window_size?: number;
-}
+export type KeywordExtractorOptions = YakeOptions;
 
 /**
  * Tuple form of the simplified YAKE output.
@@ -55,7 +51,7 @@ export interface KeywordExtractorOptions extends YakeOptions {
 export type KeywordScore = [keyword: string, score: number];
 
 interface NormalizedConfig {
-  lan: string;
+  language: string;
   n: number;
   dedupLim: number;
   dedupFunc: string;
@@ -86,11 +82,11 @@ export class KeywordExtractor {
     }
 
     this.config = {
-      lan: options.language ?? options.lan ?? "en",
+      language: options.language ?? "en",
       n: options.n ?? 3,
-      dedupLim: options.dedupLim ?? options.dedup_lim ?? 0.9,
-      dedupFunc: options.dedupFunc ?? options.dedup_func ?? "seqm",
-      windowSize: options.windowSize ?? options.windowsSize ?? options.window_size ?? 1,
+      dedupLim: options.dedupLim ?? 0.9,
+      dedupFunc: options.dedupFunc ?? "seqm",
+      windowSize: options.windowSize ?? 1,
       top: options.top ?? 20,
       features: options.features ?? null,
     };
@@ -104,7 +100,7 @@ export class KeywordExtractor {
     this.candidateFilter = options.candidateFilter;
     this.similarityCache = options.similarityCache ?? null;
     this.stopwordSet = options.stopwords == null
-      ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.lan)
+      ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.language)
       : new Set([...options.stopwords].map((value) => value.toLowerCase()));
     this.dedupFunction = options.dedupStrategy == null
       ? this.getDedupFunction(this.config.dedupFunc)
@@ -154,14 +150,14 @@ export class KeywordExtractor {
     }
 
     const core = new DataCore(text, this.stopwordSet, {
-      windowsSize: this.config.windowSize,
+      windowSize: this.config.windowSize,
       n: this.config.n,
       textProcessor: this.textProcessor,
       lemmatizer: this.lemmatizer,
       candidateNormalizer: this.candidateNormalizer,
       singleWordScorer: this.singleWordScorer,
       multiWordScorer: this.multiWordScorer,
-      language: this.config.lan,
+      language: this.config.language,
     });
 
     core.buildSingleTermsFeatures(this.config.features);
@@ -203,26 +199,16 @@ export class KeywordExtractor {
     return resultSet;
   }
 
-  /**
-   * Python-style alias for `extractKeywords()`.
-   * @deprecated Prefer `extractKeywords()` or `extract()` in TypeScript code.
-   */
-  extract_keywords(text: string | null | undefined): KeywordScore[] {
-    return this.extractKeywords(text);
-  }
-
   private getDedupFunction(funcName: string): DedupFunction {
     switch (funcName.toLowerCase()) {
       case "jaro":
-      case "jaro_winkler":
         return this.jaro.bind(this);
-      case "sequencematcher":
       case "seqm":
         return this.seqm.bind(this);
-      case "leve":
       case "levs":
-      default:
         return this.levs.bind(this);
+      default:
+        throw new TypeError(`Unknown dedupFunc "${funcName}"; expected one of "seqm", "levs", "jaro".`);
     }
   }
 }

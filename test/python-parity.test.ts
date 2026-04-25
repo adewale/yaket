@@ -20,16 +20,18 @@ describe.skipIf(!hasPythonReference)("python parity", () => {
       "    print(json.dumps({'name': sample['name'], 'result': result}, ensure_ascii=False))",
     ].join("\n");
 
+    // Python YAKE keyword arguments use snake_case; translate the Yaket
+    // canonical option names here for the Python-side call.
     const pythonSamples = referenceCases.map((fixture) => ({
       name: fixture.name,
       text: fixture.text,
       options: {
-        lan: fixture.options.lan ?? fixture.options.language ?? "en",
+        lan: fixture.options.language ?? "en",
         n: fixture.options.n ?? 3,
         top: fixture.options.top ?? 20,
-        dedup_lim: fixture.options.dedupLim ?? fixture.options.dedup_lim ?? 0.9,
-        dedup_func: fixture.options.dedupFunc ?? fixture.options.dedup_func ?? "seqm",
-        window_size: fixture.options.windowSize ?? fixture.options.windowsSize ?? fixture.options.window_size ?? 1,
+        dedup_lim: fixture.options.dedupLim ?? 0.9,
+        dedup_func: fixture.options.dedupFunc ?? "seqm",
+        window_size: fixture.options.windowSize ?? 1,
       },
     }));
 

@@ -25,7 +25,7 @@ interface CliDeps {
   stderr(message: string): void;
 }
 
-const VALID_DEDUP_FUNCTIONS = new Set(["leve", "levs", "jaro", "jaro_winkler", "seqm", "sequencematcher"]);
+const VALID_DEDUP_FUNCTIONS = new Set(["levs", "jaro", "seqm"]);
 
 export function parseCliArgs(argv: string[]): CliArgs {
   const result: CliArgs = {
@@ -132,7 +132,7 @@ export function validateCliArgs(args: CliArgs): string[] {
   }
 
   if (args.dedupFunc != null && !VALID_DEDUP_FUNCTIONS.has(args.dedupFunc.toLowerCase())) {
-    errors.push("--dedup-func must be one of leve, levs, jaro, jaro_winkler, seqm, sequencematcher");
+    errors.push("--dedup-func must be one of levs, jaro, seqm");
   }
 
   return errors;
@@ -147,7 +147,7 @@ export function formatCliOutput(keywords: KeywordScore[], verbose: boolean): str
 }
 
 export function helpText(): string {
-  return "Usage: yaket [OPTIONS]\n\nOptions:\n  -ti, --text-input TEXT     Input text\n  -i, --input-file TEXT      Input file\n  -l, --language TEXT        Language\n  -n, --ngram-size INTEGER   Max size of the ngram\n  -df, --dedup-func TEXT     Deduplication function (leve|jaro|seqm)\n  -dl, --dedup-lim FLOAT     Deduplication limit\n  -ws, --window-size INT     Window size\n  -t, --top INTEGER          Number of keywords to extract\n  -v, --verbose              Print keyword-score pairs as JSON\n  --help                     Show this message\n";
+  return "Usage: yaket [OPTIONS]\n\nOptions:\n  -ti, --text-input TEXT     Input text\n  -i, --input-file TEXT      Input file\n  -l, --language TEXT        Language\n  -n, --ngram-size INTEGER   Max size of the ngram\n  -df, --dedup-func TEXT     Deduplication function (levs|jaro|seqm)\n  -dl, --dedup-lim FLOAT     Deduplication limit\n  -ws, --window-size INT     Window size\n  -t, --top INTEGER          Number of keywords to extract\n  -v, --verbose              Print keyword-score pairs as JSON\n  --help                     Show this message\n";
 }
 
 export function runCli(argv: string[], deps: Partial<CliDeps> = {}): number {
@@ -175,7 +175,7 @@ export function runCli(argv: string[], deps: Partial<CliDeps> = {}): number {
   }
 
   const keywords = runtime.extract(text, {
-    lan: args.language,
+    language: args.language,
     n: args.ngramSize,
     dedupFunc: args.dedupFunc,
     dedupLim: args.dedupLim,

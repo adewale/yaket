@@ -56,7 +56,7 @@ describe("property-based invariants", () => {
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 1, max: 3 }),
         (text, topK, maxNgram) => {
-          const details = extractKeywordDetails(text, { top: topK, n: maxNgram, lan: "en" });
+          const details = extractKeywordDetails(text, { top: topK, n: maxNgram, language: "en" });
 
           expect(details.length).toBeLessThanOrEqual(topK);
           for (const detail of details) {
@@ -83,7 +83,7 @@ describe("property-based invariants", () => {
         fc.integer({ min: 1, max: 3 }),
         (text, topK, maxNgram) => {
           const canonical = extractKeywordDetails(text, { language: "en", top: topK, n: maxNgram });
-          const legacy = extractKeywordDetails(text, { lan: "en", top: topK, n: maxNgram });
+          const legacy = extractKeywordDetails(text, { language: "en", top: topK, n: maxNgram });
 
           expect(canonical).toEqual(legacy);
         },
@@ -109,8 +109,8 @@ describe("property-based invariants", () => {
         ),
         (parts) => {
           const text = parts.join(" ");
-          const first = extractKeywordDetails(text, { lan: "en", n: 3, top: 10 });
-          const second = extractKeywordDetails(text, { lan: "en", n: 3, top: 10 });
+          const first = extractKeywordDetails(text, { language: "en", n: 3, top: 10 });
+          const second = extractKeywordDetails(text, { language: "en", n: 3, top: 10 });
 
           expect(second).toEqual(first);
           for (const detail of first) {
@@ -130,8 +130,8 @@ describe("property-based invariants", () => {
         fc.string({ minLength: 0, maxLength: 500 }),
         fc.integer({ min: 1, max: 3 }),
         (text, maxNgram) => {
-          const top3 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 3, dedupLim: 0.9 });
-          const top6 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 6, dedupLim: 0.9 });
+          const top3 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 3, dedupLim: 0.9 });
+          const top6 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 6, dedupLim: 0.9 });
 
           expect(top6.slice(0, top3.length)).toEqual(top3);
           expect(new Set(top6.map((item) => item.normalizedKeyword)).size).toBe(top6.length);
@@ -147,8 +147,8 @@ describe("property-based invariants", () => {
         fc.string({ minLength: 0, maxLength: 500 }),
         fc.integer({ min: 1, max: 3 }),
         (text, maxNgram) => {
-          const top4 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 4, dedupLim: 1 });
-          const top8 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 8, dedupLim: 1 });
+          const top4 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 4, dedupLim: 1 });
+          const top8 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 8, dedupLim: 1 });
 
           expect(top8.slice(0, top4.length)).toEqual(top4);
         },

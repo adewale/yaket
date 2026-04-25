@@ -22,12 +22,12 @@ describe("edge cases", () => {
   });
 
   it("returns empty results for stopword-only input", () => {
-    expect(new KeywordExtractor({ lan: "en", n: 1, top: 5 }).extractKeywords(stopwordOnlyText)).toEqual([]);
+    expect(new KeywordExtractor({ language: "en", n: 1, top: 5 }).extractKeywords(stopwordOnlyText)).toEqual([]);
   });
 
   it("never returns phrases starting or ending with a stopword in boundary fixture", () => {
     const stopwords = loadStopwords("en");
-    const result = new KeywordExtractor({ lan: "en", n: 2, top: 10 }).extractKeywords("alpha and beta and gamma");
+    const result = new KeywordExtractor({ language: "en", n: 2, top: 10 }).extractKeywords("alpha and beta and gamma");
 
     for (const [keyword] of result) {
       const words = keyword.toLowerCase().split(/\s+/);
@@ -60,7 +60,7 @@ describe("edge cases", () => {
   });
 
   it("matches upstream ordering for near-tie ngrams", () => {
-    const actual = new KeywordExtractor({ lan: "en" }).extractKeywords("Google Kaggle data science");
+    const actual = new KeywordExtractor({ language: "en" }).extractKeywords("Google Kaggle data science");
 
     expect(actual.slice(0, 2).map(([keyword]) => keyword)).toEqual([
       "Kaggle data science",

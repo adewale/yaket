@@ -17,8 +17,8 @@ describe("mutation-style fuzzing over known-good fixtures", () => {
             return `${text.slice(0, position)}${mutation}${text.slice(position)}`;
           }, baseText);
 
-          const first = extractKeywords(mutated, { lan: "en", n: 3, top: 10 });
-          const second = extractKeywords(mutated, { lan: "en", n: 3, top: 10 });
+          const first = extractKeywords(mutated, { language: "en", n: 3, top: 10 });
+          const second = extractKeywords(mutated, { language: "en", n: 3, top: 10 });
 
           expect(second).toEqual(first);
           for (const [keyword, score] of first) {

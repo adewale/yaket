@@ -42,13 +42,13 @@ describe("similarity cache diagnostics", () => {
     const text = "Google is acquiring data science community Kaggle. Sources tell us that Google is acquiring Kaggle, a platform that hosts data science and machine learning competitions.";
 
     clearSimilarityCaches();
-    const cold = extractKeywords(text, { lan: "en", n: 3, top: 10, dedupFunc: "seqm" });
+    const cold = extractKeywords(text, { language: "en", n: 3, top: 10, dedupFunc: "seqm" });
 
     for (let index = 0; index < 5_000; index += 1) {
       sequenceSimilarity(`warm-${index}`, `other-${index}`);
     }
 
-    const warm = extractKeywords(text, { lan: "en", n: 3, top: 10, dedupFunc: "seqm" });
+    const warm = extractKeywords(text, { language: "en", n: 3, top: 10, dedupFunc: "seqm" });
     expect(warm).toEqual(cold);
   });
 
@@ -56,14 +56,14 @@ describe("similarity cache diagnostics", () => {
     const text = "machine learning machine learning deep learning";
 
     clearSimilarityCaches();
-    const cold = extractKeywords(text, { lan: "en", n: 2, top: 5, dedupFunc: "levs", dedupLim: 0.9 });
+    const cold = extractKeywords(text, { language: "en", n: 2, top: 5, dedupFunc: "levs", dedupLim: 0.9 });
 
     for (let index = 0; index < 15_000; index += 1) {
       Levenshtein.distance(`candidate-${index}`, `alternative-${index}`);
       sequenceSimilarity(`candidate-${index}`, `alternative-${index}`);
     }
 
-    const warm = extractKeywords(text, { lan: "en", n: 2, top: 5, dedupFunc: "levs", dedupLim: 0.9 });
+    const warm = extractKeywords(text, { language: "en", n: 2, top: 5, dedupFunc: "levs", dedupLim: 0.9 });
     expect(warm).toEqual(cold);
   });
 });

@@ -106,20 +106,23 @@ Common options:
 | `dedupFunc` | dedup function (`seqm`, `levs`, `jaro`) | `seqm` |
 | `dedupLim` | dedup threshold | `0.9` |
 | `windowSize` | co-occurrence window | `1` |
-| `stopwords` | explicit stopword iterable override | bundled set for `lan` |
+| `stopwords` | explicit stopword iterable override | bundled set for `language` |
 
 For the complete public API, see `docs/api-reference.md`.
 
-Canonical option names are:
+Canonical option names:
 
 - `language`
 - `dedupLim`
-- `dedupFunc`
+- `dedupFunc` — `seqm`, `levs`, or `jaro`
 - `windowSize`
 
-Legacy aliases such as `lan`, `dedup_lim`, `windowsSize`, and `window_size` are still accepted for backward compatibility, but new code should prefer the canonical names.
+Yaket 0.6 dropped the snake_case aliases (`lan`, `dedup_lim`, `dedup_func`,
+`windowsSize`, `window_size`), the `extract_keywords()` method, and the
+dedup-function value aliases (`leve`, `jaro_winkler`, `sequencematcher`).
+Existing 0.5.x consumers should follow `docs/migration-bobbin-0.6.md`.
 
-If you prefer the most concise one-shot API, `extract()` is an alias for `extractKeywords()`.
+If you prefer the most concise one-shot API, `extract()` is a re-export of `extractKeywords()`.
 
 ### Reusable extractor
 
@@ -422,6 +425,7 @@ npm run benchmark
 - Use cases: `docs/use-cases.md`
 - Algorithm drift: `docs/algorithm-drift.md`
 - Lemmatization evaluation: `docs/lemmatization-evaluation.md`
+- Bobbin / 0.5.x → 0.6 migration: `docs/migration-bobbin-0.6.md`
 - Dataset benchmarks: `docs/benchmarks/inspec-semeval.md`
 - [Bobbin](https://github.com/adewale/bobbin) integration guide: `docs/integrations/bobbin.md`
 - Generic pipeline guide: `docs/integrations/pipelines.md`

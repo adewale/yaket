@@ -17,7 +17,7 @@ export function extractYakeKeywords(
   maxNgram = 3,
 ): BobbinYakeResult[] {
   const ranked = extractKeywordDetails(text, {
-    lan: "en",
+    language: "en",
     top: Math.max(n * 3, n),
     n: maxNgram,
   }).map(({ keyword, score }) => ({

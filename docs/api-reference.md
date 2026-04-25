@@ -82,12 +82,11 @@ Most commonly used fields:
 | `dedupLim` | dedup similarity threshold | `0.9` |
 | `windowSize` | co-occurrence window size | `1` |
 
-Deprecated but still accepted aliases exist on `KeywordExtractorOptions` for compatibility:
-
-- `lan`
-- `dedup_lim`
-- `windowsSize`
-- `window_size`
+Yaket 0.6 dropped the legacy snake_case aliases (`lan`, `dedup_lim`,
+`dedup_func`, `windowsSize`, `window_size`), the `extract_keywords()` method,
+and the dedup-function value aliases (`leve`, `jaro_winkler`,
+`sequencematcher`). Use the canonical camelCase names in the table above.
+See `docs/migration-bobbin-0.6.md` for the migration recipe.
 
 ## Adapters
 

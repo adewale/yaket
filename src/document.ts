@@ -57,17 +57,17 @@ export function extractFromDocument<TMetadata = Record<string, unknown>>(
   document: InputDocument<TMetadata>,
   options: DocumentExtractionOptions = {},
 ): DocumentKeywordResult<TMetadata> {
-  const language = options.lan ?? options.language ?? document.language ?? "en";
+  const language = options.language ?? document.language ?? "en";
   const extractor = new KeywordExtractor({
     ...options,
-    lan: language,
+    language,
   });
   const text = prepareDocumentText(document, options, language);
   const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
 
   return {
     id: document.id,
-    language: extractor.config.lan,
+    language: extractor.config.language,
     title: document.title,
     metadata: document.metadata,
     keywords,
@@ -84,14 +84,14 @@ export function extractFromDocuments<TMetadata = Record<string, unknown>>(
   const extractorForLanguage = createExtractorCache(options);
 
   return [...documents].map((document) => {
-    const language = document.language ?? options.lan ?? options.language ?? "en";
+    const language = document.language ?? options.language ?? "en";
     const extractor = extractorForLanguage(language);
     const text = prepareDocumentText(document, options, language);
     const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
 
     return {
       id: document.id,
-      language: extractor.config.lan,
+      language: extractor.config.language,
       title: document.title,
       metadata: document.metadata,
       keywords,
@@ -109,14 +109,14 @@ export async function* extractFromDocumentStream<TMetadata = Record<string, unkn
   const extractorForLanguage = createExtractorCache(options);
 
   for await (const document of documents) {
-    const language = document.language ?? options.lan ?? options.language ?? "en";
+    const language = document.language ?? options.language ?? "en";
     const extractor = extractorForLanguage(language);
     const text = prepareDocumentText(document, options, language);
     const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
 
     yield {
       id: document.id,
-      language: extractor.config.lan,
+      language: extractor.config.language,
       title: document.title,
       metadata: document.metadata,
       keywords,
@@ -189,7 +189,7 @@ function createExtractorCache(options: DocumentExtractionOptions): (language: st
 
     const extractor = new KeywordExtractor({
       ...options,
-      lan: options.lan ?? options.language ?? language,
+      language: options.language ?? language,
     });
     cache.set(cacheKey, extractor);
     return extractor;

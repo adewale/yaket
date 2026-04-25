@@ -20,7 +20,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-kaggle-excerpt",
     text: kaggleExcerpt,
-    options: { lan: "en", n: 3, top: 10 },
+    options: { language: "en", n: 3, top: 10 },
     expected: [
       ["science community Kaggle", 0.022868570857866734],
       ["community Kaggle", 0.047789707710865825],
@@ -37,7 +37,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-window-size",
     text: smallEnglish,
-    options: { lan: "en", n: 2, top: 5, windowSize: 2 },
+    options: { language: "en", n: 2, top: 5, windowSize: 2 },
     expected: [
       ["data science", 0.04940384002065631],
       ["machine learning", 0.04940384002065631],
@@ -49,7 +49,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-dedup-on",
     text: dedupEnglish,
-    options: { lan: "en", n: 2, top: 5, dedupLim: 0.9 },
+    options: { language: "en", n: 2, top: 5, dedupLim: 0.9 },
     expected: [
       ["machine learning", 0.023072402583411963],
       ["learning deep", 0.041166451867834804],
@@ -61,7 +61,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-dedup-off",
     text: dedupEnglish,
-    options: { lan: "en", n: 2, top: 5, dedupLim: 1 },
+    options: { language: "en", n: 2, top: 5, dedupLim: 1 },
     expected: [
       ["machine learning", 0.023072402583411963],
       ["learning deep", 0.041166451867834804],
@@ -73,7 +73,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-special-characters",
     text: specialCharacters,
-    options: { lan: "en", n: 1, top: 5 },
+    options: { language: "en", n: 1, top: 5 },
     expected: [
       ["Python", 0.05899937629682816],
       ["programming", 0.17881754828257995],
@@ -84,7 +84,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "german-reference",
     text: germanSample,
-    options: { lan: "de", n: 2, top: 5 },
+    options: { language: "de", n: 2, top: 5 },
     expected: [
       ["Maschinelles Lernen", 0.023458380875189744],
       ["wichtige Technologien", 0.026233073037508336],
@@ -96,7 +96,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "portuguese-reference",
     text: portugueseSample,
-    options: { lan: "pt", n: 3, top: 5 },
+    options: { language: "pt", n: 3, top: 5 },
     expected: [
       ["Conta-me Histórias", 0.01984585111858601],
       ["Histórias", 0.09705179139403544],
@@ -108,7 +108,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-boundary-filtering",
     text: boundarySample,
-    options: { lan: "en", n: 2, top: 10 },
+    options: { language: "en", n: 2, top: 10 },
     expected: [
       ["alpha", 0.09568045026443411],
       ["gamma", 0.09568045026443411],
@@ -118,7 +118,7 @@ export const referenceCases: ReferenceCase[] = [
   {
     name: "english-long-repetitive",
     text: longRepetitiveEnglish,
-    options: { lan: "en", n: 2, top: 5 },
+    options: { language: "en", n: 2, top: 5 },
     expected: [
       ["science machine", 0.000021801996753389333],
       ["data science", 0.00002180612257549257],

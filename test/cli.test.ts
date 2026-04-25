@@ -52,7 +52,7 @@ describe("cli", () => {
     expect(validateCliArgs(args)).toEqual([
       "--top must be a positive integer",
       "--dedup-lim must be between 0 and 1",
-      "--dedup-func must be one of leve, levs, jaro, jaro_winkler, seqm, sequencematcher",
+      "--dedup-func must be one of levs, jaro, seqm",
     ]);
   });
 

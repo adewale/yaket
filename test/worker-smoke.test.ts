@@ -10,7 +10,7 @@ describe("worker smoke", () => {
         contents: `
           import { extractKeywords, extractFromDocument, extractYakeKeywords } from "./src/index.ts";
 
-          const keywords = extractKeywords("Cloudflare Workers process requests at the edge.", { lan: "en", top: 5, n: 2 });
+          const keywords = extractKeywords("Cloudflare Workers process requests at the edge.", { language: "en", top: 5, n: 2 });
           const bobbin = extractYakeKeywords("Keyword extraction powers topic ranking.", 5, 2);
           const document = extractFromDocument({ id: "edge-doc", body: "Workers run code close to users.", language: "en" });
 

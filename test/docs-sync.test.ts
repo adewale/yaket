@@ -19,11 +19,11 @@ import {
 
 describe("documentation-code sync", () => {
   it("supports the APIs documented in the README and integration guides", () => {
-    const extractor = new KeywordExtractor({ lan: "en", n: 2, top: 5 });
-    const created = createKeywordExtractor({ lan: "en", n: 2, top: 5 });
-    const extracted = extract("Machine learning improves software delivery.", { lan: "en", n: 2, top: 5 });
-    const tuples = extractKeywords("Machine learning improves software delivery.", { lan: "en", n: 2, top: 5 });
-    const details = extractKeywordDetails("Search indexing helps relevance.", { lan: "en", n: 2, top: 5 });
+    const extractor = new KeywordExtractor({ language: "en", n: 2, top: 5 });
+    const created = createKeywordExtractor({ language: "en", n: 2, top: 5 });
+    const extracted = extract("Machine learning improves software delivery.", { language: "en", n: 2, top: 5 });
+    const tuples = extractKeywords("Machine learning improves software delivery.", { language: "en", n: 2, top: 5 });
+    const details = extractKeywordDetails("Search indexing helps relevance.", { language: "en", n: 2, top: 5 });
     const bobbin = extractYakeKeywords("Platform ecosystems reward integration.", 5, 2);
     const document = extractFromDocument({ id: "doc", body: "Document pipelines need stable keyword extraction.", language: "en" });
     const highlighted = new TextHighlighter().highlight("Machine learning improves software delivery.", tuples);

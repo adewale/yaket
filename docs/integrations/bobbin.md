@@ -40,6 +40,16 @@ Notes:
 2. `maxNgram` maps to maximum keyword length.
 3. returned keywords are lowercased to match Bobbin's current expectations.
 
+## Migrating to Yaket 0.6
+
+If Bobbin is already on Yaket 0.5.x, the 0.6 release removes the snake_case
+option aliases and the `extract_keywords()` method. Follow
+`docs/migration-bobbin-0.6.md` for the full recipe — it is a one-pass
+rename, with no behavior change on the canonical API.
+
+If Bobbin only consumes Yaket through `extractYakeKeywords()`, the upgrade
+is a version bump with no code changes.
+
 ## Migration path
 
 Recommended adoption sequence:

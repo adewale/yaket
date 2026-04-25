@@ -8,21 +8,21 @@
 
 | Language | Yaket runtime (ms) | Head match (leading exact prefix) | Top-K overlap |
 |---|---:|---:|---:|
-| English (`en`) | 7.88 | 10/10 | 10/10 |
-| German (`de`) | 1.94 | 10/10 | 10/10 |
+| English (`en`) | 10.51 | 10/10 | 10/10 |
+| German (`de`) | 3.23 | 10/10 | 10/10 |
 | Spanish (`es`) | 1.20 | 9/10 | 9/10 |
-| French (`fr`) | 1.26 | 10/10 | 10/10 |
-| Italian (`it`) | 2.00 | 10/10 | 10/10 |
-| Portuguese (`pt`) | 1.35 | 10/10 | 10/10 |
-| Dutch (`nl`) | 1.44 | 10/10 | 10/10 |
-| Russian (`ru`) | 3.90 | 10/10 | 10/10 |
-| Arabic (`ar`) | 1.16 | 0/10 | 10/10 |
+| French (`fr`) | 1.69 | 10/10 | 10/10 |
+| Italian (`it`) | 1.23 | 10/10 | 10/10 |
+| Portuguese (`pt`) | 1.57 | 10/10 | 10/10 |
+| Dutch (`nl`) | 2.43 | 10/10 | 10/10 |
+| Russian (`ru`) | 3.62 | 10/10 | 10/10 |
+| Arabic (`ar`) | 1.17 | 0/10 | 10/10 |
 
 ## Per-language results
 
 ### English (`en`)
 
-Yaket runtime: 7.88 ms
+Yaket runtime: 10.51 ms
 
 **Yaket top keywords**
 
@@ -55,7 +55,7 @@ Top-10 set overlap: 10
 
 ### German (`de`)
 
-Yaket runtime: 1.94 ms
+Yaket runtime: 3.23 ms
 
 **Yaket top keywords**
 
@@ -121,7 +121,7 @@ Top-10 set overlap: 9
 
 ### French (`fr`)
 
-Yaket runtime: 1.26 ms
+Yaket runtime: 1.69 ms
 
 **Yaket top keywords**
 
@@ -154,7 +154,7 @@ Top-10 set overlap: 10
 
 ### Italian (`it`)
 
-Yaket runtime: 2.00 ms
+Yaket runtime: 1.23 ms
 
 **Yaket top keywords**
 
@@ -187,7 +187,7 @@ Top-10 set overlap: 10
 
 ### Portuguese (`pt`)
 
-Yaket runtime: 1.35 ms
+Yaket runtime: 1.57 ms
 
 **Yaket top keywords**
 
@@ -220,7 +220,7 @@ Top-10 set overlap: 10
 
 ### Dutch (`nl`)
 
-Yaket runtime: 1.44 ms
+Yaket runtime: 2.43 ms
 
 **Yaket top keywords**
 
@@ -253,7 +253,7 @@ Top-10 set overlap: 10
 
 ### Russian (`ru`)
 
-Yaket runtime: 3.90 ms
+Yaket runtime: 3.62 ms
 
 **Yaket top keywords**
 
@@ -286,7 +286,7 @@ Top-10 set overlap: 10
 
 ### Arabic (`ar`)
 
-Yaket runtime: 1.16 ms
+Yaket runtime: 1.17 ms
 
 **Yaket top keywords**
 

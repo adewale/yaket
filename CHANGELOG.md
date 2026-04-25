@@ -4,6 +4,66 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.6.0 - 2026-04-25
+
+Multilingual parity, alias removal, and pluggable internals.
+
+### Breaking
+
+- removed the snake_case option aliases on `KeywordExtractorOptions`:
+  `lan`, `dedup_lim`, `dedup_func`, `windowsSize`, `window_size`. Use
+  `language`, `dedupLim`, `dedupFunc`, and `windowSize`.
+- removed the `extract_keywords()` Python-style method on `KeywordExtractor`.
+  Use `extractKeywords()` (or the standalone `extract()` / `extractKeywords()`
+  helpers) instead.
+- removed the dedup-function value aliases. `dedupFunc` (and `--dedup-func`)
+  now accept exactly `seqm`, `levs`, or `jaro`. `leve`, `jaro_winkler`, and
+  `sequencematcher` are rejected with a `TypeError`.
+- renamed the public `KeywordExtractor.config.lan` field to
+  `KeywordExtractor.config.language`.
+- renamed the `DataCore` constructor option from `windowsSize` to
+  `windowSize`. The internal field is renamed in lockstep.
+- the CLI `--dedup-func` validation message now reads
+  `must be one of levs, jaro, seqm`. The CLI help text was updated to match.
+
+See `docs/migration-bobbin-0.6.md` for the migration recipe.
+
+### Added
+
+- ASCII architecture diagram alongside the existing Mermaid diagram in
+  `docs/architecture.md` for environments without Mermaid support.
+- `test/multilingual-parity.test.ts` locking head-parity against upstream
+  Python YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, and `ar`,
+  plus three property-based invariants (no-throw on arbitrary unicode,
+  determinism, top-bound) exercised across bundled languages.
+- `scripts/benchmark-multilingual.ts` and `docs/benchmarks/multilingual.md`
+  reporting Yaket-vs-Python head match and top-K overlap per language.
+  Wired in as `npm run benchmark:multilingual`.
+- `docs/lemmatization-evaluation.md` documenting why bundled lemmatizers
+  remain out of scope and what would change that decision.
+- `sentenceSplitter` and `tokenizer` options on `KeywordExtractorOptions`
+  so the existing `SentenceSplitter` and `Tokenizer` interfaces can be
+  supplied independently of the combined `TextProcessor`.
+- `createSimilarityCache({ maxSize? })` factory that returns a typed
+  `SimilarityCache` instance with `stats()` and `clear()` methods. The
+  similarity helpers (`sequenceSimilarity`, `levenshteinSimilarity`,
+  `Levenshtein.distance`, `Levenshtein.ratio`, `jaroSimilarity`) now accept
+  the cache as an optional final parameter.
+- `similarityCache` option on `KeywordExtractor` so workers, tests, and
+  benchmarks can isolate cache state from the module-level default.
+- `docs/migration-bobbin-0.6.md` migration guide.
+
+### Fixed
+
+- Portuguese ranking drift in upstream `test_n3_PT`. The tokenizer now
+  matches segtok behavior when a sentence closer is the last token of the
+  input (`Histórias."` → `[Histórias, ., "]`), removing duplicate
+  `Histórias.` / `Conta-me Histórias.` candidates that had been crowding
+  upstream-ranked entries out of the top 20. Yaket now exact-matches the
+  upstream YAKE 9-element prefix for `test_n3_PT` and 10/10 head parity on
+  the multilingual paragraphs tracked in `test/multilingual-parity.test.ts`
+  for de/fr/it/pt/nl/ru.
+
 ## 0.5.3 - 2026-04-18
 
 Release workflow and documentation alignment update.

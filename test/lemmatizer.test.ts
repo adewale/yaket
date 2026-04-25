@@ -11,11 +11,11 @@ const singularLemmatizer: Lemmatizer = {
 describe("lemmatizer hook", () => {
   it("aggregates related unigram forms into a single normalized keyword", () => {
     const text = "models model models shape products";
-    const plain = extractKeywordDetails(text, { top: 10, n: 1, lan: "en" });
+    const plain = extractKeywordDetails(text, { top: 10, n: 1, language: "en" });
     const lemmatized = extractKeywordDetails(text, {
       top: 10,
       n: 1,
-      lan: "en",
+      language: "en",
       lemmatizer: singularLemmatizer,
     });
 
@@ -40,7 +40,7 @@ describe("lemmatizer hook", () => {
     const details = extractKeywordDetails("Models improve systems. Model improves system.", {
       top: 10,
       n: 2,
-      lan: "en",
+      language: "en",
       lemmatizer: singularLemmatizer,
     });
 
@@ -80,7 +80,7 @@ describe("lemmatizer hook", () => {
     extractKeywordDetails("Models improve systems.", {
       top: 10,
       n: 2,
-      lan: "en",
+      language: "en",
       lemmatizer: recordingLemmatizer,
     });
 
@@ -95,7 +95,7 @@ describe("lemmatizer hook", () => {
     expect(() => extractKeywordDetails("models model models", {
       top: 10,
       n: 1,
-      lan: "en",
+      language: "en",
       lemmatizer: "spacy" as unknown as Lemmatizer,
     })).toThrow(/not implemented in Yaket/i);
   });

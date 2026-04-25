@@ -21,7 +21,7 @@ describe("golden fixtures", () => {
     it(`matches fixture ${fixtureName}`, () => {
       const input = readFileSync(join(INPUT_DIR, `${fixtureName}.txt`), "utf8");
       const expected = JSON.parse(readFileSync(join(EXPECTED_DIR, `${fixtureName}.json`), "utf8")) as ReturnType<typeof extractKeywordDetails>;
-      const actual = extractKeywordDetails(input, { lan: "en", n: 3, top: 5 });
+      const actual = extractKeywordDetails(input, { language: "en", n: 3, top: 5 });
 
       expect(actual).toHaveLength(expected.length);
 

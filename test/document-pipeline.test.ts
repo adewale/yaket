@@ -68,7 +68,7 @@ describe("document pipeline helpers", () => {
       title: "Cloudflare Workers",
       body: "Search indexing improves relevance.",
       language: "pt",
-    }, { includeTitleInText: false, lan: "en", top: 5, n: 2 });
+    }, { includeTitleInText: false, language: "en", top: 5, n: 2 });
 
     expect(result.language).toBe("en");
     expect(result.keywords.some((item) => item.keyword.includes("Cloudflare"))).toBe(false);

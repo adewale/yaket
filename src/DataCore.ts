@@ -8,7 +8,7 @@ import { DEFAULT_EXCLUDE, getTag, preFilter } from "./utils.js";
 type BlockWord = [tag: string, word: string, term: SingleWord, normalizedWord: string];
 
 interface DataCoreConfig {
-  windowsSize?: number;
+  windowSize?: number;
   n?: number;
   tagsToDiscard?: Set<string>;
   exclude?: ReadonlySet<string>;
@@ -61,7 +61,7 @@ export class DataCore {
       this.freqNs[index] = 0;
     }
 
-    this.build(text, config.windowsSize ?? 2, n);
+    this.build(text, config.windowSize ?? 2, n);
   }
 
   /**
@@ -191,7 +191,7 @@ export class DataCore {
     this.candidates.get(candidate.uniqueKw)!.tf += 1;
   }
 
-  private build(text: string, windowsSize: number, n: number): void {
+  private build(text: string, windowSize: number, n: number): void {
     const filtered = preFilter(text);
     const sentences = this.textProcessor.splitSentences(filtered)
       .map((sentence) => this.textProcessor.tokenizeWords(sentence)
@@ -203,13 +203,13 @@ export class DataCore {
 
     let posText = 0;
     for (const [sentenceId, sentence] of this.sentencesStr.entries()) {
-      posText = this.processSentence(sentence, sentenceId, posText, windowsSize, n);
+      posText = this.processSentence(sentence, sentenceId, posText, windowSize, n);
     }
 
     this.numberOfWords = posText;
   }
 
-  private processSentence(sentence: string[], sentenceId: number, posText: number, windowsSize: number, n: number): number {
+  private processSentence(sentence: string[], sentenceId: number, posText: number, windowSize: number, n: number): number {
     const sentenceObjAux: BlockWord[][] = [];
     let blockOfWordObj: BlockWord[] = [];
 
@@ -222,7 +222,7 @@ export class DataCore {
         continue;
       }
 
-      posText = this.processWord(word, posText, sentenceId, posSent, blockOfWordObj, windowsSize, n);
+      posText = this.processWord(word, posText, sentenceId, posSent, blockOfWordObj, windowSize, n);
     }
 
     if (blockOfWordObj.length > 0) {
@@ -236,7 +236,7 @@ export class DataCore {
     return posText;
   }
 
-  private processWord(word: string, posText: number, sentenceId: number, posSent: number, blockOfWordObj: BlockWord[], windowsSize: number, n: number): number {
+  private processWord(word: string, posText: number, sentenceId: number, posSent: number, blockOfWordObj: BlockWord[], windowSize: number, n: number): number {
     const normalizedWord = this.normalizeTerm(word);
     const tag = this.getTag(word, posSent);
     const termObj = this.getTerm(normalizedWord, true, true);
@@ -245,7 +245,7 @@ export class DataCore {
     posText += 1;
 
     if (!this.tagsToDiscard.has(tag)) {
-      this.updateCooccurrence(blockOfWordObj, termObj, windowsSize);
+      this.updateCooccurrence(blockOfWordObj, termObj, windowSize);
     }
 
     this.generateCandidates([tag, word], normalizedWord, termObj, blockOfWordObj, n);
@@ -254,8 +254,8 @@ export class DataCore {
     return posText;
   }
 
-  private updateCooccurrence(blockOfWordObj: BlockWord[], termObj: SingleWord, windowsSize: number): void {
-    const start = Math.max(0, blockOfWordObj.length - windowsSize);
+  private updateCooccurrence(blockOfWordObj: BlockWord[], termObj: SingleWord, windowSize: number): void {
+    const start = Math.max(0, blockOfWordObj.length - windowSize);
 
     for (let index = start; index < blockOfWordObj.length; index += 1) {
       const blockWord = blockOfWordObj[index]!;

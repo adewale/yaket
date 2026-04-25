@@ -20,7 +20,7 @@ const customStopwords: StopwordProvider = {
 describe("pluggable strategies", () => {
   it("supports custom text processing", () => {
     const extractor = createKeywordExtractor({
-      lan: "en",
+      language: "en",
       n: 2,
       top: 5,
       textProcessor: pipeSeparatedProcessor,
@@ -34,7 +34,7 @@ describe("pluggable strategies", () => {
 
   it("supports custom stopword providers", () => {
     const details = extractKeywordDetails("alpha beta alpha beta", {
-      lan: "en",
+      language: "en",
       n: 1,
       top: 5,
       stopwordProvider: customStopwords,
@@ -47,7 +47,7 @@ describe("pluggable strategies", () => {
 
   it("supports candidate filters on extracted results", () => {
     const details = extractKeywordDetails("agent swarms coordinate agent workflows", {
-      lan: "en",
+      language: "en",
       n: 2,
       top: 10,
       candidateFilter(candidate) {
@@ -61,7 +61,7 @@ describe("pluggable strategies", () => {
 
   it("supports candidate normalizers", () => {
     const details = extractKeywordDetails("co-founder ecosystems", {
-      lan: "en",
+      language: "en",
       n: 1,
       top: 5,
       candidateNormalizer: {
@@ -84,7 +84,7 @@ describe("pluggable strategies", () => {
     };
 
     const details = extractKeywordDetails("co-founder", {
-      lan: "en",
+      language: "en",
       n: 1,
       top: 5,
       candidateNormalizer: normalizer,
@@ -96,7 +96,7 @@ describe("pluggable strategies", () => {
 
   it("supports custom keyword scorers", () => {
     const details = extractKeywordDetails("agent swarms coordinate distributed teams", {
-      lan: "en",
+      language: "en",
       n: 2,
       top: 5,
       keywordScorer(candidates) {
