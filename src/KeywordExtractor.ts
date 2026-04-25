@@ -1,8 +1,9 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { DataCore } from "./DataCore.js";
-import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor } from "./strategies.js";
+import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SentenceSplitter, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor, Tokenizer } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
-import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity } from "./similarity.js";
+import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity, type SimilarityCache } from "./similarity.js";
+import { splitSentences as defaultSplitSentences, tokenizeWords as defaultTokenizeWords } from "./utils.js";
 
 type DedupFunction = (cand1: string, cand2: string) => number;
 
@@ -19,8 +20,11 @@ export interface YakeOptions {
   features?: string[] | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
+  sentenceSplitter?: SentenceSplitter;
+  tokenizer?: Tokenizer;
   stopwordProvider?: StopwordProvider;
   dedupStrategy?: SimilarityStrategy | DedupFunction;
+  similarityCache?: SimilarityCache;
   lemmatizer?: Lemmatizer;
   candidateNormalizer?: CandidateNormalizer;
   singleWordScorer?: SingleWordScorer;
@@ -70,6 +74,7 @@ export class KeywordExtractor {
   readonly multiWordScorer: MultiWordScorer | null;
   readonly keywordScorer: ((candidates: KeywordResult[]) => KeywordResult[]) | null;
   readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
+  readonly similarityCache: SimilarityCache | null;
   private readonly dedupFunction: DedupFunction;
 
   /**
@@ -90,13 +95,14 @@ export class KeywordExtractor {
       features: options.features ?? null,
     };
 
-    this.textProcessor = options.textProcessor;
+    this.textProcessor = composeTextProcessor(options.textProcessor, options.sentenceSplitter, options.tokenizer);
     this.lemmatizer = options.lemmatizer ?? null;
     this.candidateNormalizer = options.candidateNormalizer ?? null;
     this.singleWordScorer = options.singleWordScorer ?? null;
     this.multiWordScorer = options.multiWordScorer ?? null;
     this.keywordScorer = options.keywordScorer == null ? null : getKeywordScorer(options.keywordScorer);
     this.candidateFilter = options.candidateFilter;
+    this.similarityCache = options.similarityCache ?? null;
     this.stopwordSet = options.stopwords == null
       ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.lan)
       : new Set([...options.stopwords].map((value) => value.toLowerCase()));
@@ -109,21 +115,27 @@ export class KeywordExtractor {
    * Levenshtein-based dedup similarity.
    */
   levs(cand1: string, cand2: string): number {
-    return levenshteinSimilarity(cand1, cand2);
+    return this.similarityCache == null
+      ? levenshteinSimilarity(cand1, cand2)
+      : levenshteinSimilarity(cand1, cand2, this.similarityCache);
   }
 
   /**
    * Sequence-style dedup similarity that approximates upstream YAKE's optimized path.
    */
   seqm(cand1: string, cand2: string): number {
-    return sequenceSimilarity(cand1, cand2);
+    return this.similarityCache == null
+      ? sequenceSimilarity(cand1, cand2)
+      : sequenceSimilarity(cand1, cand2, this.similarityCache);
   }
 
   /**
    * Jaro-based dedup similarity.
    */
   jaro(cand1: string, cand2: string): number {
-    return jaroSimilarity(cand1, cand2);
+    return this.similarityCache == null
+      ? jaroSimilarity(cand1, cand2)
+      : jaroSimilarity(cand1, cand2, this.similarityCache);
   }
 
   /**
@@ -247,6 +259,31 @@ export { Levenshtein };
 
 function getStrategyFunction(strategy: SimilarityStrategy | DedupFunction): DedupFunction {
   return typeof strategy === "function" ? strategy : strategy.compare.bind(strategy);
+}
+
+function composeTextProcessor(
+  textProcessor: TextProcessor | undefined,
+  sentenceSplitter: SentenceSplitter | undefined,
+  tokenizer: Tokenizer | undefined,
+): TextProcessor | undefined {
+  if (sentenceSplitter == null && tokenizer == null) {
+    return textProcessor;
+  }
+
+  // Default to bundled behavior when only one half is overridden, or when only
+  // a TextProcessor is provided alongside one of the granular interfaces.
+  return {
+    splitSentences: sentenceSplitter != null
+      ? (text) => sentenceSplitter.split(text)
+      : textProcessor != null
+        ? (text) => textProcessor.splitSentences(text)
+        : (text) => defaultSplitSentences(text),
+    tokenizeWords: tokenizer != null
+      ? (text) => tokenizer.tokenize(text)
+      : textProcessor != null
+        ? (text) => textProcessor.tokenizeWords(text)
+        : (text) => defaultTokenizeWords(text),
+  };
 }
 
 function getKeywordScorer(strategy: KeywordScorer | ((candidates: KeywordResult[]) => KeywordResult[])): (candidates: KeywordResult[]) => KeywordResult[] {

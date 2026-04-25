@@ -74,4 +74,35 @@ describe("tokenizer and sentence splitting parity", () => {
       "。",
     ]);
   });
+
+  it("does not attach a trailing period when the closer is the last token (segtok parity)", () => {
+    // segtok: web_tokenizer('"Conta-me Histórias."') -> ['"', 'Conta-me', 'Histórias', '.', '"']
+    expect(tokenizeWords("\"Conta-me Histórias.\"")).toEqual([
+      "\"",
+      "Conta-me",
+      "Histórias",
+      ".",
+      "\"",
+    ]);
+    // segtok: web_tokenizer('See (a.)') -> ['See', '(', 'a', '.', ')']
+    expect(tokenizeWords("See (a.)")).toEqual([
+      "See",
+      "(",
+      "a",
+      ".",
+      ")",
+    ]);
+  });
+
+  it("still attaches a trailing period when content follows the closer (segtok parity)", () => {
+    // existing behavior, kept as a regression: He said [wow.]. -> wow. attached, ] standalone
+    expect(tokenizeWords("He said [wow.].")).toEqual([
+      "He",
+      "said",
+      "[",
+      "wow.",
+      "]",
+      ".",
+    ]);
+  });
 });

@@ -4,6 +4,5 @@ Deferred items tracked here intentionally remain outside the current implementat
 
 ## Deferred
 
-1. Expand multilingual support and multilingual parity validation beyond the current smoke and regression coverage.
-2. Expand multilingual verification and benchmark coverage beyond the current regression suite, especially across the bundled stopword languages.
-3. Investigate the remaining Portuguese ranking drift seen in upstream `test_n3_PT`, where Yaket still surfaces `plataforma` and reorders lower-ranked named phrases versus Python YAKE.
+1. Investigate the remaining mid-rank Portuguese drift around `plataforma`, `Arquivo.pt`, `Ricardo Campos investigador`, and the `seqm` dedup divergence on near-duplicate phrases. The leading 9 candidates of upstream `test_n3_PT` are now exact-match parity (locked in `test/multilingual-parity.test.ts`); positions 10+ still drift on a small number of names due to `seqm` dedup behavior on overlapping phrases.
+2. Investigate the upstream tie-break ordering used when several candidates share byte-identical scores (visible on the Arabic AI sample at positions 3-5).

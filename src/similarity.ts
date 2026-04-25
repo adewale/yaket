@@ -1,7 +1,4 @@
-const distanceCache = new Map<string, number>();
-const ratioCache = new Map<string, number>();
-const sequenceCache = new Map<string, number>();
-const MAX_CACHE_SIZE = 20_000;
+const DEFAULT_MAX_CACHE_SIZE = 20_000;
 
 export interface SimilarityCacheStats {
   distance: number;
@@ -9,31 +6,82 @@ export interface SimilarityCacheStats {
   sequence: number;
 }
 
+/**
+ * Pluggable cache surface used by the similarity helpers.
+ *
+ * Each instance owns three bounded `Map`s — one per similarity helper.
+ * Pass an instance to a similarity function (or to `KeywordExtractor` via
+ * `similarityCache`) to keep cache state isolated from the module-level
+ * default and bounded to a smaller `maxSize` if needed.
+ */
+export interface SimilarityCache {
+  readonly distance: Map<string, number>;
+  readonly ratio: Map<string, number>;
+  readonly sequence: Map<string, number>;
+  readonly maxSize: number;
+  stats(): SimilarityCacheStats;
+  clear(): void;
+}
+
+/**
+ * Creates an isolated similarity cache bounded by `maxSize` (default 20000).
+ *
+ * Useful for long-running workers that want bounded per-request caches, for
+ * tests that need to avoid leaking state into the module-level default, and
+ * for benchmarks that need a reset between runs without disturbing other
+ * callers.
+ */
+export function createSimilarityCache(options: { maxSize?: number } = {}): SimilarityCache {
+  const maxSize = options.maxSize ?? DEFAULT_MAX_CACHE_SIZE;
+  const cache: SimilarityCache = {
+    distance: new Map<string, number>(),
+    ratio: new Map<string, number>(),
+    sequence: new Map<string, number>(),
+    maxSize,
+    stats(): SimilarityCacheStats {
+      return {
+        distance: cache.distance.size,
+        ratio: cache.ratio.size,
+        sequence: cache.sequence.size,
+      };
+    },
+    clear(): void {
+      cache.distance.clear();
+      cache.ratio.clear();
+      cache.sequence.clear();
+    },
+  };
+
+  return cache;
+}
+
+const defaultCache = createSimilarityCache();
+
 export class Levenshtein {
   /**
    * Returns a normalized Levenshtein similarity ratio.
    */
-  static ratio(seq1: string, seq2: string): number {
+  static ratio(seq1: string, seq2: string, cache: SimilarityCache = defaultCache): number {
     const key = cacheKey(seq1, seq2);
-    const cached = ratioCache.get(key);
+    const cached = cache.ratio.get(key);
     if (cached != null) {
       return cached;
     }
 
-    const distance = Levenshtein.distance(seq1, seq2);
+    const distance = Levenshtein.distance(seq1, seq2, cache);
     const length = Math.max(seq1.length, seq2.length);
     const ratio = length > 0 ? 1 - distance / length : 1;
 
-    setBoundedCache(ratioCache, key, ratio);
+    setBoundedCache(cache.ratio, key, ratio, cache.maxSize);
     return ratio;
   }
 
   /**
    * Returns the exact Levenshtein edit distance.
    */
-  static distance(seq1: string, seq2: string): number {
+  static distance(seq1: string, seq2: string, cache: SimilarityCache = defaultCache): number {
     const key = cacheKey(seq1, seq2);
-    const cached = distanceCache.get(key);
+    const cached = cache.distance.get(key);
     if (cached != null) {
       return cached;
     }
@@ -42,12 +90,12 @@ export class Levenshtein {
     let len2 = seq2.length;
 
     if (len1 === 0) {
-      setBoundedCache(distanceCache, key, len2);
+      setBoundedCache(cache.distance, key, len2, cache.maxSize);
       return len2;
     }
 
     if (len2 === 0) {
-      setBoundedCache(distanceCache, key, len1);
+      setBoundedCache(cache.distance, key, len1, cache.maxSize);
       return len1;
     }
 
@@ -57,7 +105,7 @@ export class Levenshtein {
     }
 
     const result = len1 <= 3 ? simpleDistance(seq1, seq2) : matrixDistance(seq1, seq2);
-    setBoundedCache(distanceCache, key, result);
+    setBoundedCache(cache.distance, key, result, cache.maxSize);
     return result;
   }
 }
@@ -65,7 +113,7 @@ export class Levenshtein {
 /**
  * Normalized Levenshtein similarity helper for deduplication.
  */
-export function levenshteinSimilarity(cand1: string, cand2: string): number {
+export function levenshteinSimilarity(cand1: string, cand2: string, cache: SimilarityCache = defaultCache): number {
   const cand1Chars = [...cand1];
   const cand2Chars = [...cand2];
   const maxLength = Math.max(cand1Chars.length, cand2Chars.length);
@@ -73,26 +121,26 @@ export function levenshteinSimilarity(cand1: string, cand2: string): number {
     return 1;
   }
 
-  return 1 - (Levenshtein.distance(cand1, cand2) / maxLength);
+  return 1 - (Levenshtein.distance(cand1, cand2, cache) / maxLength);
 }
 
 /**
  * Sequence-style similarity used to approximate upstream YAKE's `seqm` dedup behavior.
  */
-export function sequenceSimilarity(cand1: string, cand2: string): number {
+export function sequenceSimilarity(cand1: string, cand2: string, cache: SimilarityCache = defaultCache): number {
   const key = cacheKey(cand1, cand2);
-  const cached = sequenceCache.get(key);
+  const cached = cache.sequence.get(key);
   if (cached != null) {
     return cached;
   }
 
   if (cand1 === cand2) {
-    setBoundedCache(sequenceCache, key, 1);
+    setBoundedCache(cache.sequence, key, 1, cache.maxSize);
     return 1;
   }
 
   if (!aggressivePreFilter(cand1, cand2)) {
-    setBoundedCache(sequenceCache, key, 0);
+    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
     return 0;
   }
 
@@ -100,13 +148,13 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
   const cand2Chars = [...cand2];
   const maxLength = Math.max(cand1Chars.length, cand2Chars.length);
   if (maxLength === 0) {
-    setBoundedCache(sequenceCache, key, 0);
+    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
     return 0;
   }
 
   const lengthRatio = Math.min(cand1Chars.length, cand2Chars.length) / maxLength;
   if (lengthRatio < 0.3) {
-    setBoundedCache(sequenceCache, key, 0);
+    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
     return 0;
   }
 
@@ -114,19 +162,19 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
   const s2 = cand2.toLowerCase();
   const charUnion = new Set([...s1, ...s2]);
   if (charUnion.size === 0) {
-    setBoundedCache(sequenceCache, key, 0);
+    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
     return 0;
   }
 
   const overlap = [...new Set(s1)].filter((char) => s2.includes(char)).length / charUnion.size;
   if (overlap < 0.2) {
-    setBoundedCache(sequenceCache, key, 0);
+    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
     return 0;
   }
 
   if (maxLength <= 4) {
     const result = overlap * lengthRatio;
-    setBoundedCache(sequenceCache, key, result);
+    setBoundedCache(cache.sequence, key, result, cache.maxSize);
     return result;
   }
 
@@ -137,7 +185,7 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
     if (wordUnion.size > 0) {
       const wordOverlap = [...new Set(words1)].filter((word) => words2.includes(word)).length / wordUnion.size;
       if (wordOverlap > 0.4) {
-        setBoundedCache(sequenceCache, key, wordOverlap);
+        setBoundedCache(cache.sequence, key, wordOverlap, cache.maxSize);
         return wordOverlap;
       }
     }
@@ -149,14 +197,18 @@ export function sequenceSimilarity(cand1: string, cand2: string): number {
   const trigramOverlap = trigramUnion.size === 0 ? 0 : [...trigrams1].filter((trigram) => trigrams2.has(trigram)).length / trigramUnion.size;
   const result = Math.min((0.3 * lengthRatio) + (0.2 * overlap) + (0.5 * trigramOverlap), 1);
 
-  setBoundedCache(sequenceCache, key, result);
+  setBoundedCache(cache.sequence, key, result, cache.maxSize);
   return result;
 }
 
 /**
  * Jaro similarity helper.
+ *
+ * Accepts the same `SimilarityCache` parameter as the other helpers so callers
+ * can pass an isolated cache uniformly. Jaro itself is not memoized today, so
+ * the cache argument is currently unused for Jaro but reserved for future use.
  */
-export function jaroSimilarity(first: string, second: string): number {
+export function jaroSimilarity(first: string, second: string, _cache: SimilarityCache = defaultCache): number {
   if (first === second) {
     return 1;
   }
@@ -215,7 +267,7 @@ export function jaroSimilarity(first: string, second: string): number {
 }
 
 function cacheKey(first: string, second: string): string {
-  return first <= second ? `${first}\u0000${second}` : `${second}\u0000${first}`;
+  return first <= second ? `${first} ${second}` : `${second} ${first}`;
 }
 
 function simpleDistance(seq1: string, seq2: string): number {
@@ -306,8 +358,8 @@ function countSpaces(value: string): number {
   return count;
 }
 
-function setBoundedCache(cache: Map<string, number>, key: string, value: number): void {
-  if (!cache.has(key) && cache.size >= MAX_CACHE_SIZE) {
+function setBoundedCache(cache: Map<string, number>, key: string, value: number, maxSize: number): void {
+  if (!cache.has(key) && cache.size >= maxSize) {
     const oldestKey = cache.keys().next().value;
     if (oldestKey != null) {
       cache.delete(oldestKey);
@@ -318,21 +370,21 @@ function setBoundedCache(cache: Map<string, number>, key: string, value: number)
 }
 
 /**
- * Returns current sizes of the bounded similarity caches.
+ * Returns current sizes of the module-level bounded similarity caches.
+ *
+ * Custom caches created via `createSimilarityCache()` expose the same
+ * information through their own `.stats()` method.
  */
 export function getSimilarityCacheStats(): SimilarityCacheStats {
-  return {
-    distance: distanceCache.size,
-    ratio: ratioCache.size,
-    sequence: sequenceCache.size,
-  };
+  return defaultCache.stats();
 }
 
 /**
- * Clears all bounded similarity caches.
+ * Clears the module-level bounded similarity caches.
+ *
+ * Custom caches created via `createSimilarityCache()` expose `.clear()` for
+ * the equivalent operation on isolated state.
  */
 export function clearSimilarityCaches(): void {
-  distanceCache.clear();
-  ratioCache.clear();
-  sequenceCache.clear();
+  defaultCache.clear();
 }

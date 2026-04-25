@@ -71,13 +71,14 @@ export function tokenizeWords(text: string): string[] {
 
     const nextToken = tokens[index + 1];
     const nextNextToken = tokens[index + 2];
+    const tokenAfterCloser = tokens[index + 3];
     if (token === "…" && nextToken != null && SENTENCE_CLOSERS.has(nextToken)) {
       expanded.push(`${token}${nextToken}`);
       index += 1;
       continue;
     }
 
-    if (nextToken === "." && shouldAttachTrailingPeriod(token, nextNextToken)) {
+    if (nextToken === "." && shouldAttachTrailingPeriod(token, nextNextToken, tokenAfterCloser)) {
       expanded.push(...splitContractions(`${token}.`));
       index += 1;
       continue;
@@ -186,9 +187,15 @@ function consumeEllipsis(tokens: string[], startIndex: number): { value: string;
   };
 }
 
-function shouldAttachTrailingPeriod(token: string, nextNextToken?: string): boolean {
+function shouldAttachTrailingPeriod(token: string, nextNextToken?: string, tokenAfterCloser?: string): boolean {
   const normalized = token.toLowerCase();
-  return token.includes(".") || COMMON_ABBREVIATIONS.has(normalized) || (nextNextToken != null && SENTENCE_CLOSERS.has(nextNextToken));
+  if (token.includes(".") || COMMON_ABBREVIATIONS.has(normalized)) {
+    return true;
+  }
+  // segtok keeps `word.` attached when a sentence closer follows AND there is more text after it.
+  // When the closer is the last token of the input (e.g. `Histórias."` at end of a sentence)
+  // the period is left as its own token instead.
+  return nextNextToken != null && SENTENCE_CLOSERS.has(nextNextToken) && tokenAfterCloser != null;
 }
 
 function shouldAttachTrailingPunctuation(token: string): boolean {

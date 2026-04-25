@@ -227,7 +227,9 @@ const details = extractKeywordDetails("models model models", {
 
 Available extension points:
 
-- `TextProcessor`
+- `TextProcessor` (combined `splitSentences` + `tokenizeWords` surface)
+- `SentenceSplitter` (just `split(text) => string[]`, supplied via the `sentenceSplitter` option)
+- `Tokenizer` (just `tokenize(text) => string[]`, supplied via the `tokenizer` option)
 - `StopwordProvider`
 - `SimilarityStrategy`
 - `CandidateNormalizer`
@@ -236,6 +238,11 @@ Available extension points:
 - `MultiWordScorer`
 - `KeywordScorer`
 - `candidateFilter`
+
+`sentenceSplitter` and `tokenizer` can be supplied independently when you only
+want to override one half of the text-processing pipeline. They take precedence
+over a `textProcessor` for the half they cover, so the other half keeps the
+bundled (or `textProcessor`-supplied) behavior.
 
 `lemmatizer` stays hook-based in Yaket. Upstream-style string backends such as `"spacy"` or `"nltk"` are intentionally not implemented in the extraction core.
 
@@ -264,6 +271,42 @@ const details = extractKeywordDetails("agent swarms coordinate teams", {
   },
 });
 ```
+
+### Configurable similarity caches
+
+`Yaket` memoizes similarity scores used by the `seqm` / `levs` dedup paths in
+bounded module-level caches. To isolate cache state — for long-running edge
+workers, tests, or per-request caching — create your own cache and pass it
+to a `KeywordExtractor` (or directly to a similarity helper):
+
+```ts
+import {
+  KeywordExtractor,
+  createSimilarityCache,
+  sequenceSimilarity,
+} from "@ade_oshineye/yaket";
+
+const cache = createSimilarityCache({ maxSize: 5_000 });
+
+const extractor = new KeywordExtractor({
+  language: "en",
+  n: 3,
+  top: 10,
+  similarityCache: cache,
+});
+
+extractor.extractKeywords("Edge runtimes power modern serverless platforms.");
+
+console.log(cache.stats());
+cache.clear();
+
+// Direct use is supported for callers wiring custom dedup logic.
+sequenceSimilarity("alpha", "alpha", cache);
+```
+
+The module-level helpers `clearSimilarityCaches()` and
+`getSimilarityCacheStats()` continue to operate on the default cache for
+backwards compatibility.
 
 ### Stopwords and languages
 
@@ -349,14 +392,21 @@ The repository includes a benchmark harness that compares:
 - the original [Bobbin](https://github.com/adewale/bobbin) YAKE-like implementation
 - a simple TF-IDF baseline
 
-Current checked-in report:
+Current checked-in reports:
 
 - `docs/benchmarks/komoroske-2026-04-06.md`
+- `docs/benchmarks/multilingual.md`
 
 Additional dataset-oriented benchmark support is available for Inspec and SemEval-style evaluation via `scripts/benchmark-datasets.ts`.
 
 ```bash
 npm run benchmark:datasets
+```
+
+A per-language Python-YAKE parity benchmark (English, German, Spanish, French, Italian, Portuguese, Dutch, Russian, Arabic) is available via:
+
+```bash
+npm run benchmark:multilingual
 ```
 
 Run it with:
@@ -371,6 +421,7 @@ npm run benchmark
 - API reference: `docs/api-reference.md`
 - Use cases: `docs/use-cases.md`
 - Algorithm drift: `docs/algorithm-drift.md`
+- Lemmatization evaluation: `docs/lemmatization-evaluation.md`
 - Dataset benchmarks: `docs/benchmarks/inspec-semeval.md`
 - [Bobbin](https://github.com/adewale/bobbin) integration guide: `docs/integrations/bobbin.md`
 - Generic pipeline guide: `docs/integrations/pipelines.md`

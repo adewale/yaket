@@ -74,7 +74,10 @@ On the currently tracked upstream unit-test examples:
 
 - the previously identified English near-tie ordering cases are fixed
 - randomized `seqm` differential checks now match the upstream optimized path on the tracked parity corpus
-- a Portuguese ranking drift remains in `test_n3_PT`
+- the upstream `test_n3_PT` Portuguese sample now exact-matches the upstream YAKE leading 9 candidates (locked in `test/multilingual-parity.test.ts`). The remaining mid-rank drift is dedup-driven (Yaket's `seqm` drops a few near-duplicate phrases that upstream keeps) rather than tokenizer-driven.
+- single-paragraph multilingual parity heads for `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar` are exact-match against upstream YAKE on the tracked samples.
+
+The headline tokenizer fix that closed the major Portuguese drift was: trailing periods are no longer attached to a token when the only thing that follows is a sentence closer (e.g. `Histórias."` at the end of a sentence). This now matches segtok behavior and removed duplicate `Histórias.` / `Conta-me Histórias.` candidates that previously crowded out upstream-ranked entries.
 
 ## Deferred Follow-up
 
