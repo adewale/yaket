@@ -2,7 +2,42 @@
 
 Deferred items tracked here intentionally remain outside the current implementation tranche.
 
-## Deferred
+## Parity drift (low priority, headline drift is fixed)
 
-1. Investigate the remaining mid-rank Portuguese drift around `plataforma`, `Arquivo.pt`, `Ricardo Campos investigador`, and the `seqm` dedup divergence on near-duplicate phrases. The leading 9 candidates of upstream `test_n3_PT` are now exact-match parity (locked in `test/multilingual-parity.test.ts`); positions 10+ still drift on a small number of names due to `seqm` dedup behavior on overlapping phrases.
-2. Investigate the upstream tie-break ordering used when several candidates share byte-identical scores (visible on the Arabic AI sample at positions 3-5).
+1. Investigate the remaining mid-rank Portuguese drift around `plataforma`,
+   `Arquivo.pt`, `Ricardo Campos investigador`, and the `seqm` dedup
+   divergence on near-duplicate phrases. The leading 9 candidates of upstream
+   `test_n3_PT` are now exact-match parity (locked in
+   `test/multilingual-parity.test.ts`); positions 10+ still drift on a small
+   number of names due to `seqm` dedup behavior on overlapping phrases.
+2. Investigate the upstream tie-break ordering used when several candidates
+   share byte-identical scores (visible on the Arabic AI sample at positions
+   3-5; the `test/multilingual-parity.test.ts` Arabic head is intentionally
+   trimmed to top-2 to avoid this until it is resolved).
+3. Investigate the Spanish 9/10 multilingual benchmark head (one position
+   inside the upstream top-10 differs); the regression test pins what we
+   reproduce today so a fix shows up as a parity gain.
+
+## Coverage / verification breadth
+
+4. Expand the multilingual parity corpus from the current single
+   representative paragraph per language to a multi-document corpus per
+   language, so head-parity checks have more statistical weight.
+5. Run `npm run test:mutation` periodically against the scoring and dedup
+   modules and act on surviving mutants. The Stryker config is already in
+   place; this is about scheduling and triage, not infrastructure.
+
+## Pluggable surface follow-ups (only if a real adopter asks)
+
+6. Optional `lemmaAggregation` policy (`min` / `mean` / `max` / `harmonic`)
+   wired to the existing `Lemmatizer` hook so consumers can match upstream
+   YAKE's score-merging behavior without bundling spaCy / NLTK.
+   See `docs/lemmatization-evaluation.md` for the rationale.
+7. Bundle-size reporting in CI for edge adopters who care about the
+   per-Worker payload.
+
+## Adoption track
+
+8. Keep Bobbin's integration validation current as Bobbin evolves. The 0.6
+   release dropped the snake_case aliases; consumers still on 0.5.x should
+   follow `docs/migration-bobbin-0.6.md` before upgrading.

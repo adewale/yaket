@@ -41,7 +41,17 @@ Then update:
 ```bash
 npm run verify
 npm run benchmark
+npm run benchmark:multilingual   # if Python YAKE is available locally
 ```
+
+For a major-version bump that changes the public API surface (such as the
+0.5 → 0.6 alias removal), also confirm that:
+
+- `docs/migration-bobbin-0.6.md` (or the equivalent guide for the new
+  major) covers every removed / renamed entry point.
+- `CHANGELOG.md` lists each breaking change explicitly.
+- `docs/api-reference.md` and `README.md` no longer document the removed
+  surface as supported.
 
 ### 3. Commit the release
 

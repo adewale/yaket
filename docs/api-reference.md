@@ -58,10 +58,14 @@ type YakeOptions = {
   dedupLim?: number;
   dedupFunc?: string;
   windowSize?: number;
+  features?: string[] | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
+  sentenceSplitter?: SentenceSplitter;
+  tokenizer?: Tokenizer;
   stopwordProvider?: StopwordProvider;
   dedupStrategy?: SimilarityStrategy | ((a: string, b: string) => number);
+  similarityCache?: SimilarityCache;
   lemmatizer?: Lemmatizer;
   candidateNormalizer?: CandidateNormalizer;
   singleWordScorer?: SingleWordScorer;
@@ -78,9 +82,16 @@ Most commonly used fields:
 | `language` | two-letter language code | `en` |
 | `n` | maximum n-gram size | `3` |
 | `top` | number of keywords to return | `20` |
-| `dedupFunc` | `seqm`, `levs`, or `jaro`-style dedup | `seqm` |
+| `dedupFunc` | exactly `seqm`, `levs`, or `jaro` | `seqm` |
 | `dedupLim` | dedup similarity threshold | `0.9` |
 | `windowSize` | co-occurrence window size | `1` |
+| `sentenceSplitter` | override only the sentence splitter | bundled |
+| `tokenizer` | override only the tokenizer | bundled |
+| `similarityCache` | isolated cache for `seqm` / `levs` memoization | shared module-level default |
+
+`KeywordExtractorOptions` is exported as an alias for `YakeOptions` so
+existing imports keep compiling. `dedupFunc` now throws on unknown values
+instead of silently aliasing them.
 
 Yaket 0.6 dropped the legacy snake_case aliases (`lan`, `dedup_lim`,
 `dedup_func`, `windowsSize`, `window_size`), the `extract_keywords()` method,
@@ -163,16 +174,36 @@ Utility for wrapping extracted keywords in HTML markers.
 ### `levenshteinSimilarity`
 ### `sequenceSimilarity`
 ### `jaroSimilarity`
+
+These all accept an optional final `SimilarityCache` argument. When
+omitted, they use the bounded module-level default cache.
+
+### `createSimilarityCache(options?)`
+
+Returns a `SimilarityCache` with isolated `distance` / `ratio` /
+`sequence` `Map`s plus `stats()` and `clear()` methods. Pass `{ maxSize }`
+to set the bounded LRU eviction threshold (default `20000`). Use this
+for long-running edge workers, per-request cache scopes, tests that
+must not leak into the module-level default, or benchmarks that need
+to reset state between runs.
+
 ### `getSimilarityCacheStats`
 ### `clearSimilarityCaches`
 
-Use these mainly for diagnostics, experimentation, and custom dedup logic.
+Operate on the module-level default cache only. Custom caches expose
+the same operations through their own `.stats()` and `.clear()` methods.
+
+### `SimilarityCache` / `SimilarityCacheStats`
+
+Typed interfaces re-exported from the public surface.
 
 ## Extension Types
 
 Yaket exports the main extension interfaces directly:
 
-- `TextProcessor`
+- `TextProcessor` (combined `splitSentences` + `tokenizeWords` surface)
+- `SentenceSplitter` (just `split(text) => string[]`)
+- `Tokenizer` (just `tokenize(text) => string[]`)
 - `StopwordProvider`
 - `SimilarityStrategy`
 - `CandidateNormalizer`
@@ -182,7 +213,16 @@ Yaket exports the main extension interfaces directly:
 - `KeywordScorer`
 - `CandidateFilterInput`
 
-Lemmatization remains hook-only. Yaket does not implement upstream-style string backend selectors such as `"spacy"` or `"nltk"` inside the extraction core.
+The default values `defaultTextProcessor`, `defaultSentenceSplitter`,
+`defaultTokenizer`, and `defaultStopwordProvider` are also exported so
+custom strategies can compose with the bundled behavior without
+re-implementing it.
+
+`sentenceSplitter` and `tokenizer` take precedence over `textProcessor`
+for the half they cover. The other half falls back to whichever of
+`textProcessor` or the bundled default is available.
+
+Lemmatization remains hook-only. Yaket does not implement upstream-style string backend selectors such as `"spacy"` or `"nltk"` inside the extraction core. See `docs/lemmatization-evaluation.md` for the rationale.
 
 ## Choosing an API
 

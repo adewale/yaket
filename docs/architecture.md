@@ -159,13 +159,17 @@ Runtime boundary key:
 | `src/SingleWord.ts` | Single-word feature accumulation and scoring |
 | `src/ComposedWord.ts` | Multi-word candidate validation and scoring |
 | `src/utils.ts` | Pre-filtering, sentence splitting, tokenization, YAKE tag logic |
-| `src/similarity.ts` | Levenshtein, sequence, Jaro similarity, cache diagnostics |
+| `src/similarity.ts` | Levenshtein, sequence, Jaro similarity, configurable `SimilarityCache` |
 | `src/stopwords.ts` | Bundled stopword loading |
-| `src/strategies.ts` | Pluggable strategy and result interfaces |
+| `src/strategies.ts` | Pluggable strategy and result interfaces (incl. `SentenceSplitter` and `Tokenizer`) |
 | `src/document.ts` | Document-oriented pipeline helpers |
 | `src/bobbin.ts` | Bobbin-compatible adapter output |
 | `src/highlight.ts` | Keyword highlighting utility |
+| `src/graph.ts` | Adjacency-backed co-occurrence graph |
 | `src/cli.ts` | Optional Node CLI entry point |
+| `scripts/benchmark.ts` | Komoroske corpus benchmark harness (Node-only) |
+| `scripts/benchmark-multilingual.ts` | Per-language Yaket-vs-Python YAKE parity benchmark (Node-only) |
+| `scripts/benchmark-datasets.ts` | Inspec/SemEval-style dataset benchmark (Node-only) |
 
 ## Extraction Flow
 
@@ -199,9 +203,12 @@ These remain optional and separate:
 
 `Yaket` currently exposes these extension points:
 
-- `TextProcessor`
+- `TextProcessor` (combined sentence-split + tokenize)
+- `SentenceSplitter` (just sentence split, override one half independently)
+- `Tokenizer` (just tokenize, override one half independently)
 - `StopwordProvider`
 - `SimilarityStrategy`
+- `SimilarityCache` (configurable bounded cache for `seqm` / `levs` memoization)
 - `CandidateNormalizer`
 - `Lemmatizer`
 - `SingleWordScorer`
@@ -218,15 +225,17 @@ Package consumers install Yaket from npm as `@ade_oshineye/yaket`.
 The current architecture is verified through multiple test layers:
 
 - golden fixtures
-- Python parity checks
-- property-based tests
+- Python parity checks (English fixtures)
+- multilingual parity checks (`test/multilingual-parity.test.ts` locking head-parity heads against upstream YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar`)
+- property-based tests including PBT invariants exercised across bundled languages (no-throw on arbitrary unicode, determinism, top-bound)
+- canonical-only options tests asserting the 0.6 alias removal at type and runtime level
 - mutation-style fuzz tests
 - dedicated CLI coverage checks
 - Cloudflare Worker runtime tests
 - package-surface smoke tests
 - docs-sync tests
 - Bobbin-style regression tests
-- benchmark comparisons against Bobbin, TF-IDF, and Python YAKE
+- benchmark comparisons against Bobbin, TF-IDF, and Python YAKE (Komoroske, multilingual, Inspec/SemEval-style datasets)
 - mutation testing on scoring and dedup modules
 
 ## Non-Goals
