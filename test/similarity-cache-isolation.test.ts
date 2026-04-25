@@ -17,16 +17,19 @@ describe("configurable similarity caches", () => {
 
     const isolated = createSimilarityCache();
     sequenceSimilarity("alpha", "alpha", isolated);
+    sequenceSimilarity("kaggle", "google", isolated);
     Levenshtein.distance("beta", "betas", isolated);
     Levenshtein.ratio("gamma", "gamm", isolated);
 
-    expect(isolated.stats()).toEqual({
-      distance: expect.any(Number),
-      ratio: expect.any(Number),
-      sequence: expect.any(Number),
-    });
-    expect(isolated.stats().sequence).toBeGreaterThan(0);
-    expect(isolated.stats().distance).toBeGreaterThan(0);
+    // Distinct calls populate distinct entries in each underlying map.
+    expect(isolated.stats().sequence).toBeGreaterThanOrEqual(1);
+    expect(isolated.stats().distance).toBeGreaterThanOrEqual(1);
+    expect(isolated.stats().ratio).toBeGreaterThanOrEqual(1);
+
+    // The same key only ever counts once (proves we are reading the cache).
+    const sequenceBefore = isolated.stats().sequence;
+    sequenceSimilarity("alpha", "alpha", isolated);
+    expect(isolated.stats().sequence).toBe(sequenceBefore);
 
     expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
   });
@@ -63,21 +66,31 @@ describe("configurable similarity caches", () => {
   });
 
   it("KeywordExtractor accepts a similarityCache option and routes seqm dedup through it", () => {
+    const text = "machine learning machine learning deep learning";
+
+    // First: capture what the no-cache path produces.
+    const baseline = new KeywordExtractor({
+      language: "en",
+      n: 2,
+      top: 5,
+      dedupFunc: "seqm",
+      dedupLim: 0.9,
+    }).extractKeywords(text);
+
+    // Now use an isolated cache. After clearing the module-level default,
+    // running the isolated extractor must populate ONLY the isolated cache.
     clearSimilarityCaches();
     const isolated = createSimilarityCache();
-
-    const text = "machine learning machine learning deep learning";
-    const extractor = new KeywordExtractor({
+    const result = new KeywordExtractor({
       language: "en",
       n: 2,
       top: 5,
       dedupFunc: "seqm",
       dedupLim: 0.9,
       similarityCache: isolated,
-    });
+    }).extractKeywords(text);
 
-    const result = extractor.extractKeywords(text);
-    expect(result.length).toBeGreaterThan(0);
+    expect(result).toEqual(baseline);
     expect(isolated.stats().sequence).toBeGreaterThan(0);
     // Module-level cache must remain untouched when an isolated cache is provided.
     expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });

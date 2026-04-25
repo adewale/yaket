@@ -28,6 +28,7 @@ If you are touching scoring, dedup, or parity-sensitive areas, also run:
 ```bash
 npm run benchmark
 npm run benchmark:multilingual   # if Python YAKE is available locally
+npm run bundle-size              # writes docs/benchmarks/bundle-size.md
 ```
 
 The Python-parity tests (`test/python-parity.test.ts`,

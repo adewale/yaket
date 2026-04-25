@@ -36,7 +36,12 @@ describe("canonical options surface", () => {
     };
 
     const result = extractKeywordDetails("Machine learning improves retrieval.", options);
-    expect(result.length).toBeGreaterThan(0);
+    expect(result.length).toBeLessThanOrEqual(5);
+    expect(result.every((entry) => entry.ngramSize <= 2)).toBe(true);
+    const normalized = result.map((entry) => entry.normalizedKeyword);
+    expect(normalized).toContain("machine learning");
+    // determinism: same options must yield identical output on a re-run.
+    expect(extractKeywordDetails("Machine learning improves retrieval.", options)).toEqual(result);
   });
 
   it("preserves surface case separately from normalized keywords", () => {

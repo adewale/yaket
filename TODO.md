@@ -20,24 +20,19 @@ Deferred items tracked here intentionally remain outside the current implementat
 
 ## Coverage / verification breadth
 
-4. Expand the multilingual parity corpus from the current single
-   representative paragraph per language to a multi-document corpus per
-   language, so head-parity checks have more statistical weight.
-5. Run `npm run test:mutation` periodically against the scoring and dedup
+4. Run `npm run test:mutation` periodically against the scoring and dedup
    modules and act on surviving mutants. The Stryker config is already in
    place; this is about scheduling and triage, not infrastructure.
 
 ## Pluggable surface follow-ups (only if a real adopter asks)
 
-6. Optional `lemmaAggregation` policy (`min` / `mean` / `max` / `harmonic`)
+5. Optional `lemmaAggregation` policy (`min` / `mean` / `max` / `harmonic`)
    wired to the existing `Lemmatizer` hook so consumers can match upstream
    YAKE's score-merging behavior without bundling spaCy / NLTK.
    See `docs/lemmatization-evaluation.md` for the rationale.
-7. Bundle-size reporting in CI for edge adopters who care about the
-   per-Worker payload.
 
 ## Adoption track
 
-8. Keep Bobbin's integration validation current as Bobbin evolves. The 0.6
+6. Keep Bobbin's integration validation current as Bobbin evolves. The 0.6
    release dropped the snake_case aliases; consumers still on 0.5.x should
    follow `docs/migration-bobbin-0.6.md` before upgrading.

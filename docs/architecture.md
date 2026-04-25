@@ -170,6 +170,7 @@ Runtime boundary key:
 | `scripts/benchmark.ts` | Komoroske corpus benchmark harness (Node-only) |
 | `scripts/benchmark-multilingual.ts` | Per-language Yaket-vs-Python YAKE parity benchmark (Node-only) |
 | `scripts/benchmark-datasets.ts` | Inspec/SemEval-style dataset benchmark (Node-only) |
+| `scripts/bundle-size.ts` | Worker-target bundle-size reporter (esbuild, Node-only) |
 
 ## Extraction Flow
 
@@ -227,6 +228,8 @@ The current architecture is verified through multiple test layers:
 - golden fixtures
 - Python parity checks (English fixtures)
 - multilingual parity checks (`test/multilingual-parity.test.ts` locking head-parity heads against upstream YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar`)
+- multilingual corpus parity (`test/multilingual-corpus.test.ts` covering 21 documents across 7 languages with 168/210 head slots locked vs upstream)
+- bundle-size guardrail (`test/bundle-size.test.ts` asserts the worker-target gzipped bundle stays inside a documented edge budget and contains no Node built-ins)
 - property-based tests including PBT invariants exercised across bundled languages (no-throw on arbitrary unicode, determinism, top-bound)
 - canonical-only options tests asserting the 0.6 alias removal at type and runtime level
 - mutation-style fuzz tests

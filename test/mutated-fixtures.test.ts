@@ -21,10 +21,19 @@ describe("mutation-style fuzzing over known-good fixtures", () => {
           const second = extractKeywords(mutated, { language: "en", n: 3, top: 10 });
 
           expect(second).toEqual(first);
+          // Output must remain ascending by score.
+          for (let index = 1; index < first.length; index += 1) {
+            expect(first[index]![1]).toBeGreaterThanOrEqual(first[index - 1]![1]);
+          }
+          // Keywords are unique, trimmed, and have finite positive scores.
+          const keywords = first.map(([keyword]) => keyword);
+          expect(new Set(keywords).size).toBe(keywords.length);
           for (const [keyword, score] of first) {
-            expect(keyword.trim().length).toBeGreaterThan(0);
+            expect(keyword).toBe(keyword.trim());
+            expect(keyword.length).toBeGreaterThanOrEqual(1);
             expect(Number.isFinite(score)).toBe(true);
             expect(score).toBeGreaterThan(0);
+            expect(score).toBeLessThanOrEqual(1);
           }
         },
       ),

@@ -52,6 +52,14 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
 - `similarityCache` option on `KeywordExtractor` so workers, tests, and
   benchmarks can isolate cache state from the module-level default.
 - `docs/migration-bobbin-0.6.md` migration guide.
+- `test/multilingual-corpus.test.ts` covering 21 documents across 7 bundled languages
+  (`de`, `fr`, `es`, `it`, `pt`, `nl`, `ru`) with 168/210 head slots locked
+  against upstream YAKE 0.7.x. Documented the residual float-precision tie-break
+  drift items in `docs/algorithm-drift.md`.
+- `test/bundle-size.test.ts` and `scripts/bundle-size.ts`. The test asserts
+  the worker-target ESM bundle stays inside a 64 KiB gzipped budget and
+  contains no Node built-ins (`fs`, `path`, `child_process`, `os`). The
+  script writes a markdown report to `docs/benchmarks/bundle-size.md`.
 
 ### Fixed
 

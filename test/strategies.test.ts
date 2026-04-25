@@ -46,7 +46,12 @@ describe("pluggable strategies", () => {
   });
 
   it("supports candidate filters on extracted results", () => {
-    const details = extractKeywordDetails("agent swarms coordinate agent workflows", {
+    const baseline = extractKeywordDetails("agent swarms coordinate agent workflows", {
+      language: "en",
+      n: 2,
+      top: 10,
+    });
+    const filtered = extractKeywordDetails("agent swarms coordinate agent workflows", {
       language: "en",
       n: 2,
       top: 10,
@@ -55,8 +60,16 @@ describe("pluggable strategies", () => {
       },
     });
 
-    expect(details.length).toBeGreaterThan(0);
-    expect(details.every((item) => item.ngramSize > 1)).toBe(true);
+    expect(filtered.every((item) => item.ngramSize > 1)).toBe(true);
+    // The filter must remove at least the unigrams that the baseline contained.
+    expect(baseline.some((item) => item.ngramSize === 1)).toBe(true);
+    expect(filtered.length).toBeLessThan(baseline.length);
+    // Surviving multi-word candidates keep their baseline scores.
+    for (const item of filtered) {
+      const baselineMatch = baseline.find((entry) => entry.normalizedKeyword === item.normalizedKeyword);
+      expect(baselineMatch).toBeDefined();
+      expect(item.score).toBe(baselineMatch!.score);
+    }
   });
 
   it("supports candidate normalizers", () => {

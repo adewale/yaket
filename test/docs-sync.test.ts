@@ -31,16 +31,30 @@ describe("documentation-code sync", () => {
     const provider = createStaticStopwordProvider({ en: ["alpha", "beta"] });
 
     expect(created).toBeInstanceOf(KeywordExtractor);
-    expect(extractor.extractKeywords("Cloudflare Workers are edge runtimes.").length).toBeGreaterThan(0);
+    const extractorOutput = extractor.extractKeywords("Cloudflare Workers are edge runtimes.");
+    expect(extractorOutput.length).toBeGreaterThanOrEqual(2);
+    expect(extractorOutput.length).toBeLessThanOrEqual(5);
+    expect(extractorOutput.map(([keyword]) => keyword)).toContain("Cloudflare Workers");
     expect(extracted).toEqual(tuples);
-    expect(tuples.length).toBeGreaterThan(0);
-    expect(details.length).toBeGreaterThan(0);
-    expect(bobbin.length).toBeGreaterThan(0);
-    expect(document.keywords.length).toBeGreaterThan(0);
-    expect(highlighted).toContain("<mark>");
+    expect(tuples.map(([keyword]) => keyword)).toContain("Machine learning");
+    expect(details.map((entry) => entry.normalizedKeyword)).toContain("search indexing");
+    expect(details.every((entry) => entry.score > 0 && Number.isFinite(entry.score))).toBe(true);
+    expect(details.every((entry) => entry.normalizedKeyword === entry.normalizedKeyword.toLowerCase())).toBe(true);
+    expect(bobbin.map((entry) => entry.keyword)).toContain("platform ecosystems");
+    expect(bobbin.every((entry) => entry.keyword === entry.keyword.toLowerCase())).toBe(true);
+    expect(document.id).toBe("doc");
+    expect(document.language).toBe("en");
+    expect(document.keywords.map((entry) => entry.normalizedKeyword)).toContain("document pipelines");
+    // Highlighter wraps any matched keyword token. Confirm it covers the
+    // top-ranked phrases rather than asserting a specific phrase boundary
+    // (which depends on dedup and ranking ties).
+    expect(highlighted).toMatch(/<mark>[^<]*Machine[^<]*<\/mark>/);
+    expect(highlighted).toMatch(/<mark>[^<]*learning[^<]*<\/mark>/);
     expect(derivedStopwords.has("yaket")).toBe(true);
+    expect(derivedStopwords.has("the")).toBe(true);
     expect(provider.load("en")).toEqual(new Set(["alpha", "beta"]));
     expect(STOPWORDS.en).toContain("the");
+    expect(STOPWORDS.en).toContain("a");
   });
 
   it("keeps documented exports and CLI flags in sync", () => {

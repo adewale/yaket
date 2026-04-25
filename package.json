@@ -44,6 +44,7 @@
     "benchmark": "tsx scripts/benchmark.ts",
     "benchmark:datasets": "tsx scripts/benchmark-datasets.ts",
     "benchmark:multilingual": "tsx scripts/benchmark-multilingual.ts",
+    "bundle-size": "tsx scripts/bundle-size.ts",
     "check:package": "npm pack --dry-run && publint",
     "prepack": "npm run build",
     "test:cli:coverage": "vitest run --config vitest.cli-coverage.config.ts",

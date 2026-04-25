@@ -79,6 +79,29 @@ On the currently tracked upstream unit-test examples:
 
 The headline tokenizer fix that closed the major Portuguese drift was: trailing periods are no longer attached to a token when the only thing that follows is a sentence closer (e.g. `Histórias."` at the end of a sentence). This now matches segtok behavior and removed duplicate `Histórias.` / `Conta-me Histórias.` candidates that previously crowded out upstream-ranked entries.
 
+### Float-precision tie-break residuals
+
+The remaining tracked drift on `ar` (positions 3-5) and `es` (positions 10-11)
+is **not** an algorithm bug but a 1-3 ULP float64 precision difference
+between Yaket's and Python YAKE's scoring math. Upstream Python computes
+slightly different floats for some candidates that score equal in Yaket
+(or vice versa), and stable sort then orders them by insertion order.
+
+Concretely, on the multilingual benchmark sample:
+
+- Arabic positions 3-5 share byte-identical `h` in Yaket but differ by
+  1-3 ULP in Python (e.g. `0.003473156652249835` vs
+  `0.0034731566522498347`).
+- Spanish positions 10-12 share byte-identical `h` in **both** Yaket and
+  Python, so the order is purely insertion-order driven; Yaket's
+  current `isSlidingNgramTie` reversal in `compareCandidates` is the
+  source of the disagreement on the sliding-trigram pair.
+
+A full fix would require replicating Python's float-arithmetic operation
+order bit-exactly inside `SingleWord.updateH` and `ComposedWord.updateH`.
+That is deferred until a real adopter needs byte-exact ordering past the
+tracked head-parity heads.
+
 ## Deferred Follow-up
 
 The explicit parity follow-up work is tracked in `TODO.md`.

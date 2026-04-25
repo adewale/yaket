@@ -412,6 +412,16 @@ A per-language Python-YAKE parity benchmark (English, German, Spanish, French, I
 npm run benchmark:multilingual
 ```
 
+A bundle-size report (worker-target, ESM, gzipped) is available via:
+
+```bash
+npm run bundle-size
+```
+
+This is a Node-only script that uses esbuild and writes
+`docs/benchmarks/bundle-size.md`. The `test/bundle-size.test.ts` test
+asserts the gzipped bundle stays inside the documented edge budget.
+
 Run it with:
 
 ```bash
