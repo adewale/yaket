@@ -60,6 +60,15 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
   the worker-target ESM bundle stays inside a 64 KiB gzipped budget and
   contains no Node built-ins (`fs`, `path`, `child_process`, `os`). The
   script writes a markdown report to `docs/benchmarks/bundle-size.md`.
+- mutation-testing audit at `docs/audits/mutation-testing-2026-04-26.md`
+  with a 68.77 % overall Stryker mutation score (above the 60 % break
+  threshold). New `test/keyword-extractor-defaults.test.ts` and
+  `test/dedup-boundaries.test.ts` kill the highest-value `KeywordExtractor`
+  survivors (default option values, dedup threshold strict-greater
+  semantics, early-exit branch).
+- `stryker.conf.json` switched to `coverageAnalysis: "perTest"` and
+  dropped the TypeScript checker so a full mutation run completes in
+  ~8 minutes.
 
 ### Fixed
 

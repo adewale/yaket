@@ -21,8 +21,11 @@ Deferred items tracked here intentionally remain outside the current implementat
 ## Coverage / verification breadth
 
 4. Run `npm run test:mutation` periodically against the scoring and dedup
-   modules and act on surviving mutants. The Stryker config is already in
-   place; this is about scheduling and triage, not infrastructure.
+   modules. Current baseline is 68.77 % overall, captured in
+   `docs/audits/mutation-testing-2026-04-26.md`. Most remaining
+   `src/similarity.ts` survivors are equivalent mutants (cache-hit
+   short-circuits, length-symmetric Levenshtein swap, simple-vs-matrix
+   threshold). Future work is scheduling and triage, not infrastructure.
 
 ## Pluggable surface follow-ups (only if a real adopter asks)
 

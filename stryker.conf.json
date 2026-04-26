@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/@stryker-mutator/core/schema/stryker-schema.json",
   "testRunner": "vitest",
-  "checkers": ["typescript"],
+  "checkers": [],
   "reporters": ["clear-text", "json"],
   "mutate": [
     "src/similarity.ts",
@@ -9,7 +9,8 @@
     "src/ComposedWord.ts",
     "src/KeywordExtractor.ts"
   ],
-  "coverageAnalysis": "off",
+  "coverageAnalysis": "perTest",
+  "concurrency": 4,
   "thresholds": {
     "high": 80,
     "low": 65,
