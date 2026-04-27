@@ -20,18 +20,23 @@ describe("configurable similarity caches", () => {
     sequenceSimilarity("kaggle", "google", isolated);
     Levenshtein.distance("beta", "betas", isolated);
     Levenshtein.ratio("gamma", "gamm", isolated);
+    jaroSimilarity("martha", "marhta", isolated);
 
     // Distinct calls populate distinct entries in each underlying map.
     expect(isolated.stats().sequence).toBeGreaterThanOrEqual(1);
     expect(isolated.stats().distance).toBeGreaterThanOrEqual(1);
     expect(isolated.stats().ratio).toBeGreaterThanOrEqual(1);
+    expect(isolated.stats().jaro).toBeGreaterThanOrEqual(1);
 
     // The same key only ever counts once (proves we are reading the cache).
     const sequenceBefore = isolated.stats().sequence;
     sequenceSimilarity("alpha", "alpha", isolated);
     expect(isolated.stats().sequence).toBe(sequenceBefore);
+    const jaroBefore = isolated.stats().jaro;
+    jaroSimilarity("martha", "marhta", isolated);
+    expect(isolated.stats().jaro).toBe(jaroBefore);
 
-    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
+    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
   });
 
   it("rejects non-positive or non-integer maxSize values", () => {
@@ -47,12 +52,14 @@ describe("configurable similarity caches", () => {
       sequenceSimilarity(`a-${index}`, `b-${index}`, isolated);
       Levenshtein.distance(`c-${index}`, `d-${index}`, isolated);
       Levenshtein.ratio(`e-${index}`, `f-${index}`, isolated);
+      jaroSimilarity(`g-${index}`, `h-${index}`, isolated);
     }
 
     const stats = isolated.stats();
     expect(stats.sequence).toBeLessThanOrEqual(10);
     expect(stats.distance).toBeLessThanOrEqual(10);
     expect(stats.ratio).toBeLessThanOrEqual(10);
+    expect(stats.jaro).toBeLessThanOrEqual(10);
   });
 
   it("clear() drains an isolated cache without touching the module-level default", () => {
@@ -62,13 +69,28 @@ describe("configurable similarity caches", () => {
 
     const isolated = createSimilarityCache();
     sequenceSimilarity("isolated", "isolated", isolated);
+    jaroSimilarity("isolated-jaro", "isolated-jaroz", isolated);
     expect(isolated.stats().sequence).toBeGreaterThan(0);
+    expect(isolated.stats().jaro).toBeGreaterThan(0);
 
     isolated.clear();
-    expect(isolated.stats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
+    expect(isolated.stats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
 
     const moduleStatsAfter = getSimilarityCacheStats();
     expect(moduleStatsAfter).toEqual(moduleStatsBefore);
+  });
+
+  it("jaroSimilarity caches results in the supplied cache and returns the same value on a hit", () => {
+    const isolated = createSimilarityCache();
+    const baseline = jaroSimilarity("dwayne", "duane");
+
+    expect(isolated.stats().jaro).toBe(0);
+    const cold = jaroSimilarity("dwayne", "duane", isolated);
+    expect(isolated.stats().jaro).toBe(1);
+    const warm = jaroSimilarity("dwayne", "duane", isolated);
+    expect(isolated.stats().jaro).toBe(1); // hit, no new entry
+    expect(cold).toBe(baseline);
+    expect(warm).toBe(baseline);
   });
 
   it("KeywordExtractor accepts a similarityCache option and routes seqm dedup through it", () => {
@@ -99,7 +121,7 @@ describe("configurable similarity caches", () => {
     expect(result).toEqual(baseline);
     expect(isolated.stats().sequence).toBeGreaterThan(0);
     // Module-level cache must remain untouched when an isolated cache is provided.
-    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
+    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
   });
 
   it("levenshteinSimilarity and jaroSimilarity also accept the cache parameter without behavior change", () => {

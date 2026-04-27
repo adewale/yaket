@@ -83,6 +83,10 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
 - `KeywordExtractorOptions` doc comment clarified — the alias is
   *import-compatible*, not value-compatible (the legacy keys are rejected
   at construction time).
+- `jaroSimilarity` now memoizes results in the supplied `SimilarityCache`
+  on equal terms with `sequenceSimilarity` and `Levenshtein.ratio` /
+  `.distance`. The `SimilarityCacheStats` interface gained a `jaro: number`
+  field; `clear()` empties the Jaro map alongside the other three.
 
 ### Fixed
 

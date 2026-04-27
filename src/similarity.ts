@@ -4,12 +4,13 @@ export interface SimilarityCacheStats {
   distance: number;
   ratio: number;
   sequence: number;
+  jaro: number;
 }
 
 /**
  * Pluggable cache surface used by the similarity helpers.
  *
- * Each instance owns three bounded `Map`s — one per similarity helper.
+ * Each instance owns four bounded `Map`s — one per similarity helper.
  * Pass an instance to a similarity function (or to `KeywordExtractor` via
  * `similarityCache`) to keep cache state isolated from the module-level
  * default and bounded to a smaller `maxSize` if needed.
@@ -18,6 +19,7 @@ export interface SimilarityCache {
   readonly distance: Map<string, number>;
   readonly ratio: Map<string, number>;
   readonly sequence: Map<string, number>;
+  readonly jaro: Map<string, number>;
   readonly maxSize: number;
   stats(): SimilarityCacheStats;
   clear(): void;
@@ -40,18 +42,21 @@ export function createSimilarityCache(options: { maxSize?: number } = {}): Simil
     distance: new Map<string, number>(),
     ratio: new Map<string, number>(),
     sequence: new Map<string, number>(),
+    jaro: new Map<string, number>(),
     maxSize,
     stats(): SimilarityCacheStats {
       return {
         distance: cache.distance.size,
         ratio: cache.ratio.size,
         sequence: cache.sequence.size,
+        jaro: cache.jaro.size,
       };
     },
     clear(): void {
       cache.distance.clear();
       cache.ratio.clear();
       cache.sequence.clear();
+      cache.jaro.clear();
     },
   };
 
@@ -207,11 +212,23 @@ export function sequenceSimilarity(cand1: string, cand2: string, cache: Similari
 /**
  * Jaro similarity helper.
  *
- * Accepts the same `SimilarityCache` parameter as the other helpers so callers
- * can pass an isolated cache uniformly. Jaro itself is not memoized today, so
- * the cache argument is currently unused for Jaro but reserved for future use.
+ * Memoized in the supplied `SimilarityCache`. Without an explicit cache
+ * argument, the module-level default cache is used, mirroring the other
+ * helpers.
  */
-export function jaroSimilarity(first: string, second: string, _cache: SimilarityCache = defaultCache): number {
+export function jaroSimilarity(first: string, second: string, cache: SimilarityCache = defaultCache): number {
+  const key = cacheKey(first, second);
+  const cached = cache.jaro.get(key);
+  if (cached != null) {
+    return cached;
+  }
+
+  const result = computeJaro(first, second);
+  setBoundedCache(cache.jaro, key, result, cache.maxSize);
+  return result;
+}
+
+function computeJaro(first: string, second: string): number {
   if (first === second) {
     return 1;
   }

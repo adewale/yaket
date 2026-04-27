@@ -5,14 +5,14 @@ import { clearSimilarityCaches, extractKeywords, getSimilarityCacheStats, Levens
 describe("similarity cache diagnostics", () => {
   it("reports and clears cache usage", () => {
     clearSimilarityCaches();
-    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
+    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
 
     sequenceSimilarity("machine learning", "machine learning");
     const stats = getSimilarityCacheStats();
     expect(stats.sequence).toBeGreaterThan(0);
 
     clearSimilarityCaches();
-    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
+    expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
   });
 
   it("stays bounded under many unique similarities", () => {
