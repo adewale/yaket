@@ -25,16 +25,36 @@ const VARIANTS = [
   { entry: "src/index.ts", minified: false },
 ] as const;
 
-const NODE_BUILTINS = [
-  "node:fs",
-  "node:path",
-  "node:child_process",
-  "node:os",
+const FORBIDDEN_BUILTIN_NAMES = [
   "fs",
+  "fs/promises",
   "path",
+  "path/posix",
   "child_process",
   "os",
+  "url",
+  "stream",
+  "zlib",
+  "crypto",
+  "http",
+  "https",
+  "net",
+  "tls",
+  "worker_threads",
+  "process",
+  "util",
 ];
+
+function buildForbiddenPatterns(): string[] {
+  const patterns: string[] = [];
+  for (const name of FORBIDDEN_BUILTIN_NAMES) {
+    patterns.push(`"${name}"`);
+    patterns.push(`'${name}'`);
+    patterns.push(`"node:${name}"`);
+    patterns.push(`'node:${name}'`);
+  }
+  return patterns;
+}
 
 async function main(): Promise<void> {
   const reports: VariantReport[] = [];
@@ -66,12 +86,16 @@ async function main(): Promise<void> {
     }
 
     // Sanity-check that no Node built-ins leaked in. We assert at the SOURCE
-    // bundle bytes, not after gzip.
+    // bundle bytes, not after gzip. Both quote styles and the bare and
+    // `node:`-prefixed forms are checked to match the test guardrail.
     const bundleText = output.text;
-    for (const builtin of NODE_BUILTINS) {
-      if (bundleText.includes(`"${builtin}"`) || bundleText.includes(`'${builtin}'`)) {
-        throw new Error(`Bundle leaked Node built-in: ${builtin}`);
+    for (const pattern of buildForbiddenPatterns()) {
+      if (bundleText.includes(pattern)) {
+        throw new Error(`Bundle leaked Node built-in pattern: ${pattern}`);
       }
+    }
+    if (/import\s*\(\s*["']node:/u.test(bundleText) || /require\s*\(\s*["']node:/u.test(bundleText)) {
+      throw new Error("Bundle leaked a dynamic Node built-in import");
     }
 
     reports.push({

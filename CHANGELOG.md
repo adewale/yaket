@@ -69,6 +69,20 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
 - `stryker.conf.json` switched to `coverageAnalysis: "perTest"` and
   dropped the TypeScript checker so a full mutation run completes in
   ~8 minutes.
+- Runtime validation of removed options. Passing `lan`, `dedup_lim`,
+  `dedup_func`, `windowsSize`, or `window_size` through a plain JS object
+  (where the TypeScript guard does not apply) now throws a `TypeError`
+  rather than silently falling back to the default.
+- `createSimilarityCache({ maxSize })` now validates that `maxSize` is a
+  positive integer; `0`, negatives, `NaN`, `Infinity`, and non-integers
+  throw a `RangeError`.
+- Stricter bundle-size leak detection in `test/bundle-size.test.ts` and
+  `scripts/bundle-size.ts`: 17 Node built-in module names are checked
+  under both quote styles and the bare-vs-`node:`-prefixed forms, plus
+  dynamic `import()` and `require()` of `node:*` modules.
+- `KeywordExtractorOptions` doc comment clarified — the alias is
+  *import-compatible*, not value-compatible (the legacy keys are rejected
+  at construction time).
 
 ### Fixed
 

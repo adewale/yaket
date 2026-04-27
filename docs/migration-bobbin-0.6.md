@@ -6,6 +6,13 @@ familiarity and Bobbin compatibility. The extraction behavior is unchanged
 on the canonical surface — only the option names, one method name, and
 three dedup-function values went away.
 
+**Important:** the legacy keys are rejected at **runtime** as well as at the
+type level. Passing `{ lan: "pt" }` (or any of the other removed keys)
+through a plain JS object or JSON payload now throws a `TypeError` rather
+than silently falling back to the default. Unknown values for `dedupFunc`
+also throw with an error that lists the bad value and the three accepted
+names (`seqm`, `levs`, `jaro`).
+
 If you adopted Yaket 0.5.x by passing canonical names already
 (`language`, `dedupLim`, `dedupFunc`, `windowSize`, `extractKeywords()`),
 the upgrade is a simple version bump. If you copied Python YAKE's

@@ -34,6 +34,12 @@ describe("configurable similarity caches", () => {
     expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0 });
   });
 
+  it("rejects non-positive or non-integer maxSize values", () => {
+    for (const bad of [0, -1, -100, 1.5, NaN, Infinity, -Infinity]) {
+      expect(() => createSimilarityCache({ maxSize: bad })).toThrow(/maxSize/);
+    }
+  });
+
   it("respects the maxSize option for bounded user caches", () => {
     const isolated = createSimilarityCache({ maxSize: 10 });
 

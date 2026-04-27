@@ -7,6 +7,32 @@ import { splitSentences as defaultSplitSentences, tokenizeWords as defaultTokeni
 
 type DedupFunction = (cand1: string, cand2: string) => number;
 
+const VALID_DEDUP_FUNC_NAMES = new Set(["seqm", "levs", "jaro"]);
+
+/**
+ * Snake_case keys removed in 0.6. Reject these at runtime so callers that
+ * construct options from a plain JS object or JSON payload (where the
+ * TypeScript guard does not apply) get a loud error instead of silent
+ * fallback to defaults.
+ */
+const REMOVED_OPTION_KEYS: ReadonlyArray<[string, string]> = [
+  ["lan", "language"],
+  ["dedup_lim", "dedupLim"],
+  ["dedup_func", "dedupFunc"],
+  ["windowsSize", "windowSize"],
+  ["window_size", "windowSize"],
+];
+
+function assertNoRemovedOptionKeys(options: object): void {
+  for (const [legacy, canonical] of REMOVED_OPTION_KEYS) {
+    if (Object.prototype.hasOwnProperty.call(options, legacy)) {
+      throw new TypeError(
+        `Yaket option "${legacy}" was removed in 0.6; use "${canonical}" instead. See docs/migration-bobbin-0.6.md.`,
+      );
+    }
+  }
+}
+
 /**
  * Public configuration for Yaket extraction.
  *
@@ -38,10 +64,14 @@ export interface YakeOptions {
 }
 
 /**
- * Backwards-compatible alias for the public option type.
+ * Import-compatible alias for the public option type.
  *
- * In 0.6 this is identical to `YakeOptions`; the alias remains so that
- * existing imports keep compiling while the documentation transitions.
+ * In 0.6 this is structurally identical to `YakeOptions`; the alias keeps
+ * existing `import { KeywordExtractorOptions } from "..."` declarations
+ * compiling. It is NOT backwards-compatible at the value level — the
+ * legacy snake_case keys (`lan`, `dedup_lim`, `dedup_func`, `windowsSize`,
+ * `window_size`) are rejected at construction time. See
+ * `docs/migration-bobbin-0.6.md`.
  */
 export type KeywordExtractorOptions = YakeOptions;
 
@@ -77,6 +107,8 @@ export class KeywordExtractor {
    * Creates a reusable keyword extractor with normalized options.
    */
   constructor(options: KeywordExtractorOptions = {}) {
+    assertNoRemovedOptionKeys(options);
+
     if (typeof options.lemmatizer === "string") {
       throw new TypeError("String lemmatizer backends such as 'spacy' or 'nltk' are not implemented in Yaket; provide a hook object with a lemmatize() method instead.");
     }
@@ -200,7 +232,13 @@ export class KeywordExtractor {
   }
 
   private getDedupFunction(funcName: string): DedupFunction {
-    switch (funcName.toLowerCase()) {
+    const lower = funcName.toLowerCase();
+    if (!VALID_DEDUP_FUNC_NAMES.has(lower)) {
+      throw new TypeError(
+        `Unknown dedupFunc "${funcName}"; expected one of "seqm", "levs", "jaro".`,
+      );
+    }
+    switch (lower) {
       case "jaro":
         return this.jaro.bind(this);
       case "seqm":
@@ -208,7 +246,8 @@ export class KeywordExtractor {
       case "levs":
         return this.levs.bind(this);
       default:
-        throw new TypeError(`Unknown dedupFunc "${funcName}"; expected one of "seqm", "levs", "jaro".`);
+        // Unreachable: VALID_DEDUP_FUNC_NAMES guard rules out everything else.
+        throw new TypeError(`Unreachable dedupFunc dispatch for "${funcName}"`);
     }
   }
 }

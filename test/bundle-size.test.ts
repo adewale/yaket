@@ -13,7 +13,43 @@ import { resolve } from "node:path";
  */
 const MINIFIED_GZIP_BUDGET_BYTES = 64 * 1024; // 64 KiB
 const MINIFIED_RAW_BUDGET_BYTES = 192 * 1024; // 192 KiB
-const FORBIDDEN_BUILTINS = ["node:fs", "node:path", "node:child_process", "node:os", '"fs"', '"path"', '"child_process"'];
+
+/**
+ * Names of Node-only built-ins that must never appear as imports in the
+ * worker-target bundle. Each entry is checked under both single and double
+ * quote styles, with and without the `node:` prefix, to catch any minified
+ * variation esbuild might emit.
+ */
+const FORBIDDEN_BUILTIN_NAMES = [
+  "fs",
+  "fs/promises",
+  "path",
+  "path/posix",
+  "child_process",
+  "os",
+  "url",
+  "stream",
+  "zlib",
+  "crypto",
+  "http",
+  "https",
+  "net",
+  "tls",
+  "worker_threads",
+  "process",
+  "util",
+];
+
+function buildForbiddenPatterns(): string[] {
+  const patterns: string[] = [];
+  for (const name of FORBIDDEN_BUILTIN_NAMES) {
+    patterns.push(`"${name}"`);
+    patterns.push(`'${name}'`);
+    patterns.push(`"node:${name}"`);
+    patterns.push(`'node:${name}'`);
+  }
+  return patterns;
+}
 
 describe("bundle size guardrails", () => {
   it("worker-target bundle of src/index.ts stays inside the documented edge budget", async () => {
@@ -37,9 +73,15 @@ describe("bundle size guardrails", () => {
     const gzippedBytes = gzipSync(output.contents).byteLength;
 
     // Hard fail before doing anything else if Node-only modules leaked in.
-    for (const builtin of FORBIDDEN_BUILTINS) {
-      expect(bundleText, `bundle leaked Node built-in: ${builtin}`).not.toContain(builtin);
+    // We check both quote styles and both the bare and `node:`-prefixed forms.
+    for (const pattern of buildForbiddenPatterns()) {
+      expect(bundleText, `bundle leaked Node built-in pattern: ${pattern}`).not.toContain(pattern);
     }
+
+    // Also catch dynamic imports of Node built-ins that bypass static-string
+    // matching. esbuild emits these for `import("node:fs")` style code.
+    expect(bundleText).not.toMatch(/import\s*\(\s*["']node:/u);
+    expect(bundleText).not.toMatch(/require\s*\(\s*["']node:/u);
 
     // The bundle must not be empty (would mean tree-shaking went wrong).
     expect(rawBytes).toBeGreaterThan(50 * 1024);

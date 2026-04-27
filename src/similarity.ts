@@ -33,6 +33,9 @@ export interface SimilarityCache {
  */
 export function createSimilarityCache(options: { maxSize?: number } = {}): SimilarityCache {
   const maxSize = options.maxSize ?? DEFAULT_MAX_CACHE_SIZE;
+  if (!Number.isInteger(maxSize) || maxSize < 1) {
+    throw new RangeError(`createSimilarityCache: maxSize must be a positive integer, got ${String(options.maxSize)}`);
+  }
   const cache: SimilarityCache = {
     distance: new Map<string, number>(),
     ratio: new Map<string, number>(),
