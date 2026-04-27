@@ -91,10 +91,20 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
   `Object.prototype.hasOwnProperty.call`), so legacy keys that arrive on
   the prototype chain (e.g. `Object.create({ lan: "pt" })` or class
   hierarchies) also fail loudly instead of silently falling through.
-- Extracted the bundle-leak forbidden-built-in list and pattern builder
-  into `scripts/bundle-leak-detector.ts`. Both `scripts/bundle-size.ts`
-  and `test/bundle-size.test.ts` now import from it, so they cannot
-  drift apart.
+- Extracted the bundle-leak forbidden-built-in list and detector into
+  `scripts/bundle-leak-detector.ts`. The detector now walks esbuild's
+  metafile (the actual import graph) instead of grepping the bundle
+  text, so innocuous string literals like `"process"`, `"path"`, or
+  `"url"` in user-facing strings can no longer false-positive as
+  Node-built-in leaks. Both `scripts/bundle-size.ts` and
+  `test/bundle-size.test.ts` import from the shared helper, so they
+  cannot drift apart.
+- `npm run typecheck` now runs against `tsconfig.tooling.json` in
+  addition to the build `tsconfig.json`, so script tooling
+  (`scripts/**/*.ts`) and tests (`test/**/*.ts`) are covered too. This
+  immediately surfaced two stale `lan: "en"` calls in
+  `scripts/benchmark.ts` and `scripts/benchmark-datasets.ts` that were
+  previously missed during the 0.6 alias removal.
 - README and api-reference rewritten for the four-map `SimilarityCache`
   (added `jaro`) and updated multilingual limitation wording to reflect
   the actual residual drift instead of "broad multilingual parity
@@ -102,6 +112,14 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
 
 ### Fixed
 
+- Portuguese ranking drift in upstream `test_n3_PT`. The tokenizer now
+  matches segtok behavior when a sentence closer is the last token of the
+  input (`Histórias."` → `[Histórias, ., "]`), removing duplicate
+  `Histórias.` / `Conta-me Histórias.` candidates that had been crowding
+  upstream-ranked entries out of the top 20. Yaket now exact-matches the
+  upstream YAKE 9-element prefix for `test_n3_PT` and 10/10 head parity on
+  the multilingual paragraphs tracked in `test/multilingual-parity.test.ts`
+  for de/fr/it/pt/nl/ru.
 - Document-pipeline language precedence is now consistent across
   `extractFromDocument`, `extractFromDocuments`, and
   `extractFromDocumentStream`. All three resolve language as
@@ -117,17 +135,6 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
   ctx)` could see `ctx.language === "fr"` while the extractor scored
   with `language: "en"`. Both halves now use the single
   `resolveLanguage(document, options)` helper.
-
-### Fixed
-
-- Portuguese ranking drift in upstream `test_n3_PT`. The tokenizer now
-  matches segtok behavior when a sentence closer is the last token of the
-  input (`Histórias."` → `[Histórias, ., "]`), removing duplicate
-  `Histórias.` / `Conta-me Histórias.` candidates that had been crowding
-  upstream-ranked entries out of the top 20. Yaket now exact-matches the
-  upstream YAKE 9-element prefix for `test_n3_PT` and 10/10 head parity on
-  the multilingual paragraphs tracked in `test/multilingual-parity.test.ts`
-  for de/fr/it/pt/nl/ru.
 
 ## 0.5.3 - 2026-04-18
 

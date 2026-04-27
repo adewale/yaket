@@ -13,7 +13,7 @@ import { gzipSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-import { buildForbiddenBuiltinPatterns, FORBIDDEN_DYNAMIC_IMPORT_PATTERNS } from "./bundle-leak-detector.js";
+import { findForbiddenBuiltinImports } from "./bundle-leak-detector.js";
 
 interface VariantReport {
   readonly entry: string;
@@ -44,6 +44,10 @@ async function main(): Promise<void> {
       // esbuild will emit an error and the build fails — which is exactly the
       // signal we want for the worker safety guarantee.
       external: [],
+      // metafile is what `findForbiddenBuiltinImports` walks. It lists the
+      // actual import graph, so user-facing strings like "process" or "url"
+      // cannot false-positive as Node-built-in leaks.
+      metafile: true,
       logLevel: "silent",
     });
 
@@ -55,21 +59,13 @@ async function main(): Promise<void> {
     if (output == null) {
       throw new Error("esbuild produced no output");
     }
-
-    // Sanity-check that no Node built-ins leaked in. We assert at the SOURCE
-    // bundle bytes, not after gzip. Both quote styles and the bare and
-    // `node:`-prefixed forms are checked to match the test guardrail —
-    // both lists come from the shared bundle-leak-detector module.
-    const bundleText = output.text;
-    for (const pattern of buildForbiddenBuiltinPatterns()) {
-      if (bundleText.includes(pattern)) {
-        throw new Error(`Bundle leaked Node built-in pattern: ${pattern}`);
-      }
+    if (result.metafile == null) {
+      throw new Error("esbuild produced no metafile");
     }
-    for (const [label, regex] of FORBIDDEN_DYNAMIC_IMPORT_PATTERNS) {
-      if (regex.test(bundleText)) {
-        throw new Error(`Bundle leaked a dynamic Node built-in import: ${label}`);
-      }
+
+    const leaked = findForbiddenBuiltinImports(result.metafile);
+    if (leaked.length > 0) {
+      throw new Error(`Bundle leaked Node built-in imports: ${leaked.join(", ")}`);
     }
 
     reports.push({

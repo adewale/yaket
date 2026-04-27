@@ -1,12 +1,20 @@
+import type { Metafile } from "esbuild";
+
 /**
- * Shared list of Node-only built-in module names that must never appear in
- * the worker-target bundle, plus a pattern builder used by both the
- * `bundle-size` script and `test/bundle-size.test.ts`. Keeping the list and
- * the pattern shape in one place prevents the script and the test from
- * silently disagreeing on what counts as a leak.
+ * Shared bundle-leak detection used by both the `npm run bundle-size` script
+ * and `test/bundle-size.test.ts`. Uses esbuild's metafile (the actual import
+ * graph) instead of greppable strings, so harmless string literals like
+ * `"process"`, `"path"`, or `"url"` that appear in user-facing text cannot
+ * false-positive as Node-built-in leaks.
  *
- * This file is Node-only (it has no runtime dependencies, but it lives
- * outside `src/` so it never enters the published package graph).
+ * This file is Node-only (it depends on the `esbuild` Metafile type) and
+ * lives in `scripts/` so it never enters the published package graph.
+ */
+
+/**
+ * Node-only built-in module names that must never appear as imports in the
+ * worker-target bundle. Both bare (`"fs"`) and `node:`-prefixed
+ * (`"node:fs"`) specifiers are treated as the same forbidden import.
  */
 export const FORBIDDEN_BUILTIN_NAMES: readonly string[] = [
   "fs",
@@ -29,27 +37,31 @@ export const FORBIDDEN_BUILTIN_NAMES: readonly string[] = [
 ];
 
 /**
- * Builds the list of literal strings that, if present in a bundle, indicate
- * that a Node-only built-in was pulled in. Each name is checked under both
- * single and double quote styles, with and without the `node:` prefix.
+ * Returns true when an import specifier resolves to one of the forbidden
+ * Node built-ins, regardless of whether the `node:` prefix is present.
  */
-export function buildForbiddenBuiltinPatterns(): string[] {
-  const patterns: string[] = [];
-  for (const name of FORBIDDEN_BUILTIN_NAMES) {
-    patterns.push(`"${name}"`);
-    patterns.push(`'${name}'`);
-    patterns.push(`"node:${name}"`);
-    patterns.push(`'node:${name}'`);
-  }
-  return patterns;
+export function isForbiddenBuiltinSpecifier(specifier: string): boolean {
+  const bare = specifier.startsWith("node:") ? specifier.slice("node:".length) : specifier;
+  return FORBIDDEN_BUILTIN_NAMES.includes(bare);
 }
 
 /**
- * Regex patterns that catch dynamic Node-built-in imports, which would slip
- * past static-string matching. Returned as a tuple of `[name, regex]` so
- * callers can produce useful failure messages.
+ * Walks the esbuild metafile's input graph and returns every distinct
+ * import specifier that resolves to a forbidden Node built-in. The result
+ * is sorted for deterministic test output.
+ *
+ * Using the metafile (rather than grep-style string matching on the bundle
+ * text) avoids false positives on innocent string literals that happen to
+ * share a name with a built-in module.
  */
-export const FORBIDDEN_DYNAMIC_IMPORT_PATTERNS: ReadonlyArray<readonly [string, RegExp]> = [
-  ["dynamic import('node:*')", /import\s*\(\s*["']node:/u],
-  ["require('node:*')", /require\s*\(\s*["']node:/u],
-];
+export function findForbiddenBuiltinImports(metafile: Metafile): string[] {
+  const found = new Set<string>();
+  for (const input of Object.values(metafile.inputs)) {
+    for (const imp of input.imports ?? []) {
+      if (isForbiddenBuiltinSpecifier(imp.path)) {
+        found.add(imp.path);
+      }
+    }
+  }
+  return [...found].sort();
+}

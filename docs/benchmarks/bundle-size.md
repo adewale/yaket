@@ -1,7 +1,7 @@
 # Bundle Size
 
 Esbuild-bundled, worker-target ESM output for the public entry point.
-Verified to contain no Node built-ins (`fs`, `path`, `child_process`, `os`).
+Verified to contain no Node built-ins from the shared forbidden list (`scripts/bundle-leak-detector.ts`).
 
 | Entry | Minified | Bytes | Gzipped |
 |---|---|---:|---:|

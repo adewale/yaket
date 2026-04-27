@@ -113,7 +113,7 @@ async function loadDatasetExamples(dataset: DatasetName, limit: number): Promise
 function benchmarkExample(example: Example): { example: Example; yaket: RankedKeyword[]; python: RankedKeyword[]; yaketMs: number; pythonMs: number; yaketHeapDeltaBytes: number; pythonHeapDeltaBytes: number } {
   const yaketStart = performance.now();
   const yaketHeapStart = process.memoryUsage().heapUsed;
-  const yaket = extractKeywordDetails(example.text, { lan: "en", n: 3, top: 10 })
+  const yaket = extractKeywordDetails(example.text, { language: "en", n: 3, top: 10 })
     .map(({ normalizedKeyword, score }) => ({ keyword: normalizedKeyword, score }));
   const yaketMs = performance.now() - yaketStart;
   const yaketHeapDeltaBytes = Math.max(process.memoryUsage().heapUsed - yaketHeapStart, 0);
