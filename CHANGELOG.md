@@ -87,6 +87,18 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
   on equal terms with `sequenceSimilarity` and `Levenshtein.ratio` /
   `.distance`. The `SimilarityCacheStats` interface gained a `jaro: number`
   field; `clear()` empties the Jaro map alongside the other three.
+- Runtime legacy-option rejection now uses `key in options` (was
+  `Object.prototype.hasOwnProperty.call`), so legacy keys that arrive on
+  the prototype chain (e.g. `Object.create({ lan: "pt" })` or class
+  hierarchies) also fail loudly instead of silently falling through.
+- Extracted the bundle-leak forbidden-built-in list and pattern builder
+  into `scripts/bundle-leak-detector.ts`. Both `scripts/bundle-size.ts`
+  and `test/bundle-size.test.ts` now import from it, so they cannot
+  drift apart.
+- README and api-reference rewritten for the four-map `SimilarityCache`
+  (added `jaro`) and updated multilingual limitation wording to reflect
+  the actual residual drift instead of "broad multilingual parity
+  coverage is deferred".
 
 ### Fixed
 

@@ -89,6 +89,24 @@ describe("canonical-only options surface (no Bobbin/Python aliases)", () => {
     }
   });
 
+  it("rejects legacy snake_case option keys even when they appear on the prototype chain", () => {
+    // Some callers build option bags with Object.create(...) or class-style
+    // hierarchies. The runtime guard must catch inherited legacy keys too,
+    // not just own properties.
+    const inheritedLegacy = Object.create({ lan: "pt" });
+    inheritedLegacy.language = "en";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
+    expect(() => new KeywordExtractor(inheritedLegacy as any)).toThrow(/lan/);
+
+    class LegacyOptions {
+      language = "en";
+    }
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
+    (LegacyOptions.prototype as any).dedup_func = "seqm";
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
+    expect(() => new KeywordExtractor(new LegacyOptions() as any)).toThrow(/dedup_func/);
+  });
+
   it("accepts the canonical dedup function names", () => {
     expect(() => new KeywordExtractor({ language: "en", dedupFunc: "seqm" })).not.toThrow();
     expect(() => new KeywordExtractor({ language: "en", dedupFunc: "levs" })).not.toThrow();

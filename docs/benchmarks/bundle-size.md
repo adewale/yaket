@@ -5,7 +5,7 @@ Verified to contain no Node built-ins (`fs`, `path`, `child_process`, `os`).
 
 | Entry | Minified | Bytes | Gzipped |
 |---|---|---:|---:|
-| `src/index.ts` | yes | 152.1 KiB | 44.0 KiB |
-| `src/index.ts` | no | 188.9 KiB | 48.6 KiB |
+| `src/index.ts` | yes | 152.2 KiB | 44.0 KiB |
+| `src/index.ts` | no | 189.2 KiB | 48.6 KiB |
 
 These numbers include the 34-language bundled stopword set. The bundled stopword text is the dominant contributor; if a consumer needs a smaller edge payload they can ship a single-language `StopwordProvider` and tree-shake the rest.

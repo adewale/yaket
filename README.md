@@ -277,10 +277,11 @@ const details = extractKeywordDetails("agent swarms coordinate teams", {
 
 ### Configurable similarity caches
 
-`Yaket` memoizes similarity scores used by the `seqm` / `levs` dedup paths in
-bounded module-level caches. To isolate cache state — for long-running edge
-workers, tests, or per-request caching — create your own cache and pass it
-to a `KeywordExtractor` (or directly to a similarity helper):
+`Yaket` memoizes similarity scores used by the `seqm`, `levs`, and `jaro`
+dedup paths in bounded module-level caches. To isolate cache state — for
+long-running edge workers, tests, or per-request caching — create your own
+cache and pass it to a `KeywordExtractor` (or directly to a similarity
+helper):
 
 ```ts
 import {
@@ -300,12 +301,16 @@ const extractor = new KeywordExtractor({
 
 extractor.extractKeywords("Edge runtimes power modern serverless platforms.");
 
-console.log(cache.stats());
+console.log(cache.stats()); // { distance, ratio, sequence, jaro }
 cache.clear();
 
 // Direct use is supported for callers wiring custom dedup logic.
 sequenceSimilarity("alpha", "alpha", cache);
 ```
+
+Each `SimilarityCache` owns four bounded `Map`s — one per helper:
+`distance` and `ratio` for `Levenshtein`, `sequence` for `sequenceSimilarity`
+(the `seqm` dedup path), and `jaro` for `jaroSimilarity`.
 
 The module-level helpers `clearSimilarityCaches()` and
 `getSimilarityCacheStats()` continue to operate on the default cache for
@@ -449,7 +454,7 @@ npm run benchmark
 
 - The tokenizer is close to YAKE, but still not a literal `segtok` port.
 - Dedup `seqm` behavior is still approximate rather than a byte-for-byte Python clone.
-- Multilingual support exists through bundled stopwords, but broad multilingual parity coverage is deferred.
+- Multilingual support covers 34 bundled stopword languages and head-parity locks against upstream Python YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar` (single-paragraph and multi-document corpora). The remaining drift is bit-level float-precision in the scoring math at exact-tie positions — see `docs/algorithm-drift.md` for the documented residuals.
 - Bobbin adapter validation now covers the Bobbin YAKE, topic-extractor, topic-system, and extraction-quality tests in the reference Bobbin checkout, but that validation still needs to be kept current as Bobbin evolves.
 
 ## Comparison To Alternatives

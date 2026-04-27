@@ -13,6 +13,8 @@ import { gzipSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
+import { buildForbiddenBuiltinPatterns, FORBIDDEN_DYNAMIC_IMPORT_PATTERNS } from "./bundle-leak-detector.js";
+
 interface VariantReport {
   readonly entry: string;
   readonly minified: boolean;
@@ -24,37 +26,6 @@ const VARIANTS = [
   { entry: "src/index.ts", minified: true },
   { entry: "src/index.ts", minified: false },
 ] as const;
-
-const FORBIDDEN_BUILTIN_NAMES = [
-  "fs",
-  "fs/promises",
-  "path",
-  "path/posix",
-  "child_process",
-  "os",
-  "url",
-  "stream",
-  "zlib",
-  "crypto",
-  "http",
-  "https",
-  "net",
-  "tls",
-  "worker_threads",
-  "process",
-  "util",
-];
-
-function buildForbiddenPatterns(): string[] {
-  const patterns: string[] = [];
-  for (const name of FORBIDDEN_BUILTIN_NAMES) {
-    patterns.push(`"${name}"`);
-    patterns.push(`'${name}'`);
-    patterns.push(`"node:${name}"`);
-    patterns.push(`'node:${name}'`);
-  }
-  return patterns;
-}
 
 async function main(): Promise<void> {
   const reports: VariantReport[] = [];
@@ -87,15 +58,18 @@ async function main(): Promise<void> {
 
     // Sanity-check that no Node built-ins leaked in. We assert at the SOURCE
     // bundle bytes, not after gzip. Both quote styles and the bare and
-    // `node:`-prefixed forms are checked to match the test guardrail.
+    // `node:`-prefixed forms are checked to match the test guardrail —
+    // both lists come from the shared bundle-leak-detector module.
     const bundleText = output.text;
-    for (const pattern of buildForbiddenPatterns()) {
+    for (const pattern of buildForbiddenBuiltinPatterns()) {
       if (bundleText.includes(pattern)) {
         throw new Error(`Bundle leaked Node built-in pattern: ${pattern}`);
       }
     }
-    if (/import\s*\(\s*["']node:/u.test(bundleText) || /require\s*\(\s*["']node:/u.test(bundleText)) {
-      throw new Error("Bundle leaked a dynamic Node built-in import");
+    for (const [label, regex] of FORBIDDEN_DYNAMIC_IMPORT_PATTERNS) {
+      if (regex.test(bundleText)) {
+        throw new Error(`Bundle leaked a dynamic Node built-in import: ${label}`);
+      }
     }
 
     reports.push({
@@ -123,7 +97,7 @@ function renderReport(reports: readonly VariantReport[]): string {
   lines.push("# Bundle Size");
   lines.push("");
   lines.push("Esbuild-bundled, worker-target ESM output for the public entry point.");
-  lines.push("Verified to contain no Node built-ins (`fs`, `path`, `child_process`, `os`).");
+  lines.push("Verified to contain no Node built-ins from the shared forbidden list (`scripts/bundle-leak-detector.ts`).");
   lines.push("");
   lines.push("| Entry | Minified | Bytes | Gzipped |");
   lines.push("|---|---|---:|---:|");

@@ -87,7 +87,7 @@ Most commonly used fields:
 | `windowSize` | co-occurrence window size | `1` |
 | `sentenceSplitter` | override only the sentence splitter | bundled |
 | `tokenizer` | override only the tokenizer | bundled |
-| `similarityCache` | isolated cache for `seqm` / `levs` memoization | shared module-level default |
+| `similarityCache` | isolated cache for `seqm`, `levs`, and `jaro` memoization | shared module-level default |
 
 `KeywordExtractorOptions` is exported as an alias for `YakeOptions` so
 existing imports keep compiling. `dedupFunc` now throws on unknown values
@@ -175,17 +175,20 @@ Utility for wrapping extracted keywords in HTML markers.
 ### `sequenceSimilarity`
 ### `jaroSimilarity`
 
-These all accept an optional final `SimilarityCache` argument. When
-omitted, they use the bounded module-level default cache.
+All four similarity helpers accept an optional final `SimilarityCache`
+argument and memoize their results inside it. When omitted, they share
+the bounded module-level default cache.
 
 ### `createSimilarityCache(options?)`
 
-Returns a `SimilarityCache` with isolated `distance` / `ratio` /
-`sequence` `Map`s plus `stats()` and `clear()` methods. Pass `{ maxSize }`
-to set the bounded LRU eviction threshold (default `20000`). Use this
-for long-running edge workers, per-request cache scopes, tests that
-must not leak into the module-level default, or benchmarks that need
-to reset state between runs.
+Returns a `SimilarityCache` with isolated `distance`, `ratio`, `sequence`,
+and `jaro` `Map`s plus `stats()` and `clear()` methods. Pass `{ maxSize }`
+to set the bounded LRU eviction threshold per map (default `20000`).
+`maxSize` must be a positive integer; `0`, negatives, `NaN`, `Infinity`,
+and non-integers throw a `RangeError`. Use this for long-running edge
+workers, per-request cache scopes, tests that must not leak into the
+module-level default, or benchmarks that need to reset state between
+runs.
 
 ### `getSimilarityCacheStats`
 ### `clearSimilarityCaches`
@@ -195,7 +198,8 @@ the same operations through their own `.stats()` and `.clear()` methods.
 
 ### `SimilarityCache` / `SimilarityCacheStats`
 
-Typed interfaces re-exported from the public surface.
+Typed interfaces re-exported from the public surface. `SimilarityCacheStats`
+is `{ distance: number; ratio: number; sequence: number; jaro: number }`.
 
 ## Extension Types
 

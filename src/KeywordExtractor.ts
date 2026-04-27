@@ -25,7 +25,10 @@ const REMOVED_OPTION_KEYS: ReadonlyArray<[string, string]> = [
 
 function assertNoRemovedOptionKeys(options: object): void {
   for (const [legacy, canonical] of REMOVED_OPTION_KEYS) {
-    if (Object.prototype.hasOwnProperty.call(options, legacy)) {
+    // Use `in` so inherited legacy keys (e.g. on the prototype of a class
+    // that mirrors Python YAKE's option shape) are also caught — not just
+    // own enumerable properties on plain JS objects.
+    if (legacy in options) {
       throw new TypeError(
         `Yaket option "${legacy}" was removed in 0.6; use "${canonical}" instead. See docs/migration-bobbin-0.6.md.`,
       );
