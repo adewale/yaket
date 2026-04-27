@@ -102,6 +102,24 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
 
 ### Fixed
 
+- Document-pipeline language precedence is now consistent across
+  `extractFromDocument`, `extractFromDocuments`, and
+  `extractFromDocumentStream`. All three resolve language as
+  `options.language ?? document.language ?? "en"` (explicit option
+  wins). Previously batch and stream let `document.language` win, while
+  single-document let `options.language` win — different rules for the
+  same conceptual operation.
+- Document hook contexts now report the same language the extractor
+  actually used. Previously the batch/stream `extractorForLanguage`
+  cache silently re-applied `options.language ?? language` when
+  building the underlying `KeywordExtractor`, so
+  `beforeExtractText(text, ctx)` and `afterExtractKeywords(keywords,
+  ctx)` could see `ctx.language === "fr"` while the extractor scored
+  with `language: "en"`. Both halves now use the single
+  `resolveLanguage(document, options)` helper.
+
+### Fixed
+
 - Portuguese ranking drift in upstream `test_n3_PT`. The tokenizer now
   matches segtok behavior when a sentence closer is the last token of the
   input (`Histórias."` → `[Histórias, ., "]`), removing duplicate

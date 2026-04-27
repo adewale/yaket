@@ -57,7 +57,7 @@ export function extractFromDocument<TMetadata = Record<string, unknown>>(
   document: InputDocument<TMetadata>,
   options: DocumentExtractionOptions = {},
 ): DocumentKeywordResult<TMetadata> {
-  const language = options.language ?? document.language ?? "en";
+  const language = resolveLanguage(document, options);
   const extractor = new KeywordExtractor({
     ...options,
     language,
@@ -76,6 +76,9 @@ export function extractFromDocument<TMetadata = Record<string, unknown>>(
 
 /**
  * Extracts keyword details for an iterable of documents.
+ *
+ * Language precedence matches `extractFromDocument`: an explicit
+ * `options.language` always wins, then `document.language`, then `"en"`.
  */
 export function extractFromDocuments<TMetadata = Record<string, unknown>>(
   documents: Iterable<InputDocument<TMetadata>>,
@@ -84,7 +87,7 @@ export function extractFromDocuments<TMetadata = Record<string, unknown>>(
   const extractorForLanguage = createExtractorCache(options);
 
   return [...documents].map((document) => {
-    const language = document.language ?? options.language ?? "en";
+    const language = resolveLanguage(document, options);
     const extractor = extractorForLanguage(language);
     const text = prepareDocumentText(document, options, language);
     const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
@@ -101,6 +104,9 @@ export function extractFromDocuments<TMetadata = Record<string, unknown>>(
 
 /**
  * Extracts keyword details for an async stream of documents.
+ *
+ * Language precedence matches `extractFromDocument`: an explicit
+ * `options.language` always wins, then `document.language`, then `"en"`.
  */
 export async function* extractFromDocumentStream<TMetadata = Record<string, unknown>>(
   documents: AsyncIterable<InputDocument<TMetadata>>,
@@ -109,7 +115,7 @@ export async function* extractFromDocumentStream<TMetadata = Record<string, unkn
   const extractorForLanguage = createExtractorCache(options);
 
   for await (const document of documents) {
-    const language = document.language ?? options.language ?? "en";
+    const language = resolveLanguage(document, options);
     const extractor = extractorForLanguage(language);
     const text = prepareDocumentText(document, options, language);
     const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
@@ -177,21 +183,34 @@ function finalizeDocumentKeywords<TMetadata>(
     : options.afterExtractKeywords(keywords, { document, language, text });
 }
 
+function resolveLanguage<TMetadata>(
+  document: InputDocument<TMetadata>,
+  options: DocumentExtractionOptions,
+): string {
+  // Explicit option wins, then per-document language, then "en". Same rule
+  // for single-document, batch, and stream extraction so the language used
+  // by the extractor always matches the language reported in the result and
+  // in the hook contexts.
+  return options.language ?? document.language ?? "en";
+}
+
 function createExtractorCache(options: DocumentExtractionOptions): (language: string) => KeywordExtractor {
   const cache = new Map<string, KeywordExtractor>();
 
   return (language: string) => {
-    const cacheKey = language;
-    const existing = cache.get(cacheKey);
+    const existing = cache.get(language);
     if (existing != null) {
       return existing;
     }
 
+    // Callers pre-resolve precedence via `resolveLanguage`, so use the
+    // already-resolved value verbatim — never override it with
+    // `options.language` here.
     const extractor = new KeywordExtractor({
       ...options,
-      language: options.language ?? language,
+      language,
     });
-    cache.set(cacheKey, extractor);
+    cache.set(language, extractor);
     return extractor;
   };
 }
