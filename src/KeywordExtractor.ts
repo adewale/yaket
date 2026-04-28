@@ -1,13 +1,47 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { DataCore } from "./DataCore.js";
-import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor } from "./strategies.js";
+import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SentenceSplitter, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor, Tokenizer } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
-import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity } from "./similarity.js";
+import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity, type SimilarityCache } from "./similarity.js";
+import { splitSentences as defaultSplitSentences, tokenizeWords as defaultTokenizeWords } from "./utils.js";
 
 type DedupFunction = (cand1: string, cand2: string) => number;
 
+const VALID_DEDUP_FUNC_NAMES = new Set(["seqm", "levs", "jaro"]);
+
 /**
- * Canonical public configuration for Yaket extraction.
+ * Snake_case keys removed in 0.6. Reject these at runtime so callers that
+ * construct options from a plain JS object or JSON payload (where the
+ * TypeScript guard does not apply) get a loud error instead of silent
+ * fallback to defaults.
+ */
+const REMOVED_OPTION_KEYS: ReadonlyArray<[string, string]> = [
+  ["lan", "language"],
+  ["dedup_lim", "dedupLim"],
+  ["dedup_func", "dedupFunc"],
+  ["windowsSize", "windowSize"],
+  ["window_size", "windowSize"],
+];
+
+function assertNoRemovedOptionKeys(options: object): void {
+  for (const [legacy, canonical] of REMOVED_OPTION_KEYS) {
+    // Use `in` so inherited legacy keys (e.g. on the prototype of a class
+    // that mirrors Python YAKE's option shape) are also caught — not just
+    // own enumerable properties on plain JS objects.
+    if (legacy in options) {
+      throw new TypeError(
+        `Yaket option "${legacy}" was removed in 0.6; use "${canonical}" instead. See docs/migration-bobbin-0.6.md.`,
+      );
+    }
+  }
+}
+
+/**
+ * Public configuration for Yaket extraction.
+ *
+ * Only canonical camelCase names are accepted. The legacy snake_case aliases
+ * (`lan`, `dedup_lim`, `dedup_func`, `windowsSize`, `window_size`) and the
+ * `extract_keywords()` method that mirrored Python YAKE were removed in 0.6.
  */
 export interface YakeOptions {
   language?: string;
@@ -19,8 +53,11 @@ export interface YakeOptions {
   features?: string[] | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
+  sentenceSplitter?: SentenceSplitter;
+  tokenizer?: Tokenizer;
   stopwordProvider?: StopwordProvider;
   dedupStrategy?: SimilarityStrategy | DedupFunction;
+  similarityCache?: SimilarityCache;
   lemmatizer?: Lemmatizer;
   candidateNormalizer?: CandidateNormalizer;
   singleWordScorer?: SingleWordScorer;
@@ -30,20 +67,16 @@ export interface YakeOptions {
 }
 
 /**
- * Backward-compatible option surface including deprecated alias keys.
+ * Import-compatible alias for the public option type.
+ *
+ * In 0.6 this is structurally identical to `YakeOptions`; the alias keeps
+ * existing `import { KeywordExtractorOptions } from "..."` declarations
+ * compiling. It is NOT backwards-compatible at the value level — the
+ * legacy snake_case keys (`lan`, `dedup_lim`, `dedup_func`, `windowsSize`,
+ * `window_size`) are rejected at construction time. See
+ * `docs/migration-bobbin-0.6.md`.
  */
-export interface KeywordExtractorOptions extends YakeOptions {
-  /** @deprecated Use `language`. */
-  lan?: string;
-  /** @deprecated Use `dedupLim`. */
-  dedup_lim?: number;
-  /** @deprecated Use `dedupFunc`. */
-  dedup_func?: string;
-  /** @deprecated Use `windowSize`. */
-  windowsSize?: number;
-  /** @deprecated Use `windowSize`. */
-  window_size?: number;
-}
+export type KeywordExtractorOptions = YakeOptions;
 
 /**
  * Tuple form of the simplified YAKE output.
@@ -51,7 +84,7 @@ export interface KeywordExtractorOptions extends YakeOptions {
 export type KeywordScore = [keyword: string, score: number];
 
 interface NormalizedConfig {
-  lan: string;
+  language: string;
   n: number;
   dedupLim: number;
   dedupFunc: string;
@@ -70,35 +103,39 @@ export class KeywordExtractor {
   readonly multiWordScorer: MultiWordScorer | null;
   readonly keywordScorer: ((candidates: KeywordResult[]) => KeywordResult[]) | null;
   readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
+  readonly similarityCache: SimilarityCache | null;
   private readonly dedupFunction: DedupFunction;
 
   /**
    * Creates a reusable keyword extractor with normalized options.
    */
   constructor(options: KeywordExtractorOptions = {}) {
+    assertNoRemovedOptionKeys(options);
+
     if (typeof options.lemmatizer === "string") {
       throw new TypeError("String lemmatizer backends such as 'spacy' or 'nltk' are not implemented in Yaket; provide a hook object with a lemmatize() method instead.");
     }
 
     this.config = {
-      lan: options.language ?? options.lan ?? "en",
+      language: options.language ?? "en",
       n: options.n ?? 3,
-      dedupLim: options.dedupLim ?? options.dedup_lim ?? 0.9,
-      dedupFunc: options.dedupFunc ?? options.dedup_func ?? "seqm",
-      windowSize: options.windowSize ?? options.windowsSize ?? options.window_size ?? 1,
+      dedupLim: options.dedupLim ?? 0.9,
+      dedupFunc: options.dedupFunc ?? "seqm",
+      windowSize: options.windowSize ?? 1,
       top: options.top ?? 20,
       features: options.features ?? null,
     };
 
-    this.textProcessor = options.textProcessor;
+    this.textProcessor = composeTextProcessor(options.textProcessor, options.sentenceSplitter, options.tokenizer);
     this.lemmatizer = options.lemmatizer ?? null;
     this.candidateNormalizer = options.candidateNormalizer ?? null;
     this.singleWordScorer = options.singleWordScorer ?? null;
     this.multiWordScorer = options.multiWordScorer ?? null;
     this.keywordScorer = options.keywordScorer == null ? null : getKeywordScorer(options.keywordScorer);
     this.candidateFilter = options.candidateFilter;
+    this.similarityCache = options.similarityCache ?? null;
     this.stopwordSet = options.stopwords == null
-      ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.lan)
+      ? (options.stopwordProvider ?? defaultStopwordProvider).load(this.config.language)
       : new Set([...options.stopwords].map((value) => value.toLowerCase()));
     this.dedupFunction = options.dedupStrategy == null
       ? this.getDedupFunction(this.config.dedupFunc)
@@ -109,21 +146,27 @@ export class KeywordExtractor {
    * Levenshtein-based dedup similarity.
    */
   levs(cand1: string, cand2: string): number {
-    return levenshteinSimilarity(cand1, cand2);
+    return this.similarityCache == null
+      ? levenshteinSimilarity(cand1, cand2)
+      : levenshteinSimilarity(cand1, cand2, this.similarityCache);
   }
 
   /**
    * Sequence-style dedup similarity that approximates upstream YAKE's optimized path.
    */
   seqm(cand1: string, cand2: string): number {
-    return sequenceSimilarity(cand1, cand2);
+    return this.similarityCache == null
+      ? sequenceSimilarity(cand1, cand2)
+      : sequenceSimilarity(cand1, cand2, this.similarityCache);
   }
 
   /**
    * Jaro-based dedup similarity.
    */
   jaro(cand1: string, cand2: string): number {
-    return jaroSimilarity(cand1, cand2);
+    return this.similarityCache == null
+      ? jaroSimilarity(cand1, cand2)
+      : jaroSimilarity(cand1, cand2, this.similarityCache);
   }
 
   /**
@@ -142,14 +185,14 @@ export class KeywordExtractor {
     }
 
     const core = new DataCore(text, this.stopwordSet, {
-      windowsSize: this.config.windowSize,
+      windowSize: this.config.windowSize,
       n: this.config.n,
       textProcessor: this.textProcessor,
       lemmatizer: this.lemmatizer,
       candidateNormalizer: this.candidateNormalizer,
       singleWordScorer: this.singleWordScorer,
       multiWordScorer: this.multiWordScorer,
-      language: this.config.lan,
+      language: this.config.language,
     });
 
     core.buildSingleTermsFeatures(this.config.features);
@@ -191,26 +234,23 @@ export class KeywordExtractor {
     return resultSet;
   }
 
-  /**
-   * Python-style alias for `extractKeywords()`.
-   * @deprecated Prefer `extractKeywords()` or `extract()` in TypeScript code.
-   */
-  extract_keywords(text: string | null | undefined): KeywordScore[] {
-    return this.extractKeywords(text);
-  }
-
   private getDedupFunction(funcName: string): DedupFunction {
-    switch (funcName.toLowerCase()) {
+    const lower = funcName.toLowerCase();
+    if (!VALID_DEDUP_FUNC_NAMES.has(lower)) {
+      throw new TypeError(
+        `Unknown dedupFunc "${funcName}"; expected one of "seqm", "levs", "jaro".`,
+      );
+    }
+    switch (lower) {
       case "jaro":
-      case "jaro_winkler":
         return this.jaro.bind(this);
-      case "sequencematcher":
       case "seqm":
         return this.seqm.bind(this);
-      case "leve":
       case "levs":
-      default:
         return this.levs.bind(this);
+      default:
+        // Unreachable: VALID_DEDUP_FUNC_NAMES guard rules out everything else.
+        throw new TypeError(`Unreachable dedupFunc dispatch for "${funcName}"`);
     }
   }
 }
@@ -247,6 +287,31 @@ export { Levenshtein };
 
 function getStrategyFunction(strategy: SimilarityStrategy | DedupFunction): DedupFunction {
   return typeof strategy === "function" ? strategy : strategy.compare.bind(strategy);
+}
+
+function composeTextProcessor(
+  textProcessor: TextProcessor | undefined,
+  sentenceSplitter: SentenceSplitter | undefined,
+  tokenizer: Tokenizer | undefined,
+): TextProcessor | undefined {
+  if (sentenceSplitter == null && tokenizer == null) {
+    return textProcessor;
+  }
+
+  // Default to bundled behavior when only one half is overridden, or when only
+  // a TextProcessor is provided alongside one of the granular interfaces.
+  return {
+    splitSentences: sentenceSplitter != null
+      ? (text) => sentenceSplitter.split(text)
+      : textProcessor != null
+        ? (text) => textProcessor.splitSentences(text)
+        : (text) => defaultSplitSentences(text),
+    tokenizeWords: tokenizer != null
+      ? (text) => tokenizer.tokenize(text)
+      : textProcessor != null
+        ? (text) => textProcessor.tokenizeWords(text)
+        : (text) => defaultTokenizeWords(text),
+  };
 }
 
 function getKeywordScorer(strategy: KeywordScorer | ((candidates: KeywordResult[]) => KeywordResult[])): (candidates: KeywordResult[]) => KeywordResult[] {

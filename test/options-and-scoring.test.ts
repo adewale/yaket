@@ -9,19 +9,16 @@ import {
 } from "../src/index.js";
 
 describe("canonical options surface", () => {
-  it("prefers canonical option names over legacy aliases", () => {
+  it("normalizes canonical option names onto extractor.config", () => {
     const extractor = new KeywordExtractor({
-      language: "en",
-      lan: "pt",
+      language: "pt",
       top: 2,
       n: 1,
       dedupLim: 1,
-      dedup_lim: 0.1,
       windowSize: 2,
-      windowsSize: 9,
     });
 
-    expect(extractor.config.lan).toBe("en");
+    expect(extractor.config.language).toBe("pt");
     expect(extractor.config.top).toBe(2);
     expect(extractor.config.n).toBe(1);
     expect(extractor.config.dedupLim).toBe(1);
@@ -39,7 +36,12 @@ describe("canonical options surface", () => {
     };
 
     const result = extractKeywordDetails("Machine learning improves retrieval.", options);
-    expect(result.length).toBeGreaterThan(0);
+    expect(result.length).toBeLessThanOrEqual(5);
+    expect(result.every((entry) => entry.ngramSize <= 2)).toBe(true);
+    const normalized = result.map((entry) => entry.normalizedKeyword);
+    expect(normalized).toContain("machine learning");
+    // determinism: same options must yield identical output on a re-run.
+    expect(extractKeywordDetails("Machine learning improves retrieval.", options)).toEqual(result);
   });
 
   it("preserves surface case separately from normalized keywords", () => {

@@ -2,6 +2,7 @@ dist/
 node_modules/
 coverage/
 reports/
+.stryker-tmp/
 vitest.config.d.ts
 vitest.config.d.ts.map
 vitest.config.js

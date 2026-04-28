@@ -20,12 +20,16 @@ Yaket already includes the core YAKE pipeline:
 - `DataCore`
 - `SingleWord`
 - `ComposedWord`
-- stopword-backed candidate generation and scoring
+- stopword-backed candidate generation and scoring across 34 bundled languages
 - dedup helpers and deterministic ordering
 - bundled stopwords
 - regression fixtures plus Python differential tests on frozen samples
-- broader property coverage for Unicode, emoji, CJK, long-document, and dedup invariants
-- pluggable hooks for text processing, normalization, similarity, scoring, and filtering
+- multilingual head-parity locks against upstream YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar` (`test/multilingual-parity.test.ts`)
+- per-language Yaket-vs-Python benchmark and report (`scripts/benchmark-multilingual.ts`, `docs/benchmarks/multilingual.md`)
+- broader property coverage for Unicode, emoji, CJK, long-document, dedup, and multilingual invariants
+- pluggable hooks for text processing, normalization, similarity, scoring, and filtering, including independent `SentenceSplitter` and `Tokenizer` overrides
+- configurable bounded similarity caches via `createSimilarityCache({ maxSize? })` and the `similarityCache` extractor option
+- canonical-only options surface (0.6 dropped the `lan`/`dedup_lim`/`dedup_func`/`windowsSize`/`window_size` aliases, the `extract_keywords()` method, and the dedup-function value aliases)
 - Bobbin-compatible adapter output
 - document-oriented extraction helpers for ingestion pipelines, including pre/post hooks and stable serialization helpers
 - CLI support
@@ -62,8 +66,7 @@ These are the highest-value enhancements needed to match upstream Python YAKE mo
 1. Port more of the upstream corpus into fixture tests.
 2. Continue expanding parity checks for floating-point tolerance handling and multilingual ranking stability.
    Note: tracked `seqm` differential parity, harder Unicode punctuation/tokenizer cases, and the English near-tie ordering regressions are now covered by regression tests.
-3. Expand multilingual validation beyond the current smoke/regression cases.
-   Status: deferred to `TODO.md`.
+3. Multilingual validation: head-parity locks against upstream Python YAKE 0.7.x are now in place for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar` (`test/multilingual-parity.test.ts`). The headline tokenizer-driven Portuguese drift in upstream `test_n3_PT` has been closed (first 9 candidates exact-match upstream). Remaining drift items are tracked in `TODO.md` (mid-rank `seqm` dedup divergence, Arabic tie-break ordering when multiple candidates share byte-identical scores).
 
 ### Tier 2: Remaining upstream-facing feature gaps
 
@@ -128,7 +131,7 @@ Yaket already exposes most of the intended strategy surface around the existing 
 8. `CandidateFilter`
     - boundary, stopword, and tag filtering as replaceable policies
 
-Remaining follow-up: split `TextProcessor` into separate `SentenceSplitter` and `Tokenizer` interfaces only if a real consumer needs that extra granularity.
+Status: `SentenceSplitter` and `Tokenizer` are exported and wired into `KeywordExtractor` as independent options (0.6). Either half can be overridden without supplying the combined `TextProcessor`. The combined `TextProcessor` interface remains for callers that want to override both halves at once.
 
 ### Recommended API shape
 
@@ -152,7 +155,7 @@ interface KeywordResult {
 
 5. metadata kept optional so the simple API stays lightweight.
 
-Remaining follow-up: simplify alias-heavy option handling when backwards-compatibility pressure is lower.
+Status (0.6): the alias-heavy option handling has been removed. `KeywordExtractorOptions` now equals `YakeOptions`. The constructor walks one `??` per field. Migration recipe lives in `docs/migration-bobbin-0.6.md`.
 
 ### Adoption layers
 
@@ -213,10 +216,10 @@ Remaining follow-up: keep these standalone and search/indexing-oriented examples
 
 ### Internal refactors that support this
 
-1. Separate tokenization, candidate generation, scoring, and deduplication into isolated modules with stable interfaces.
+1. Separate tokenization, candidate generation, scoring, and deduplication into isolated modules with stable interfaces. (Done — `src/utils.ts` for sentence/token logic, `src/DataCore.ts` for state and candidate generation, `src/SingleWord.ts` / `src/ComposedWord.ts` for scoring, `src/similarity.ts` for dedup.)
 2. Keep `DataCore` focused on document state, not policy decisions.
-3. Remove hidden singleton-like behavior from caches and move them behind configurable cache objects.
-4. Introduce explicit option types instead of mixed alias handling once the public API stabilizes.
+3. Remove hidden singleton-like behavior from caches and move them behind configurable cache objects. (Done in 0.6 — `createSimilarityCache({ maxSize? })`, `KeywordExtractor#similarityCache`, helpers accept the cache as an optional final argument. Module-level default kept for back-compat.)
+4. Introduce explicit option types instead of mixed alias handling once the public API stabilizes. (Done in 0.6 — see migration recipe.)
 5. Move any future Bobbin-specific glue into dedicated adapter modules, never into the extraction core.
 
 ## Testing And Verification Plan
@@ -386,29 +389,29 @@ From `ANTIPATTERNS.md`, explicitly avoid:
 
 ## Benchmark Continuation
 
-Yaket already includes benchmark scripts and checked-in reports for Komoroske and dataset-oriented comparisons.
+Yaket already includes benchmark scripts and checked-in reports for Komoroske, multilingual single-paragraph parity, and Inspec/SemEval dataset-oriented comparisons.
 
 Remaining benchmark work:
 
-1. expand multilingual benchmark coverage
-2. keep comparing Yaket against upstream Python YAKE, TF-IDF, and the Bobbin baseline on new corpora
-3. add more adoption-focused benchmark notes when Bobbin integration validation is run
-4. add more explicit bundle-size reporting if edge adopters need it
+1. expand the multilingual benchmark beyond a single representative paragraph per language to a multi-document corpus per language.
+2. keep comparing Yaket against upstream Python YAKE, TF-IDF, and the Bobbin baseline on new corpora.
+3. add more adoption-focused benchmark notes when Bobbin integration validation is run.
+4. add explicit bundle-size reporting if edge adopters need it.
 
 ## Remaining Sequence
 
 Recommended next implementation order:
 
-1. expand fixture corpus and Python differential testing
-2. deepen mutation-survival in scoring and dedup modules
-3. keep Bobbin integration validation current as Bobbin evolves
-4. expand multilingual parity coverage
-5. evaluate whether a fuller optional lemmatization implementation is justified
-6. add any remaining package/runtime hardening that real adopters need
+1. expand fixture corpus and Python differential testing (English long-form, multilingual long-form).
+2. deepen mutation-survival in scoring and dedup modules with periodic Stryker passes.
+3. keep Bobbin integration validation current as Bobbin evolves.
+4. investigate the residual mid-rank Portuguese `seqm` dedup divergence and the Arabic tie-break ordering captured in `TODO.md`.
+5. evaluate whether a fuller optional lemmatization implementation is justified (see `docs/lemmatization-evaluation.md`).
+6. add any remaining package/runtime hardening that real adopters need.
 
 ## Remaining Deliverables
 
-1. broader reviewed fixture corpus, especially for multilingual and tokenizer-edge texts
-2. keep Bobbin repo integration validation current as Bobbin changes
-3. additional multilingual benchmark reports
-4. stronger mutation/property coverage reporting for scoring and dedup modules
+1. broader reviewed fixture corpus, especially for multilingual and tokenizer-edge texts beyond the current per-language paragraph.
+2. keep Bobbin repo integration validation current as Bobbin changes.
+3. multi-document multilingual benchmark report.
+4. stronger mutation/property coverage reporting for scoring and dedup modules.

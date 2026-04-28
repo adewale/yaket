@@ -13,15 +13,18 @@ const FIXTURE_NAMES = readdirSync(INPUT_DIR)
   .map((entry) => entry.replace(/\.txt$/, ""));
 
 describe("golden fixtures", () => {
-  it("has fixture inputs", () => {
-    expect(FIXTURE_NAMES.length).toBeGreaterThan(0);
+  it("discovers every checked-in fixture pair", () => {
+    // Fixture set is checked in. If a new fixture gets added, this assertion
+    // fails so reviewers see the change explicitly rather than the test
+    // silently exercising one more file.
+    expect(FIXTURE_NAMES).toEqual(["kaggle-excerpt", "newsletter-chunk"]);
   });
 
   for (const fixtureName of FIXTURE_NAMES) {
     it(`matches fixture ${fixtureName}`, () => {
       const input = readFileSync(join(INPUT_DIR, `${fixtureName}.txt`), "utf8");
       const expected = JSON.parse(readFileSync(join(EXPECTED_DIR, `${fixtureName}.json`), "utf8")) as ReturnType<typeof extractKeywordDetails>;
-      const actual = extractKeywordDetails(input, { lan: "en", n: 3, top: 5 });
+      const actual = extractKeywordDetails(input, { language: "en", n: 3, top: 5 });
 
       expect(actual).toHaveLength(expected.length);
 

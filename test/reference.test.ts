@@ -22,12 +22,12 @@ describe("edge cases", () => {
   });
 
   it("returns empty results for stopword-only input", () => {
-    expect(new KeywordExtractor({ lan: "en", n: 1, top: 5 }).extractKeywords(stopwordOnlyText)).toEqual([]);
+    expect(new KeywordExtractor({ language: "en", n: 1, top: 5 }).extractKeywords(stopwordOnlyText)).toEqual([]);
   });
 
   it("never returns phrases starting or ending with a stopword in boundary fixture", () => {
     const stopwords = loadStopwords("en");
-    const result = new KeywordExtractor({ lan: "en", n: 2, top: 10 }).extractKeywords("alpha and beta and gamma");
+    const result = new KeywordExtractor({ language: "en", n: 2, top: 10 }).extractKeywords("alpha and beta and gamma");
 
     for (const [keyword] of result) {
       const words = keyword.toLowerCase().split(/\s+/);
@@ -60,7 +60,7 @@ describe("edge cases", () => {
   });
 
   it("matches upstream ordering for near-tie ngrams", () => {
-    const actual = new KeywordExtractor({ lan: "en" }).extractKeywords("Google Kaggle data science");
+    const actual = new KeywordExtractor({ language: "en" }).extractKeywords("Google Kaggle data science");
 
     expect(actual.slice(0, 2).map(([keyword]) => keyword)).toEqual([
       "Kaggle data science",
@@ -70,19 +70,31 @@ describe("edge cases", () => {
 });
 
 describe("similarity helpers", () => {
-  it("matches upstream Levenshtein distance examples", () => {
+  it("matches upstream Levenshtein distance examples exactly", () => {
     expect(Levenshtein.distance("hello", "hello")).toBe(0);
     expect(Levenshtein.distance("hello", "helo")).toBe(1);
-    expect(Levenshtein.distance("abc", "xyz")).toBeGreaterThan(0);
+    // Three substitutions to turn "abc" into "xyz".
+    expect(Levenshtein.distance("abc", "xyz")).toBe(3);
     expect(Levenshtein.distance("a", "abcdefghij")).toBe(9);
+    // Symmetric.
+    expect(Levenshtein.distance("kitten", "sitting")).toBe(3);
+    expect(Levenshtein.distance("sitting", "kitten")).toBe(3);
+    // Empty input.
+    expect(Levenshtein.distance("", "")).toBe(0);
+    expect(Levenshtein.distance("", "abc")).toBe(3);
+    expect(Levenshtein.distance("abc", "")).toBe(3);
   });
 
-  it("matches upstream Levenshtein ratio examples", () => {
+  it("matches upstream Levenshtein ratio examples exactly", () => {
     expect(Levenshtein.ratio("hello", "hello")).toBe(1);
-    expect(Levenshtein.ratio("hello", "helo")).toBeGreaterThan(0);
-    expect(Levenshtein.ratio("hello", "helo")).toBeLessThan(1);
-    expect(Levenshtein.ratio("abc", "xyz")).toBeGreaterThanOrEqual(0);
-    expect(Levenshtein.ratio("abc", "xyz")).toBeLessThan(1);
+    // 1 - distance/maxLength: 1 - 1/5 = 0.8
+    expect(Levenshtein.ratio("hello", "helo")).toBeCloseTo(0.8, 14);
+    // 1 - 3/3 = 0 — completely disjoint, each char substituted.
+    expect(Levenshtein.ratio("abc", "xyz")).toBe(0);
+    // 1 - 3/7
+    expect(Levenshtein.ratio("kitten", "sitting")).toBeCloseTo(1 - 3 / 7, 14);
+    // Empty pair is the identity at ratio 1 by definition (length === 0).
+    expect(Levenshtein.ratio("", "")).toBe(1);
   });
 });
 

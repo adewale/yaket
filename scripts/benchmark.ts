@@ -23,7 +23,7 @@ async function main(): Promise<void> {
   const stopwords = loadStopwords("en");
 
   const yaket = benchmark("Yaket", () => extractKeywordDetails(targetEpisode.text, {
-    lan: "en",
+    language: "en",
     n: DEFAULT_NGRAM,
     top: DEFAULT_TOP,
   }).map(({ normalizedKeyword, score }) => ({ keyword: normalizedKeyword, score })));

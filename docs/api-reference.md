@@ -58,10 +58,14 @@ type YakeOptions = {
   dedupLim?: number;
   dedupFunc?: string;
   windowSize?: number;
+  features?: string[] | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
+  sentenceSplitter?: SentenceSplitter;
+  tokenizer?: Tokenizer;
   stopwordProvider?: StopwordProvider;
   dedupStrategy?: SimilarityStrategy | ((a: string, b: string) => number);
+  similarityCache?: SimilarityCache;
   lemmatizer?: Lemmatizer;
   candidateNormalizer?: CandidateNormalizer;
   singleWordScorer?: SingleWordScorer;
@@ -78,16 +82,25 @@ Most commonly used fields:
 | `language` | two-letter language code | `en` |
 | `n` | maximum n-gram size | `3` |
 | `top` | number of keywords to return | `20` |
-| `dedupFunc` | `seqm`, `levs`, or `jaro`-style dedup | `seqm` |
+| `dedupFunc` | exactly `seqm`, `levs`, or `jaro` | `seqm` |
 | `dedupLim` | dedup similarity threshold | `0.9` |
 | `windowSize` | co-occurrence window size | `1` |
+| `sentenceSplitter` | override only the sentence splitter | bundled |
+| `tokenizer` | override only the tokenizer | bundled |
+| `similarityCache` | isolated cache for `seqm`, `levs`, and `jaro` memoization | shared module-level default |
 
-Deprecated but still accepted aliases exist on `KeywordExtractorOptions` for compatibility:
+`KeywordExtractorOptions` is exported as an *import-compatible* alias for
+`YakeOptions` (structurally identical). It is not value-compatible: the
+constructor rejects the legacy snake_case keys at runtime, and `dedupFunc`
+throws on unknown values instead of silently aliasing them. Both error
+messages name the offending key/value and the canonical replacement.
 
-- `lan`
-- `dedup_lim`
-- `windowsSize`
-- `window_size`
+Yaket 0.6 dropped the legacy snake_case aliases (`lan`, `dedup_lim`,
+`dedup_func`, `windowsSize`, `window_size`), the `extract_keywords()` method,
+and the dedup-function value aliases (`leve`, `jaro_winkler`,
+`sequencematcher`). Passing any of these — even via a plain JS object,
+JSON payload, or class on the prototype chain — now throws a `TypeError`.
+See `docs/migration-bobbin-0.6.md` for the migration recipe.
 
 ## Adapters
 
@@ -109,6 +122,11 @@ type BobbinYakeResult = {
 ### `extractFromDocumentStream(documents, options?)`
 
 Use these for ingestion pipelines, indexing jobs, and ETL-style processing.
+
+All three resolve language with the same precedence rule:
+`options.language ?? document.language ?? "en"`. The explicit option always
+wins. The hook contexts (`beforeExtractText`, `afterExtractKeywords`)
+report exactly the language the underlying extractor used.
 
 `DocumentExtractionOptions` also supports:
 
@@ -164,16 +182,40 @@ Utility for wrapping extracted keywords in HTML markers.
 ### `levenshteinSimilarity`
 ### `sequenceSimilarity`
 ### `jaroSimilarity`
+
+All four similarity helpers accept an optional final `SimilarityCache`
+argument and memoize their results inside it. When omitted, they share
+the bounded module-level default cache.
+
+### `createSimilarityCache(options?)`
+
+Returns a `SimilarityCache` with isolated `distance`, `ratio`, `sequence`,
+and `jaro` `Map`s plus `stats()` and `clear()` methods. Pass `{ maxSize }`
+to set the bounded LRU eviction threshold per map (default `20000`).
+`maxSize` must be a positive integer; `0`, negatives, `NaN`, `Infinity`,
+and non-integers throw a `RangeError`. Use this for long-running edge
+workers, per-request cache scopes, tests that must not leak into the
+module-level default, or benchmarks that need to reset state between
+runs.
+
 ### `getSimilarityCacheStats`
 ### `clearSimilarityCaches`
 
-Use these mainly for diagnostics, experimentation, and custom dedup logic.
+Operate on the module-level default cache only. Custom caches expose
+the same operations through their own `.stats()` and `.clear()` methods.
+
+### `SimilarityCache` / `SimilarityCacheStats`
+
+Typed interfaces re-exported from the public surface. `SimilarityCacheStats`
+is `{ distance: number; ratio: number; sequence: number; jaro: number }`.
 
 ## Extension Types
 
 Yaket exports the main extension interfaces directly:
 
-- `TextProcessor`
+- `TextProcessor` (combined `splitSentences` + `tokenizeWords` surface)
+- `SentenceSplitter` (just `split(text) => string[]`)
+- `Tokenizer` (just `tokenize(text) => string[]`)
 - `StopwordProvider`
 - `SimilarityStrategy`
 - `CandidateNormalizer`
@@ -183,7 +225,16 @@ Yaket exports the main extension interfaces directly:
 - `KeywordScorer`
 - `CandidateFilterInput`
 
-Lemmatization remains hook-only. Yaket does not implement upstream-style string backend selectors such as `"spacy"` or `"nltk"` inside the extraction core.
+The default values `defaultTextProcessor`, `defaultSentenceSplitter`,
+`defaultTokenizer`, and `defaultStopwordProvider` are also exported so
+custom strategies can compose with the bundled behavior without
+re-implementing it.
+
+`sentenceSplitter` and `tokenizer` take precedence over `textProcessor`
+for the half they cover. The other half falls back to whichever of
+`textProcessor` or the bundled default is available.
+
+Lemmatization remains hook-only. Yaket does not implement upstream-style string backend selectors such as `"spacy"` or `"nltk"` inside the extraction core. See `docs/lemmatization-evaluation.md` for the rationale.
 
 ## Choosing an API
 

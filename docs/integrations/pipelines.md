@@ -99,3 +99,36 @@ If you are using Yaket in an edge runtime:
 2. avoid adding adapters that depend on Node-only APIs
 3. keep assets bundled at build time
 4. run `npm run test:cloudflare` as part of CI
+
+For long-running workers that process many documents per isolate, isolate
+the similarity cache so it does not share state across requests:
+
+```ts
+import { KeywordExtractor, createSimilarityCache } from "@ade_oshineye/yaket";
+
+const extractor = new KeywordExtractor({
+  language: "en",
+  n: 3,
+  top: 10,
+  // Bounded LRU; tune to match your worker memory budget.
+  similarityCache: createSimilarityCache({ maxSize: 5_000 }),
+});
+```
+
+You can also override only the half of the text-processing pipeline that
+matters for your input shape, without re-implementing the other half:
+
+```ts
+import { KeywordExtractor, type Tokenizer } from "@ade_oshineye/yaket";
+
+const tokenizer: Tokenizer = {
+  tokenize(text) {
+    return text.split(/\s+/u).filter(Boolean);
+  },
+};
+
+const extractor = new KeywordExtractor({
+  language: "en",
+  tokenizer,
+});
+```

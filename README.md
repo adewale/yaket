@@ -80,8 +80,6 @@ The package ships ESM output and exposes Worker/browser-safe entry points:
 - `@ade_oshineye/yaket/browser`
 - `@ade_oshineye/yaket/worker`
 
-## Usage
-
 ## Algorithm Summary
 
 At a high level, Yaket:
@@ -106,20 +104,23 @@ Common options:
 | `dedupFunc` | dedup function (`seqm`, `levs`, `jaro`) | `seqm` |
 | `dedupLim` | dedup threshold | `0.9` |
 | `windowSize` | co-occurrence window | `1` |
-| `stopwords` | explicit stopword iterable override | bundled set for `lan` |
+| `stopwords` | explicit stopword iterable override | bundled set for `language` |
 
 For the complete public API, see `docs/api-reference.md`.
 
-Canonical option names are:
+Canonical option names:
 
 - `language`
 - `dedupLim`
-- `dedupFunc`
+- `dedupFunc` — `seqm`, `levs`, or `jaro`
 - `windowSize`
 
-Legacy aliases such as `lan`, `dedup_lim`, `windowsSize`, and `window_size` are still accepted for backward compatibility, but new code should prefer the canonical names.
+Yaket 0.6 dropped the snake_case aliases (`lan`, `dedup_lim`, `dedup_func`,
+`windowsSize`, `window_size`), the `extract_keywords()` method, and the
+dedup-function value aliases (`leve`, `jaro_winkler`, `sequencematcher`).
+Existing 0.5.x consumers should follow `docs/migration-bobbin-0.6.md`.
 
-If you prefer the most concise one-shot API, `extract()` is an alias for `extractKeywords()`.
+If you prefer the most concise one-shot API, `extract()` is a re-export of `extractKeywords()`.
 
 ### Reusable extractor
 
@@ -227,7 +228,9 @@ const details = extractKeywordDetails("models model models", {
 
 Available extension points:
 
-- `TextProcessor`
+- `TextProcessor` (combined `splitSentences` + `tokenizeWords` surface)
+- `SentenceSplitter` (just `split(text) => string[]`, supplied via the `sentenceSplitter` option)
+- `Tokenizer` (just `tokenize(text) => string[]`, supplied via the `tokenizer` option)
 - `StopwordProvider`
 - `SimilarityStrategy`
 - `CandidateNormalizer`
@@ -236,6 +239,11 @@ Available extension points:
 - `MultiWordScorer`
 - `KeywordScorer`
 - `candidateFilter`
+
+`sentenceSplitter` and `tokenizer` can be supplied independently when you only
+want to override one half of the text-processing pipeline. They take precedence
+over a `textProcessor` for the half they cover, so the other half keeps the
+bundled (or `textProcessor`-supplied) behavior.
 
 `lemmatizer` stays hook-based in Yaket. Upstream-style string backends such as `"spacy"` or `"nltk"` are intentionally not implemented in the extraction core.
 
@@ -264,6 +272,47 @@ const details = extractKeywordDetails("agent swarms coordinate teams", {
   },
 });
 ```
+
+### Configurable similarity caches
+
+`Yaket` memoizes similarity scores used by the `seqm`, `levs`, and `jaro`
+dedup paths in bounded module-level caches. To isolate cache state — for
+long-running edge workers, tests, or per-request caching — create your own
+cache and pass it to a `KeywordExtractor` (or directly to a similarity
+helper):
+
+```ts
+import {
+  KeywordExtractor,
+  createSimilarityCache,
+  sequenceSimilarity,
+} from "@ade_oshineye/yaket";
+
+const cache = createSimilarityCache({ maxSize: 5_000 });
+
+const extractor = new KeywordExtractor({
+  language: "en",
+  n: 3,
+  top: 10,
+  similarityCache: cache,
+});
+
+extractor.extractKeywords("Edge runtimes power modern serverless platforms.");
+
+console.log(cache.stats()); // { distance, ratio, sequence, jaro }
+cache.clear();
+
+// Direct use is supported for callers wiring custom dedup logic.
+sequenceSimilarity("alpha", "alpha", cache);
+```
+
+Each `SimilarityCache` owns four bounded `Map`s — one per helper:
+`distance` and `ratio` for `Levenshtein`, `sequence` for `sequenceSimilarity`
+(the `seqm` dedup path), and `jaro` for `jaroSimilarity`.
+
+The module-level helpers `clearSimilarityCaches()` and
+`getSimilarityCacheStats()` continue to operate on the default cache for
+backwards compatibility.
 
 ### Stopwords and languages
 
@@ -349,15 +398,32 @@ The repository includes a benchmark harness that compares:
 - the original [Bobbin](https://github.com/adewale/bobbin) YAKE-like implementation
 - a simple TF-IDF baseline
 
-Current checked-in report:
+Current checked-in reports:
 
 - `docs/benchmarks/komoroske-2026-04-06.md`
+- `docs/benchmarks/multilingual.md`
 
 Additional dataset-oriented benchmark support is available for Inspec and SemEval-style evaluation via `scripts/benchmark-datasets.ts`.
 
 ```bash
 npm run benchmark:datasets
 ```
+
+A per-language Python-YAKE parity benchmark (English, German, Spanish, French, Italian, Portuguese, Dutch, Russian, Arabic) is available via:
+
+```bash
+npm run benchmark:multilingual
+```
+
+A bundle-size report (worker-target, ESM, gzipped) is available via:
+
+```bash
+npm run bundle-size
+```
+
+This is a Node-only script that uses esbuild and writes
+`docs/benchmarks/bundle-size.md`. The `test/bundle-size.test.ts` test
+asserts the gzipped bundle stays inside the documented edge budget.
 
 Run it with:
 
@@ -371,6 +437,8 @@ npm run benchmark
 - API reference: `docs/api-reference.md`
 - Use cases: `docs/use-cases.md`
 - Algorithm drift: `docs/algorithm-drift.md`
+- Lemmatization evaluation: `docs/lemmatization-evaluation.md`
+- Bobbin / 0.5.x → 0.6 migration: `docs/migration-bobbin-0.6.md`
 - Dataset benchmarks: `docs/benchmarks/inspec-semeval.md`
 - [Bobbin](https://github.com/adewale/bobbin) integration guide: `docs/integrations/bobbin.md`
 - Generic pipeline guide: `docs/integrations/pipelines.md`
@@ -384,7 +452,7 @@ npm run benchmark
 
 - The tokenizer is close to YAKE, but still not a literal `segtok` port.
 - Dedup `seqm` behavior is still approximate rather than a byte-for-byte Python clone.
-- Multilingual support exists through bundled stopwords, but broad multilingual parity coverage is deferred.
+- Multilingual support covers 34 bundled stopword languages and head-parity locks against upstream Python YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar` (single-paragraph and multi-document corpora). The remaining drift is bit-level float-precision in the scoring math at exact-tie positions — see `docs/algorithm-drift.md` for the documented residuals.
 - Bobbin adapter validation now covers the Bobbin YAKE, topic-extractor, topic-system, and extraction-quality tests in the reference Bobbin checkout, but that validation still needs to be kept current as Bobbin evolves.
 
 ## Comparison To Alternatives

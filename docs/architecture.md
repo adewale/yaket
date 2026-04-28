@@ -37,6 +37,120 @@ flowchart TD
     L --> T[CLI]
 ```
 
+## ASCII Diagram
+
+The same architecture rendered for environments without Mermaid support.
+
+```
+                                YAKET ARCHITECTURE
+                                ==================
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                            PUBLIC ENTRY POINTS                                  │
+│  extract() / extractKeywords()      one-shot pure-function API                  │
+│  extractKeywordDetails()            returns rich KeywordResult records          │
+│  new KeywordExtractor(opts)         reusable instance                           │
+│  createKeywordExtractor({...})      composition-style constructor               │
+│                                                                                 │
+│  Package exports (package.json):                                                │
+│    "@ade_oshineye/yaket"          ──┐                                           │
+│    "@ade_oshineye/yaket/browser"  ──┼─► same ESM bundle, edge-safe              │
+│    "@ade_oshineye/yaket/worker"   ──┘                                           │
+└────────────────────────────────────┬────────────────────────────────────────────┘
+                                     ▼
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                EXTRACTION CORE (edge-safe — no fs/path/child_process)           │
+│                                                                                 │
+│   src/KeywordExtractor.ts  ── option normalization, runtime guards,             │
+│   ┌──────────────────┐         result shaping, dedup orchestration,             │
+│   │ KeywordExtractor │         extension-hook wiring                            │
+│   └────────┬─────────┘                                                          │
+│            ▼                                                                    │
+│   ┌──────────────────┐  src/DataCore.ts                                         │
+│   │    DataCore      │  ── preprocess text                                      │
+│   │                  │  ── build sentences / token blocks                       │
+│   │                  │  ── maintain co-occurrence graph (src/graph.ts)          │
+│   │                  │  ── feed feature accumulators                            │
+│   └─────┬──────┬─────┘                                                          │
+│         ▼      ▼                                                                │
+│  ┌──────────┐ ┌────────────┐                                                    │
+│  │SingleWord│ │ComposedWord│  src/SingleWord.ts  → unigram features + score     │
+│  │  terms   │ │ candidates │  src/ComposedWord.ts → n-gram validation + score   │
+│  └────┬─────┘ └─────┬──────┘                                                    │
+│       └──────┬──────┘                                                           │
+│              ▼                                                                  │
+│   ┌─────────────────────┐  YAKE local-feature scoring:                          │
+│   │  YAKE local-feature │  frequency · spread · position · casing ·             │
+│   │       scoring       │  relatedness (graph-derived)                          │
+│   └──────────┬──────────┘                                                       │
+│              ▼                                                                  │
+│   ┌─────────────────────┐  { keyword, normalizedKeyword, score,                 │
+│   │   KeywordResult[]   │    ngramSize, occurrences, sentenceIds }              │
+│   └──────────┬──────────┘                                                       │
+│              ▼                                                                  │
+│   ┌─────────────────────┐  src/similarity.ts                                    │
+│   │   Dedup strategy    │  seqm  (default, segtok-flavored heuristic)           │
+│   │                     │  levs  (Levenshtein)                                  │
+│   │                     │  jaro  (Jaro)                                         │
+│   └──────────┬──────────┘  + bounded SimilarityCache (distance, ratio,          │
+│                              sequence, jaro)                                    │
+│              ▼                                                                  │
+│       Final ranked keywords                                                     │
+└────────────────────────────────────┬────────────────────────────────────────────┘
+                                     ▼
+       ┌─────────────────────────────┼──────────────────────────┐
+       ▼                             ▼                          ▼
+┌──────────────────┐     ┌──────────────────────┐    ┌─────────────────────┐
+│  ADAPTER LAYER   │     │  PIPELINE HELPERS    │    │   PRESENTATION      │
+│ src/bobbin.ts    │     │ src/document.ts      │    │ src/highlight.ts    │
+│ extractYakeKeywords│   │ extractFromDocument  │    │ TextHighlighter     │
+│ → Bobbin-shaped  │     │ + beforeExtractText  │    │                     │
+│   {keyword,score}│     │ + afterExtractKeywords│   │ src/cli.ts          │
+│ thin so Bobbin   │     │ + serialize helpers  │    │ `yaket` Node CLI    │
+│ policy stays out │     │ document-centric,    │    │ (Node-only,         │
+│ of core          │     │ topic-system-free    │    │  separated from     │
+│                  │     │                      │    │  edge-safe core)    │
+└──────────────────┘     └──────────────────────┘    └─────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                      EXTENSION POINTS  (src/strategies.ts)                      │
+│  TextProcessor          tokenize + sentence-split (Worker-safe interface)       │
+│  SentenceSplitter       split(text) → string[]                                  │
+│  Tokenizer              tokenize(text) → string[]                               │
+│  StopwordProvider       load(language) → Set<string>                            │
+│  SimilarityStrategy     compare(a,b) → number                                   │
+│  CandidateNormalizer    casing / plural / punctuation policy                    │
+│  Lemmatizer             hook only (no bundled spacy/nltk backends)              │
+│  SingleWordScorer       replace internal YAKE unigram score                     │
+│  MultiWordScorer        replace internal YAKE n-gram score                      │
+│  KeywordScorer          override final ranking score                            │
+│  candidateFilter        boundary / stopword / tag policy                        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                STOPWORDS  (src/stopwords.ts + .generated.ts)                    │
+│  bundledStopwordTexts / STOPWORDS    frozen map of raw text per 2-letter key    │
+│  loadStopwords(lang)                 default loader, falls back to "noLang"     │
+│  createStopwordSet(lang, {add,remove,replace})                                  │
+│  createStaticStopwordProvider({...}) build a custom StopwordProvider            │
+│  supportedLanguages                  34 bundled: ar bg br cz da de el en es     │
+│                                      et fa fi fr hi hr hu hy id it ja lt lv     │
+│                                      nl no pl pt ro ru sk sl sv tr uk zh        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│                          VERIFICATION LAYERS                                    │
+│  golden fixtures · Python parity (test/python-parity.test.ts) · property tests  │
+│  (fast-check) · mutation/fuzz tests · CLI coverage · Cloudflare runtime tests   │
+│  (@cloudflare/vitest-pool-workers) · package smoke · docs-sync · Bobbin         │
+│  regression · Stryker mutation testing · benchmarks vs Python YAKE/Bobbin/TF-IDF│
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+Runtime boundary key:
+  EDGE-SAFE   no fs / path / child_process / native bindings
+  NODE-ONLY   src/cli.ts, all scripts/*.ts (kept out of the public import graph)
+```
+
 ## Module Map
 
 | Module | Responsibility |
@@ -46,13 +160,19 @@ flowchart TD
 | `src/SingleWord.ts` | Single-word feature accumulation and scoring |
 | `src/ComposedWord.ts` | Multi-word candidate validation and scoring |
 | `src/utils.ts` | Pre-filtering, sentence splitting, tokenization, YAKE tag logic |
-| `src/similarity.ts` | Levenshtein, sequence, Jaro similarity, cache diagnostics |
+| `src/similarity.ts` | Levenshtein, sequence, Jaro similarity, configurable `SimilarityCache` |
 | `src/stopwords.ts` | Bundled stopword loading |
-| `src/strategies.ts` | Pluggable strategy and result interfaces |
+| `src/strategies.ts` | Pluggable strategy and result interfaces (incl. `SentenceSplitter` and `Tokenizer`) |
 | `src/document.ts` | Document-oriented pipeline helpers |
 | `src/bobbin.ts` | Bobbin-compatible adapter output |
 | `src/highlight.ts` | Keyword highlighting utility |
+| `src/graph.ts` | Adjacency-backed co-occurrence graph |
 | `src/cli.ts` | Optional Node CLI entry point |
+| `scripts/benchmark.ts` | Komoroske corpus benchmark harness (Node-only) |
+| `scripts/benchmark-multilingual.ts` | Per-language Yaket-vs-Python YAKE parity benchmark (Node-only) |
+| `scripts/benchmark-datasets.ts` | Inspec/SemEval-style dataset benchmark (Node-only) |
+| `scripts/bundle-size.ts` | Worker-target bundle-size reporter (esbuild, Node-only) |
+| `scripts/bundle-leak-detector.ts` | Shared forbidden-built-in import detector (Node-only) |
 
 ## Extraction Flow
 
@@ -77,18 +197,25 @@ The extraction core is intentionally free of Node-only runtime dependencies. Tha
 
 ### Node-only surfaces
 
-These remain optional and separate:
+These remain optional and separate from the published extraction core:
 
-- `src/cli.ts`
-- `scripts/benchmark.ts`
+- `src/cli.ts` — Node CLI entry, the only Node-only file inside `src/`
+- `scripts/benchmark.ts` — Komoroske-corpus benchmark
+- `scripts/benchmark-multilingual.ts` — per-language Yaket vs Python YAKE parity benchmark
+- `scripts/benchmark-datasets.ts` — Inspec / SemEval-style dataset benchmark
+- `scripts/bundle-size.ts` — worker-target bundle-size reporter
+- `scripts/bundle-leak-detector.ts` — shared forbidden-built-in detector used by both `scripts/bundle-size.ts` and `test/bundle-size.test.ts`
 
 ## Extension Points
 
 `Yaket` currently exposes these extension points:
 
-- `TextProcessor`
+- `TextProcessor` (combined sentence-split + tokenize)
+- `SentenceSplitter` (just sentence split, override one half independently)
+- `Tokenizer` (just tokenize, override one half independently)
 - `StopwordProvider`
 - `SimilarityStrategy`
+- `SimilarityCache` (configurable bounded cache for the `seqm`, `levs`, and `jaro` paths — `distance`, `ratio`, `sequence`, and `jaro` maps)
 - `CandidateNormalizer`
 - `Lemmatizer`
 - `SingleWordScorer`
@@ -105,15 +232,19 @@ Package consumers install Yaket from npm as `@ade_oshineye/yaket`.
 The current architecture is verified through multiple test layers:
 
 - golden fixtures
-- Python parity checks
-- property-based tests
+- Python parity checks (English fixtures)
+- multilingual parity checks (`test/multilingual-parity.test.ts` locking head-parity heads against upstream YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, `ar`)
+- multilingual corpus parity (`test/multilingual-corpus.test.ts` covering 21 documents across 7 languages with 168/210 head slots locked vs upstream)
+- bundle-size guardrail (`test/bundle-size.test.ts` asserts the worker-target gzipped bundle stays inside a documented edge budget and contains no Node built-ins)
+- property-based tests including PBT invariants exercised across bundled languages (no-throw on arbitrary unicode, determinism, top-bound)
+- canonical-only options tests asserting the 0.6 alias removal at type and runtime level
 - mutation-style fuzz tests
 - dedicated CLI coverage checks
 - Cloudflare Worker runtime tests
 - package-surface smoke tests
 - docs-sync tests
 - Bobbin-style regression tests
-- benchmark comparisons against Bobbin, TF-IDF, and Python YAKE
+- benchmark comparisons against Bobbin, TF-IDF, and Python YAKE (Komoroske, multilingual, Inspec/SemEval-style datasets)
 - mutation testing on scoring and dedup modules
 
 ## Non-Goals

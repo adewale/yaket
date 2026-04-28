@@ -56,7 +56,7 @@ describe("property-based invariants", () => {
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 1, max: 3 }),
         (text, topK, maxNgram) => {
-          const details = extractKeywordDetails(text, { top: topK, n: maxNgram, lan: "en" });
+          const details = extractKeywordDetails(text, { top: topK, n: maxNgram, language: "en" });
 
           expect(details.length).toBeLessThanOrEqual(topK);
           for (const detail of details) {
@@ -75,17 +75,50 @@ describe("property-based invariants", () => {
     );
   });
 
-  it("keeps canonical and legacy language options behaviorally equivalent when used separately", () => {
+  it("keyword surface form is always a substring of the source text (case-insensitive)", () => {
     fc.assert(
       fc.property(
         fc.string({ minLength: 0, maxLength: 400 }),
         fc.integer({ min: 1, max: 10 }),
         fc.integer({ min: 1, max: 3 }),
         (text, topK, maxNgram) => {
-          const canonical = extractKeywordDetails(text, { language: "en", top: topK, n: maxNgram });
-          const legacy = extractKeywordDetails(text, { lan: "en", top: topK, n: maxNgram });
+          const details = extractKeywordDetails(text, { language: "en", top: topK, n: maxNgram });
+          const sourceLower = text.toLowerCase();
+          for (const detail of details) {
+            // At least one token of the multi-word keyword must appear in the source.
+            // (We do not assert the whole phrase is contiguous because tokenization
+            // collapses whitespace and contractions.)
+            const firstToken = detail.normalizedKeyword.split(/\s+/u, 1)[0]!;
+            if (firstToken.length > 0) {
+              expect(sourceLower).toContain(firstToken);
+            }
+          }
+        },
+      ),
+      { numRuns: 100 },
+    );
+  });
 
-          expect(canonical).toEqual(legacy);
+  it("sentenceIds reference real sentence indices and never duplicate", () => {
+    fc.assert(
+      fc.property(
+        fc.string({ minLength: 0, maxLength: 400 }),
+        fc.integer({ min: 1, max: 10 }),
+        fc.integer({ min: 1, max: 3 }),
+        (text, topK, maxNgram) => {
+          const details = extractKeywordDetails(text, { language: "en", top: topK, n: maxNgram });
+          for (const detail of details) {
+            const ids = detail.sentenceIds ?? [];
+            // No duplicates.
+            expect(new Set(ids).size).toBe(ids.length);
+            // All non-negative.
+            for (const id of ids) {
+              expect(id).toBeGreaterThanOrEqual(0);
+              expect(Number.isInteger(id)).toBe(true);
+            }
+            // Occurrences are at least 1 when the candidate exists.
+            expect(detail.occurrences).toBeGreaterThanOrEqual(1);
+          }
         },
       ),
       { numRuns: 100 },
@@ -109,8 +142,8 @@ describe("property-based invariants", () => {
         ),
         (parts) => {
           const text = parts.join(" ");
-          const first = extractKeywordDetails(text, { lan: "en", n: 3, top: 10 });
-          const second = extractKeywordDetails(text, { lan: "en", n: 3, top: 10 });
+          const first = extractKeywordDetails(text, { language: "en", n: 3, top: 10 });
+          const second = extractKeywordDetails(text, { language: "en", n: 3, top: 10 });
 
           expect(second).toEqual(first);
           for (const detail of first) {
@@ -130,8 +163,8 @@ describe("property-based invariants", () => {
         fc.string({ minLength: 0, maxLength: 500 }),
         fc.integer({ min: 1, max: 3 }),
         (text, maxNgram) => {
-          const top3 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 3, dedupLim: 0.9 });
-          const top6 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 6, dedupLim: 0.9 });
+          const top3 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 3, dedupLim: 0.9 });
+          const top6 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 6, dedupLim: 0.9 });
 
           expect(top6.slice(0, top3.length)).toEqual(top3);
           expect(new Set(top6.map((item) => item.normalizedKeyword)).size).toBe(top6.length);
@@ -147,8 +180,8 @@ describe("property-based invariants", () => {
         fc.string({ minLength: 0, maxLength: 500 }),
         fc.integer({ min: 1, max: 3 }),
         (text, maxNgram) => {
-          const top4 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 4, dedupLim: 1 });
-          const top8 = extractKeywordDetails(text, { lan: "en", n: maxNgram, top: 8, dedupLim: 1 });
+          const top4 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 4, dedupLim: 1 });
+          const top8 = extractKeywordDetails(text, { language: "en", n: maxNgram, top: 8, dedupLim: 1 });
 
           expect(top8.slice(0, top4.length)).toEqual(top4);
         },

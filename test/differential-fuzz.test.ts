@@ -28,13 +28,16 @@ describe.skipIf(!hasPythonReference)("differential fuzzing against Python YAKE",
         YAKET_MUTATED_SAMPLES: JSON.stringify(samples.map((sample) => ({
           name: sample.name,
           text: sample.text,
+          // Python YAKE's keyword arguments use snake_case, so we translate
+          // the Yaket camelCase options here. Yaket itself only accepts the
+          // canonical names.
           options: {
-            lan: sample.options.lan ?? sample.options.language ?? "en",
+            lan: sample.options.language ?? "en",
             n: sample.options.n ?? 3,
             top: sample.options.top ?? 10,
-            dedup_lim: sample.options.dedupLim ?? sample.options.dedup_lim ?? 0.9,
-            dedup_func: sample.options.dedupFunc ?? sample.options.dedup_func ?? "seqm",
-            window_size: sample.options.windowSize ?? sample.options.windowsSize ?? sample.options.window_size ?? 1,
+            dedup_lim: sample.options.dedupLim ?? 0.9,
+            dedup_func: sample.options.dedupFunc ?? "seqm",
+            window_size: sample.options.windowSize ?? 1,
           },
         }))),
       },
@@ -68,7 +71,7 @@ describe.skipIf(!hasPythonReference)("differential fuzzing against Python YAKE",
 });
 
 function buildMutatedSamples() {
-  const baseFixtures = referenceCases.filter((fixture) => fixture.options.lan === "en" && fixture.name !== "english-special-characters");
+  const baseFixtures = referenceCases.filter((fixture) => fixture.options.language === "en" && fixture.name !== "english-special-characters");
   const mutations = [
     { suffix: ' "quoted…"', tag: "quotes-ellipsis" },
     { suffix: " Emoji 🙂 rocket 🚀", tag: "emoji" },
