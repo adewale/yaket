@@ -13,7 +13,7 @@ import { gzipSync } from "node:zlib";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 
-import { findForbiddenBuiltinImports } from "./bundle-leak-detector.js";
+import { findForbiddenBuiltinImports, findForbiddenDynamicNodeImports } from "./bundle-leak-detector.js";
 
 interface VariantReport {
   readonly entry: string;
@@ -66,6 +66,10 @@ async function main(): Promise<void> {
     const leaked = findForbiddenBuiltinImports(result.metafile);
     if (leaked.length > 0) {
       throw new Error(`Bundle leaked Node built-in imports: ${leaked.join(", ")}`);
+    }
+    const dynamicLeaks = findForbiddenDynamicNodeImports(output.text);
+    if (dynamicLeaks.length > 0) {
+      throw new Error(`Bundle leaked literal-prefix dynamic Node imports: ${dynamicLeaks.join(", ")}`);
     }
 
     reports.push({

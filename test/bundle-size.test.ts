@@ -3,7 +3,11 @@ import { build } from "esbuild";
 import { gzipSync } from "node:zlib";
 import { resolve } from "node:path";
 
-import { findForbiddenBuiltinImports, isForbiddenBuiltinSpecifier } from "../scripts/bundle-leak-detector.js";
+import {
+  findForbiddenBuiltinImports,
+  findForbiddenDynamicNodeImports,
+  isForbiddenBuiltinSpecifier,
+} from "../scripts/bundle-leak-detector.js";
 
 /**
  * Edge-budget guardrail.
@@ -13,12 +17,14 @@ import { findForbiddenBuiltinImports, isForbiddenBuiltinSpecifier } from "../scr
  * latency. We hold a generous-but-bounded ceiling here so the bundled
  * stopword set, scoring math, and dedup helpers don't grow unnoticed.
  *
- * The forbidden-built-in detection lives in
- * `scripts/bundle-leak-detector.ts` and walks esbuild's metafile (the
- * actual import graph). Both the `npm run bundle-size` script and this
- * test import the helper, so they cannot disagree on what counts as a
- * leak — and innocent string literals like `"process"` or `"path"` in
- * user-facing text cannot false-positive.
+ * The leak detection lives in `scripts/bundle-leak-detector.ts` and runs
+ * in two passes: a metafile import-graph check (catches every static
+ * `import` / static `import("node:fs")` / `require("fs")`) and a regex
+ * pass over the bundle text (catches literal-prefix dynamic imports
+ * esbuild leaves external). Computed dynamic imports such as
+ * `import("node:" + name)` are deliberately out of scope and noted in
+ * the helper docblock — that case must be guarded at the source-lint
+ * layer, not in the bundle.
  */
 const MINIFIED_GZIP_BUDGET_BYTES = 64 * 1024; // 64 KiB
 const MINIFIED_RAW_BUDGET_BYTES = 192 * 1024; // 192 KiB
@@ -44,10 +50,18 @@ describe("bundle size guardrails", () => {
     const rawBytes = output.contents.byteLength;
     const gzippedBytes = gzipSync(output.contents).byteLength;
 
-    // Walk esbuild's import graph rather than grepping the bundle text.
+    // Layer 1: walk esbuild's import graph (catches static imports and
+    // static-string dynamic imports recorded in the metafile).
     expect(result.metafile).toBeDefined();
     const leakedImports = findForbiddenBuiltinImports(result.metafile!);
     expect(leakedImports, `bundle leaked Node built-in imports: ${leakedImports.join(", ")}`).toEqual([]);
+
+    // Layer 2: regex over the bundle text catches literal-prefix dynamic
+    // imports that esbuild leaves external (e.g. `import("node:fs")`).
+    // Computed-prefix forms like `import("node:" + name)` are deliberately
+    // not detected here — see the helper docblock.
+    const dynamicLeaks = findForbiddenDynamicNodeImports(output.text);
+    expect(dynamicLeaks, `bundle leaked literal-prefix dynamic Node imports: ${dynamicLeaks.join(", ")}`).toEqual([]);
 
     // The bundle must not be empty (would mean tree-shaking went wrong).
     expect(rawBytes).toBeGreaterThan(50 * 1024);
@@ -86,5 +100,30 @@ describe("isForbiddenBuiltinSpecifier", () => {
     // on its argument and doesn't depend on any global text-grep behavior.)
     expect(isForbiddenBuiltinSpecifier("Process the input then return.")).toBe(false);
     expect(isForbiddenBuiltinSpecifier("the path to success")).toBe(false);
+  });
+});
+
+describe("findForbiddenDynamicNodeImports", () => {
+  it("flags literal-prefix dynamic imports of node:* modules", () => {
+    const sample = `const a = import("node:fs"); const b = require('node:path');`;
+    expect(findForbiddenDynamicNodeImports(sample)).toEqual([
+      `import("node:fs")`,
+      `require('node:path')`,
+    ]);
+  });
+
+  it("returns an empty list for benign sources", () => {
+    expect(findForbiddenDynamicNodeImports(`const note = "node:fs not used";`)).toEqual([]);
+    expect(findForbiddenDynamicNodeImports(`import x from "./local";`)).toEqual([]);
+    expect(findForbiddenDynamicNodeImports("")).toEqual([]);
+  });
+
+  it("documented limitation: does NOT detect computed-prefix dynamic imports", () => {
+    // `import("node:" + name)` is computed at runtime — the helper sees
+    // the string `"node:"` standing alone (not a complete specifier
+    // inside `import(...)`). This is intentional; computed forms must
+    // be guarded at the source-lint layer instead.
+    const sample = `const m = await import("node:" + name);`;
+    expect(findForbiddenDynamicNodeImports(sample)).toEqual([]);
   });
 });

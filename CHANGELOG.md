@@ -8,155 +8,91 @@ All notable changes to this project will be documented in this file.
 
 Multilingual parity, alias removal, and pluggable internals.
 
+See `docs/migration-bobbin-0.6.md` for the migration recipe.
+
 ### Breaking
 
-- removed the snake_case option aliases on `KeywordExtractorOptions`:
+- The snake_case option aliases on `KeywordExtractorOptions` are removed:
   `lan`, `dedup_lim`, `dedup_func`, `windowsSize`, `window_size`. Use
-  `language`, `dedupLim`, `dedupFunc`, and `windowSize`.
-- removed the `extract_keywords()` Python-style method on `KeywordExtractor`.
-  Use `extractKeywords()` (or the standalone `extract()` / `extractKeywords()`
-  helpers) instead.
-- removed the dedup-function value aliases. `dedupFunc` (and `--dedup-func`)
-  now accept exactly `seqm`, `levs`, or `jaro`. `leve`, `jaro_winkler`, and
-  `sequencematcher` are rejected with a `TypeError`.
-- renamed the public `KeywordExtractor.config.lan` field to
-  `KeywordExtractor.config.language`.
-- renamed the `DataCore` constructor option from `windowsSize` to
-  `windowSize`. The internal field is renamed in lockstep.
-- the CLI `--dedup-func` validation message now reads
-  `must be one of levs, jaro, seqm`. The CLI help text was updated to match.
-
-See `docs/migration-bobbin-0.6.md` for the migration recipe.
+  `language`, `dedupLim`, `dedupFunc`, and `windowSize`. Passing the old
+  names — even via plain JS, JSON, or class prototypes — now throws a
+  `TypeError` instead of silently falling back to defaults.
+- The `extract_keywords()` Python-style method on `KeywordExtractor` is
+  removed. Use `extractKeywords()` (or the standalone `extract()` /
+  `extractKeywords()` helpers).
+- The dedup-function value aliases (`leve`, `jaro_winkler`,
+  `sequencematcher`) are removed. `dedupFunc` and `--dedup-func` now
+  accept exactly `seqm`, `levs`, or `jaro` and throw a `TypeError` on
+  anything else, naming the bad value and the accepted set.
+- `KeywordExtractor.config.lan` was renamed to `.language`.
+- `DataCore({ windowsSize })` was renamed to `DataCore({ windowSize })`.
 
 ### Added
 
-- ASCII architecture diagram alongside the existing Mermaid diagram in
-  `docs/architecture.md` for environments without Mermaid support.
-- `test/multilingual-parity.test.ts` locking head-parity against upstream
-  Python YAKE 0.7.x for `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, and `ar`,
-  plus three property-based invariants (no-throw on arbitrary unicode,
-  determinism, top-bound) exercised across bundled languages.
-- `scripts/benchmark-multilingual.ts` and `docs/benchmarks/multilingual.md`
-  reporting Yaket-vs-Python head match and top-K overlap per language.
-  Wired in as `npm run benchmark:multilingual`.
-- `docs/lemmatization-evaluation.md` documenting why bundled lemmatizers
-  remain out of scope and what would change that decision.
+- Multilingual head-parity locks against upstream Python YAKE 0.7.x for
+  `pt`, `de`, `es`, `it`, `fr`, `nl`, `ru`, and `ar`. Two test layers:
+  single-paragraph (`test/multilingual-parity.test.ts`) and a 21-document
+  multi-language corpus (`test/multilingual-corpus.test.ts`, 168/210
+  head slots locked).
+- Per-language Yaket-vs-Python parity benchmark
+  (`npm run benchmark:multilingual`, report at
+  `docs/benchmarks/multilingual.md`).
 - `sentenceSplitter` and `tokenizer` options on `KeywordExtractorOptions`
-  so the existing `SentenceSplitter` and `Tokenizer` interfaces can be
-  supplied independently of the combined `TextProcessor`.
-- `createSimilarityCache({ maxSize? })` factory that returns a typed
-  `SimilarityCache` instance with `stats()` and `clear()` methods. The
-  similarity helpers (`sequenceSimilarity`, `levenshteinSimilarity`,
-  `Levenshtein.distance`, `Levenshtein.ratio`, `jaroSimilarity`) now accept
-  the cache as an optional final parameter.
-- `similarityCache` option on `KeywordExtractor` so workers, tests, and
-  benchmarks can isolate cache state from the module-level default.
-- `docs/migration-bobbin-0.6.md` migration guide.
-- `test/multilingual-corpus.test.ts` covering 21 documents across 7 bundled languages
-  (`de`, `fr`, `es`, `it`, `pt`, `nl`, `ru`) with 168/210 head slots locked
-  against upstream YAKE 0.7.x. Documented the residual float-precision tie-break
-  drift items in `docs/algorithm-drift.md`.
-- `test/bundle-size.test.ts` and `scripts/bundle-size.ts`. The test asserts
+  so the `SentenceSplitter` and `Tokenizer` interfaces can be supplied
+  independently of the combined `TextProcessor`.
+- `createSimilarityCache({ maxSize? })` factory returning a typed
+  `SimilarityCache` with `stats()`, `clear()`, and bounded `distance`,
+  `ratio`, `sequence`, and `jaro` maps. All four similarity helpers
+  (`Levenshtein.distance`, `Levenshtein.ratio`, `sequenceSimilarity`,
+  `jaroSimilarity`) accept the cache as an optional final argument and
+  memoize their results inside it.
+- `similarityCache` option on `KeywordExtractor` for isolating cache
+  state per worker / per request / per benchmark.
+- `extractFromDocument`, `extractFromDocuments`, and
+  `extractFromDocumentStream` document the same language-precedence
+  rule (`options.language ?? document.language ?? "en"`).
+- ASCII architecture diagram alongside the Mermaid one in
+  `docs/architecture.md`.
+- Bundle-size guardrail: `npm run bundle-size` writes
+  `docs/benchmarks/bundle-size.md`; `test/bundle-size.test.ts` asserts
   the worker-target ESM bundle stays inside a 64 KiB gzipped budget and
-  contains no Node built-ins (`fs`, `path`, `child_process`, `os`). The
-  script writes a markdown report to `docs/benchmarks/bundle-size.md`.
-- mutation-testing audit at `docs/audits/mutation-testing-2026-04-26.md`
-  with a 68.77 % overall Stryker mutation score (above the 60 % break
-  threshold). New `test/keyword-extractor-defaults.test.ts` and
-  `test/dedup-boundaries.test.ts` kill the highest-value `KeywordExtractor`
-  survivors (default option values, dedup threshold strict-greater
-  semantics, early-exit branch).
-- `stryker.conf.json` switched to `coverageAnalysis: "perTest"` and
-  dropped the TypeScript checker so a full mutation run completes in
-  ~8 minutes.
-- Runtime validation of removed options. Passing `lan`, `dedup_lim`,
-  `dedup_func`, `windowsSize`, or `window_size` through a plain JS object
-  (where the TypeScript guard does not apply) now throws a `TypeError`
-  rather than silently falling back to the default.
-- `createSimilarityCache({ maxSize })` now validates that `maxSize` is a
+  contains no Node built-ins.
+- Mutation-testing baseline at 68.77 % captured in
+  `docs/audits/mutation-testing-2026-04-26.md`. `npm run test:mutation`
+  finishes in ~8 minutes thanks to `coverageAnalysis: "perTest"`.
+- Migration guide at `docs/migration-bobbin-0.6.md`.
+- Lemmatization evaluation at `docs/lemmatization-evaluation.md`.
+
+### Changed
+
+- `dedupFunc` rejects unknown values with a clear `TypeError` instead of
+  silently aliasing them to a default.
+- `createSimilarityCache({ maxSize })` validates that `maxSize` is a
   positive integer; `0`, negatives, `NaN`, `Infinity`, and non-integers
   throw a `RangeError`.
-- Stricter bundle-size leak detection in `test/bundle-size.test.ts` and
-  `scripts/bundle-size.ts`: 17 Node built-in module names are checked
-  under both quote styles and the bare-vs-`node:`-prefixed forms, plus
-  dynamic `import()` and `require()` of `node:*` modules.
-- `KeywordExtractorOptions` doc comment clarified — the alias is
-  *import-compatible*, not value-compatible (the legacy keys are rejected
-  at construction time).
-- `jaroSimilarity` now memoizes results in the supplied `SimilarityCache`
-  on equal terms with `sequenceSimilarity` and `Levenshtein.ratio` /
-  `.distance`. The `SimilarityCacheStats` interface gained a `jaro: number`
-  field; `clear()` empties the Jaro map alongside the other three.
-- Runtime legacy-option rejection now uses `key in options` (was
-  `Object.prototype.hasOwnProperty.call`), so legacy keys that arrive on
-  the prototype chain (e.g. `Object.create({ lan: "pt" })` or class
-  hierarchies) also fail loudly instead of silently falling through.
-- Extracted the bundle-leak forbidden-built-in list and detector into
-  `scripts/bundle-leak-detector.ts`. The detector now walks esbuild's
-  metafile (the actual import graph) instead of grepping the bundle
-  text, so innocuous string literals like `"process"`, `"path"`, or
-  `"url"` in user-facing strings can no longer false-positive as
-  Node-built-in leaks. Both `scripts/bundle-size.ts` and
-  `test/bundle-size.test.ts` import from the shared helper, so they
-  cannot drift apart.
-- `npm run typecheck` now runs against `tsconfig.tooling.json` in
-  addition to the build `tsconfig.json`, so script tooling
-  (`scripts/**/*.ts`) and tests (`test/**/*.ts`) are covered too. This
-  immediately surfaced two stale `lan: "en"` calls in
-  `scripts/benchmark.ts` and `scripts/benchmark-datasets.ts` that were
-  previously missed during the 0.6 alias removal.
-- Documentation pass: removed an empty `## Usage` heading in README,
-  refreshed `docs/architecture.md` (alias-handling wording, four-map
-  `SimilarityCache` description, complete Node-only-surfaces list,
-  `bundle-leak-detector.ts` in the module map), and added the
-  document-helper language-precedence rule + runtime legacy-key
-  rejection note to `docs/api-reference.md`.
-- Test-quality pass: `test/edge-compatibility.test.ts` now uses the
-  shared `FORBIDDEN_BUILTIN_NAMES` list (was 4 names, now 17) and
-  pattern-matches `import`, `require`, and dynamic-import statements;
-  `test/cli.test.ts` PBT assertions now check the actual `CliArgs`
-  shape, error-message format, and that every `runCli` invocation
-  emits at least one stdout/stderr line; `test/reference.test.ts`
-  Levenshtein helper tests assert exact distances/ratios instead of
-  `> 0` / `< 1`; `test/strategies.test.ts` keyword-scorer test verifies
-  the comparator is honored at every position; `test/dedup-boundaries.test.ts`
-  asserts the dedup strategy receives the accepted entry as its right
-  argument; `test/keyword-extractor-defaults.test.ts` end-to-end test
-  checks score-ascending and presence of an expected proper-noun keyword;
-  `test/golden-fixtures.test.ts` discovery test pins the exact fixture
-  list; `test/features-filter.test.ts` baseline asserts the proper-noun
-  phrase ranks in the top-3; `test/similarity-cache-isolation.test.ts`
-  cache-state assertions tightened from `> 0` to exact entry counts.
-- README and api-reference rewritten for the four-map `SimilarityCache`
-  (added `jaro`) and updated multilingual limitation wording to reflect
-  the actual residual drift instead of "broad multilingual parity
-  coverage is deferred".
+- The bundle-leak guard now uses esbuild's import graph (the metafile)
+  plus a regex pass over the bundle text for literal-prefix
+  `import("node:*")` / `require("node:*")` calls. A shared list of
+  forbidden built-ins powers both the `bundle-size` script and its test.
+- `npm run typecheck` covers `src/`, `scripts/`, and `test/` — the
+  build `tsconfig.json` plus a new `tsconfig.tooling.json`.
 
 ### Fixed
 
 - Portuguese ranking drift in upstream `test_n3_PT`. The tokenizer now
-  matches segtok behavior when a sentence closer is the last token of the
-  input (`Histórias."` → `[Histórias, ., "]`), removing duplicate
-  `Histórias.` / `Conta-me Histórias.` candidates that had been crowding
-  upstream-ranked entries out of the top 20. Yaket now exact-matches the
-  upstream YAKE 9-element prefix for `test_n3_PT` and 10/10 head parity on
-  the multilingual paragraphs tracked in `test/multilingual-parity.test.ts`
-  for de/fr/it/pt/nl/ru.
+  matches segtok behavior when a sentence closer is the last token of
+  the input (`Histórias."` → `[Histórias, ., "]`). Yaket exact-matches
+  the upstream YAKE 9-element prefix for `test_n3_PT` and 10/10 head
+  parity on the multilingual paragraphs for de/fr/it/pt/nl/ru.
 - Document-pipeline language precedence is now consistent across
   `extractFromDocument`, `extractFromDocuments`, and
-  `extractFromDocumentStream`. All three resolve language as
-  `options.language ?? document.language ?? "en"` (explicit option
-  wins). Previously batch and stream let `document.language` win, while
-  single-document let `options.language` win — different rules for the
-  same conceptual operation.
-- Document hook contexts now report the same language the extractor
-  actually used. Previously the batch/stream `extractorForLanguage`
-  cache silently re-applied `options.language ?? language` when
-  building the underlying `KeywordExtractor`, so
-  `beforeExtractText(text, ctx)` and `afterExtractKeywords(keywords,
-  ctx)` could see `ctx.language === "fr"` while the extractor scored
-  with `language: "en"`. Both halves now use the single
-  `resolveLanguage(document, options)` helper.
+  `extractFromDocumentStream`. The explicit option wins everywhere
+  (previously batch/stream let `document.language` win while
+  single-document let `options.language` win).
+- Document hook contexts (`beforeExtractText`, `afterExtractKeywords`)
+  report the same language the underlying extractor used. Previously
+  the batch/stream cache could build the extractor with one language
+  while the hooks saw another.
 
 ## 0.5.3 - 2026-04-18
 
