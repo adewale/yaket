@@ -40,8 +40,14 @@ describe("KeywordExtractor default option values", () => {
 
   it("uses default options end-to-end without explicit configuration", () => {
     const result = extractKeywords("Cloudflare Workers run JavaScript at the edge.");
-    expect(result.length).toBeGreaterThan(0);
     expect(result.length).toBeLessThanOrEqual(20); // default top
+    expect(result.length).toBeGreaterThanOrEqual(3);
+    // Defaults must produce sorted-ascending scores.
+    for (let index = 1; index < result.length; index += 1) {
+      expect(result[index]![1]).toBeGreaterThanOrEqual(result[index - 1]![1]);
+    }
+    // Defaults must surface the expected proper-noun keyword.
+    expect(result.map(([keyword]) => keyword)).toContain("Cloudflare Workers");
   });
 
   it("constructing with empty options object is equivalent to constructing with no argument", () => {

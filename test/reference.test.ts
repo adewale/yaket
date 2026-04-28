@@ -70,19 +70,31 @@ describe("edge cases", () => {
 });
 
 describe("similarity helpers", () => {
-  it("matches upstream Levenshtein distance examples", () => {
+  it("matches upstream Levenshtein distance examples exactly", () => {
     expect(Levenshtein.distance("hello", "hello")).toBe(0);
     expect(Levenshtein.distance("hello", "helo")).toBe(1);
-    expect(Levenshtein.distance("abc", "xyz")).toBeGreaterThan(0);
+    // Three substitutions to turn "abc" into "xyz".
+    expect(Levenshtein.distance("abc", "xyz")).toBe(3);
     expect(Levenshtein.distance("a", "abcdefghij")).toBe(9);
+    // Symmetric.
+    expect(Levenshtein.distance("kitten", "sitting")).toBe(3);
+    expect(Levenshtein.distance("sitting", "kitten")).toBe(3);
+    // Empty input.
+    expect(Levenshtein.distance("", "")).toBe(0);
+    expect(Levenshtein.distance("", "abc")).toBe(3);
+    expect(Levenshtein.distance("abc", "")).toBe(3);
   });
 
-  it("matches upstream Levenshtein ratio examples", () => {
+  it("matches upstream Levenshtein ratio examples exactly", () => {
     expect(Levenshtein.ratio("hello", "hello")).toBe(1);
-    expect(Levenshtein.ratio("hello", "helo")).toBeGreaterThan(0);
-    expect(Levenshtein.ratio("hello", "helo")).toBeLessThan(1);
-    expect(Levenshtein.ratio("abc", "xyz")).toBeGreaterThanOrEqual(0);
-    expect(Levenshtein.ratio("abc", "xyz")).toBeLessThan(1);
+    // 1 - distance/maxLength: 1 - 1/5 = 0.8
+    expect(Levenshtein.ratio("hello", "helo")).toBeCloseTo(0.8, 14);
+    // 1 - 3/3 = 0 — completely disjoint, each char substituted.
+    expect(Levenshtein.ratio("abc", "xyz")).toBe(0);
+    // 1 - 3/7
+    expect(Levenshtein.ratio("kitten", "sitting")).toBeCloseTo(1 - 3 / 7, 14);
+    // Empty pair is the identity at ratio 1 by definition (length === 0).
+    expect(Levenshtein.ratio("", "")).toBe(1);
   });
 });
 

@@ -105,6 +105,28 @@ See `docs/migration-bobbin-0.6.md` for the migration recipe.
   immediately surfaced two stale `lan: "en"` calls in
   `scripts/benchmark.ts` and `scripts/benchmark-datasets.ts` that were
   previously missed during the 0.6 alias removal.
+- Documentation pass: removed an empty `## Usage` heading in README,
+  refreshed `docs/architecture.md` (alias-handling wording, four-map
+  `SimilarityCache` description, complete Node-only-surfaces list,
+  `bundle-leak-detector.ts` in the module map), and added the
+  document-helper language-precedence rule + runtime legacy-key
+  rejection note to `docs/api-reference.md`.
+- Test-quality pass: `test/edge-compatibility.test.ts` now uses the
+  shared `FORBIDDEN_BUILTIN_NAMES` list (was 4 names, now 17) and
+  pattern-matches `import`, `require`, and dynamic-import statements;
+  `test/cli.test.ts` PBT assertions now check the actual `CliArgs`
+  shape, error-message format, and that every `runCli` invocation
+  emits at least one stdout/stderr line; `test/reference.test.ts`
+  Levenshtein helper tests assert exact distances/ratios instead of
+  `> 0` / `< 1`; `test/strategies.test.ts` keyword-scorer test verifies
+  the comparator is honored at every position; `test/dedup-boundaries.test.ts`
+  asserts the dedup strategy receives the accepted entry as its right
+  argument; `test/keyword-extractor-defaults.test.ts` end-to-end test
+  checks score-ascending and presence of an expected proper-noun keyword;
+  `test/golden-fixtures.test.ts` discovery test pins the exact fixture
+  list; `test/features-filter.test.ts` baseline asserts the proper-noun
+  phrase ranks in the top-3; `test/similarity-cache-isolation.test.ts`
+  cache-state assertions tightened from `> 0` to exact entry counts.
 - README and api-reference rewritten for the four-map `SimilarityCache`
   (added `jaro`) and updated multilingual limitation wording to reflect
   the actual residual drift instead of "broad multilingual parity

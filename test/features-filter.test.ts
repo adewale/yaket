@@ -7,9 +7,12 @@ const text = "Cloudflare Workers run JavaScript at the edge. Modern edge runtime
 describe("YAKE feature-filter option", () => {
   it("default features=null computes the full YAKE score", () => {
     const baseline = extractKeywordDetails(text, { language: "en", n: 2, top: 10 });
-    expect(baseline.length).toBeGreaterThan(0);
+    expect(baseline.length).toBeLessThanOrEqual(10);
+    expect(baseline.length).toBeGreaterThanOrEqual(5);
     // All scores are positive and finite under the full feature set.
     expect(baseline.every((entry) => entry.score > 0 && Number.isFinite(entry.score))).toBe(true);
+    // Defaults must put the strong proper-noun phrase near the top.
+    expect(baseline.slice(0, 3).map((entry) => entry.normalizedKeyword)).toContain("cloudflare workers");
   });
 
   it("features=[] produces a different ranking than the default features=null", () => {

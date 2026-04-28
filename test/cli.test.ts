@@ -147,17 +147,36 @@ describe("cli", () => {
     expect(formatCliOutput([["hello", 0.1]], true)).toContain("hello");
   });
 
-  it("never throws while parsing arbitrary argv", () => {
+  it("never throws while parsing arbitrary argv and always returns a well-shaped CliArgs", () => {
     fc.assert(
       fc.property(fc.array(argvToken, { minLength: 0, maxLength: 20 }), (argv) => {
         const args = parseCliArgs(argv);
-        expect(args.parseErrors.length).toBeGreaterThanOrEqual(0);
+
+        // Every CliArgs invariant: required keys present and well-typed.
+        expect(typeof args.verbose).toBe("boolean");
+        expect(typeof args.help).toBe("boolean");
+        expect(Array.isArray(args.parseErrors)).toBe(true);
+        // Every parse error must be a non-empty string with a recognizable
+        // structure (`--<flag> ...` or `-<short> ...`). Random argv must not
+        // produce malformed error strings.
+        for (const error of args.parseErrors) {
+          expect(typeof error).toBe("string");
+          expect(error.length).toBeGreaterThan(0);
+          expect(error).toMatch(/^-/u);
+        }
+        // Numeric fields are either undefined or finite numbers (never NaN).
+        for (const key of ["ngramSize", "dedupLim", "windowSize", "top"] as const) {
+          const value = args[key];
+          if (value !== undefined) {
+            expect(typeof value).toBe("number");
+          }
+        }
       }),
       { numRuns: 200 },
     );
   });
 
-  it("never throws while running arbitrary argv with stubbed dependencies", () => {
+  it("never throws while running arbitrary argv with stubbed dependencies, only emits exit codes 0 or 1, and always emits at least one output line", () => {
     fc.assert(
       fc.property(fc.array(argvToken, { minLength: 0, maxLength: 20 }), (argv) => {
         const stdout: string[] = [];
@@ -170,8 +189,17 @@ describe("cli", () => {
           stderr: (message) => stderr.push(message),
         });
 
+        // The CLI is a one-shot command: exit code is 0 (success) or 1
+        // (validation/IO failure). Anything else is a regression.
         expect([0, 1]).toContain(exitCode);
-        expect(stdout.length + stderr.length).toBeGreaterThanOrEqual(0);
+        // Either path must produce at least one output line — either the
+        // results / help text on stdout or an error message on stderr.
+        // A silent run would mean the user sees nothing and is a bug.
+        expect(stdout.length + stderr.length).toBeGreaterThanOrEqual(1);
+        // All outputs are strings.
+        for (const line of [...stdout, ...stderr]) {
+          expect(typeof line).toBe("string");
+        }
       }),
       { numRuns: 200 },
     );

@@ -89,14 +89,17 @@ Most commonly used fields:
 | `tokenizer` | override only the tokenizer | bundled |
 | `similarityCache` | isolated cache for `seqm`, `levs`, and `jaro` memoization | shared module-level default |
 
-`KeywordExtractorOptions` is exported as an alias for `YakeOptions` so
-existing imports keep compiling. `dedupFunc` now throws on unknown values
-instead of silently aliasing them.
+`KeywordExtractorOptions` is exported as an *import-compatible* alias for
+`YakeOptions` (structurally identical). It is not value-compatible: the
+constructor rejects the legacy snake_case keys at runtime, and `dedupFunc`
+throws on unknown values instead of silently aliasing them. Both error
+messages name the offending key/value and the canonical replacement.
 
 Yaket 0.6 dropped the legacy snake_case aliases (`lan`, `dedup_lim`,
 `dedup_func`, `windowsSize`, `window_size`), the `extract_keywords()` method,
 and the dedup-function value aliases (`leve`, `jaro_winkler`,
-`sequencematcher`). Use the canonical camelCase names in the table above.
+`sequencematcher`). Passing any of these — even via a plain JS object,
+JSON payload, or class on the prototype chain — now throws a `TypeError`.
 See `docs/migration-bobbin-0.6.md` for the migration recipe.
 
 ## Adapters
@@ -119,6 +122,11 @@ type BobbinYakeResult = {
 ### `extractFromDocumentStream(documents, options?)`
 
 Use these for ingestion pipelines, indexing jobs, and ETL-style processing.
+
+All three resolve language with the same precedence rule:
+`options.language ?? document.language ?? "en"`. The explicit option always
+wins. The hook contexts (`beforeExtractText`, `afterExtractKeywords`)
+report exactly the language the underlying extractor used.
 
 `DocumentExtractionOptions` also supports:
 

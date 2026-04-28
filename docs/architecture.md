@@ -61,7 +61,7 @@ The same architecture rendered for environments without Mermaid support.
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                EXTRACTION CORE (edge-safe — no fs/path/child_process)           │
 │                                                                                 │
-│   src/KeywordExtractor.ts  ── option normalization, alias handling,             │
+│   src/KeywordExtractor.ts  ── option normalization, runtime guards,             │
 │   ┌──────────────────┐         result shaping, dedup orchestration,             │
 │   │ KeywordExtractor │         extension-hook wiring                            │
 │   └────────┬─────────┘                                                          │
@@ -92,7 +92,8 @@ The same architecture rendered for environments without Mermaid support.
 │   │   Dedup strategy    │  seqm  (default, segtok-flavored heuristic)           │
 │   │                     │  levs  (Levenshtein)                                  │
 │   │                     │  jaro  (Jaro)                                         │
-│   └──────────┬──────────┘  + bounded similarity caches                          │
+│   └──────────┬──────────┘  + bounded SimilarityCache (distance, ratio,          │
+│                              sequence, jaro)                                    │
 │              ▼                                                                  │
 │       Final ranked keywords                                                     │
 └────────────────────────────────────┬────────────────────────────────────────────┘
@@ -147,7 +148,7 @@ The same architecture rendered for environments without Mermaid support.
 
 Runtime boundary key:
   EDGE-SAFE   no fs / path / child_process / native bindings
-  NODE-ONLY   src/cli.ts, scripts/benchmark.ts (kept out of import graph)
+  NODE-ONLY   src/cli.ts, all scripts/*.ts (kept out of the public import graph)
 ```
 
 ## Module Map
@@ -171,6 +172,7 @@ Runtime boundary key:
 | `scripts/benchmark-multilingual.ts` | Per-language Yaket-vs-Python YAKE parity benchmark (Node-only) |
 | `scripts/benchmark-datasets.ts` | Inspec/SemEval-style dataset benchmark (Node-only) |
 | `scripts/bundle-size.ts` | Worker-target bundle-size reporter (esbuild, Node-only) |
+| `scripts/bundle-leak-detector.ts` | Shared forbidden-built-in import detector (Node-only) |
 
 ## Extraction Flow
 
@@ -195,10 +197,14 @@ The extraction core is intentionally free of Node-only runtime dependencies. Tha
 
 ### Node-only surfaces
 
-These remain optional and separate:
+These remain optional and separate from the published extraction core:
 
-- `src/cli.ts`
-- `scripts/benchmark.ts`
+- `src/cli.ts` — Node CLI entry, the only Node-only file inside `src/`
+- `scripts/benchmark.ts` — Komoroske-corpus benchmark
+- `scripts/benchmark-multilingual.ts` — per-language Yaket vs Python YAKE parity benchmark
+- `scripts/benchmark-datasets.ts` — Inspec / SemEval-style dataset benchmark
+- `scripts/bundle-size.ts` — worker-target bundle-size reporter
+- `scripts/bundle-leak-detector.ts` — shared forbidden-built-in detector used by both `scripts/bundle-size.ts` and `test/bundle-size.test.ts`
 
 ## Extension Points
 
@@ -209,7 +215,7 @@ These remain optional and separate:
 - `Tokenizer` (just tokenize, override one half independently)
 - `StopwordProvider`
 - `SimilarityStrategy`
-- `SimilarityCache` (configurable bounded cache for `seqm` / `levs` memoization)
+- `SimilarityCache` (configurable bounded cache for the `seqm`, `levs`, and `jaro` paths — `distance`, `ratio`, `sequence`, and `jaro` maps)
 - `CandidateNormalizer`
 - `Lemmatizer`
 - `SingleWordScorer`

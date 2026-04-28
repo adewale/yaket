@@ -66,12 +66,13 @@ describe("configurable similarity caches", () => {
     clearSimilarityCaches();
     sequenceSimilarity("module", "module"); // populate default
     const moduleStatsBefore = getSimilarityCacheStats();
+    expect(moduleStatsBefore.sequence).toBe(1);
 
     const isolated = createSimilarityCache();
     sequenceSimilarity("isolated", "isolated", isolated);
     jaroSimilarity("isolated-jaro", "isolated-jaroz", isolated);
-    expect(isolated.stats().sequence).toBeGreaterThan(0);
-    expect(isolated.stats().jaro).toBeGreaterThan(0);
+    // Each unique pair adds exactly one entry to its bucket.
+    expect(isolated.stats()).toEqual({ distance: 0, ratio: 0, sequence: 1, jaro: 1 });
 
     isolated.clear();
     expect(isolated.stats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
@@ -119,7 +120,12 @@ describe("configurable similarity caches", () => {
     }).extractKeywords(text);
 
     expect(result).toEqual(baseline);
-    expect(isolated.stats().sequence).toBeGreaterThan(0);
+    // Real seqm dedup over the repetitive input must produce at least a few
+    // cached pairs (each consecutive comparison is recorded once).
+    expect(isolated.stats().sequence).toBeGreaterThanOrEqual(2);
+    expect(isolated.stats().distance).toBe(0);
+    expect(isolated.stats().ratio).toBe(0);
+    expect(isolated.stats().jaro).toBe(0);
     // Module-level cache must remain untouched when an isolated cache is provided.
     expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
   });

@@ -107,16 +107,34 @@ describe("pluggable strategies", () => {
     expect(calls).toEqual(["co-founder:co-founder"]);
   });
 
-  it("supports custom keyword scorers", () => {
-    const details = extractKeywordDetails("agent swarms coordinate distributed teams", {
+  it("supports custom keyword scorers — output ordering follows the user-supplied comparator", () => {
+    const text = "agent swarms coordinate distributed teams";
+    const baseline = extractKeywordDetails(text, { language: "en", n: 2, top: 10 });
+    const reordered = extractKeywordDetails(text, {
       language: "en",
       n: 2,
-      top: 5,
+      top: 10,
       keywordScorer(candidates) {
-        return [...candidates].sort((left, right) => right.ngramSize - left.ngramSize || left.score - right.score);
+        // ngramSize DESC, then score ASC.
+        return [...candidates].sort(
+          (left, right) => right.ngramSize - left.ngramSize || left.score - right.score,
+        );
       },
     });
 
-    expect(details[0]!.ngramSize).toBeGreaterThanOrEqual(details[details.length - 1]!.ngramSize);
+    // Output is a permutation of the same candidate set (scorer doesn't add/remove).
+    expect(reordered.map((entry) => entry.normalizedKeyword).sort()).toEqual(
+      baseline.map((entry) => entry.normalizedKeyword).sort(),
+    );
+    // The custom comparator must produce a globally non-increasing ngramSize sequence.
+    for (let index = 1; index < reordered.length; index += 1) {
+      expect(reordered[index]!.ngramSize).toBeLessThanOrEqual(reordered[index - 1]!.ngramSize);
+    }
+    // Within each ngramSize bucket the comparator orders by score ASC.
+    for (let index = 1; index < reordered.length; index += 1) {
+      if (reordered[index]!.ngramSize === reordered[index - 1]!.ngramSize) {
+        expect(reordered[index]!.score).toBeGreaterThanOrEqual(reordered[index - 1]!.score);
+      }
+    }
   });
 });

@@ -42,7 +42,9 @@ describe("dedupLim threshold behavior", () => {
     const result = extractor.extractKeywords(repetitiveText);
     // With the strategy returning exactly dedupLim, the strict `>` keeps
     // every candidate (similarity is not strictly greater than the limit).
-    expect(calls.length).toBeGreaterThan(0);
+    // The dedupStrategy is consulted for every selected/candidate pair.
+    expect(calls.length).toBeGreaterThanOrEqual(result.length - 1);
+    expect(calls.every(([left, right]) => left !== right)).toBe(true);
     const baseline = extractKeywords(repetitiveText, { language: "en", n: 2, top: 10, dedupLim: 1 });
     expect(result.map(([keyword]) => keyword)).toEqual(baseline.map(([keyword]) => keyword));
   });
@@ -62,8 +64,15 @@ describe("dedupLim threshold behavior", () => {
     const result = extractor.extractKeywords(repetitiveText);
     // Every subsequent candidate after the first is at similarity 1 > 0.5,
     // so dedup drops them all. Result must contain exactly one entry.
-    expect(calls.length).toBeGreaterThan(0);
+    // The strategy must have been consulted at least once per dropped
+    // candidate.
     expect(result).toHaveLength(1);
+    expect(calls.length).toBeGreaterThanOrEqual(1);
+    // All dedup calls compare a candidate against the single accepted entry.
+    const accepted = result[0]![0];
+    for (const [, right] of calls) {
+      expect(right).toBe(accepted.toLowerCase());
+    }
   });
 });
 

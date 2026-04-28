@@ -80,8 +80,6 @@ The package ships ESM output and exposes Worker/browser-safe entry points:
 - `@ade_oshineye/yaket/browser`
 - `@ade_oshineye/yaket/worker`
 
-## Usage
-
 ## Algorithm Summary
 
 At a high level, Yaket:
