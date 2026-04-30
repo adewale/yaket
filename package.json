@@ -42,6 +42,7 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "benchmark": "tsx scripts/benchmark.ts",
+    "benchmark:core": "tsx scripts/benchmark-core.ts",
     "benchmark:write": "tsx scripts/benchmark.ts --write",
     "benchmark:datasets": "tsx scripts/benchmark-datasets.ts",
     "benchmark:multilingual": "tsx scripts/benchmark-multilingual.ts",

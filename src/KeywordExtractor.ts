@@ -1,41 +1,12 @@
 import { ComposedWord } from "./ComposedWord.js";
+import { parseYakeOptions, type YakeConfig } from "./config.js";
 import { DataCore } from "./DataCore.js";
-import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
 import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SentenceSplitter, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor, Tokenizer } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity, type SimilarityCache } from "./similarity.js";
 import { splitSentences as defaultSplitSentences, tokenizeWords as defaultTokenizeWords } from "./utils.js";
 
 type DedupFunction = (cand1: string, cand2: string) => number;
-
-const VALID_DEDUP_FUNC_NAMES = new Set(["seqm", "levs", "jaro"]);
-
-/**
- * Snake_case keys removed in 0.6. Reject these at runtime so callers that
- * construct options from a plain JS object or JSON payload (where the
- * TypeScript guard does not apply) get a loud error instead of silent
- * fallback to defaults.
- */
-const REMOVED_OPTION_KEYS: ReadonlyArray<[string, string]> = [
-  ["lan", "language"],
-  ["dedup_lim", "dedupLim"],
-  ["dedup_func", "dedupFunc"],
-  ["windowsSize", "windowSize"],
-  ["window_size", "windowSize"],
-];
-
-function assertNoRemovedOptionKeys(options: object): void {
-  for (const [legacy, canonical] of REMOVED_OPTION_KEYS) {
-    // Use `in` so inherited legacy keys (e.g. on the prototype of a class
-    // that mirrors Python YAKE's option shape) are also caught — not just
-    // own enumerable properties on plain JS objects.
-    if (legacy in options) {
-      throw new TypeError(
-        `Yaket option "${legacy}" was removed in 0.6; use "${canonical}" instead. See docs/migration-bobbin-0.6.md.`,
-      );
-    }
-  }
-}
 
 /**
  * Public configuration for Yaket extraction.
@@ -84,18 +55,8 @@ export type KeywordExtractorOptions = YakeOptions;
  */
 export type KeywordScore = [keyword: string, score: number];
 
-interface NormalizedConfig {
-  language: string;
-  n: number;
-  dedupLim: number;
-  dedupFunc: string;
-  windowSize: number;
-  top: number;
-  features: string[] | null;
-}
-
 export class KeywordExtractor {
-  readonly config: NormalizedConfig;
+  readonly config: YakeConfig;
   readonly stopwordSet: Set<string>;
   readonly textProcessor?: TextProcessor;
   readonly lemmatizer: Lemmatizer | null;
@@ -111,21 +72,16 @@ export class KeywordExtractor {
    * Creates a reusable keyword extractor with normalized options.
    */
   constructor(options: KeywordExtractorOptions = {}) {
-    assertNoRemovedOptionKeys(options);
+    const parsedConfig = parseYakeOptions(options);
+    if (!parsedConfig.ok) {
+      throw new TypeError(parsedConfig.error.message);
+    }
 
     if (typeof options.lemmatizer === "string") {
       throw new TypeError("String lemmatizer backends such as 'spacy' or 'nltk' are not implemented in Yaket; provide a hook object with a lemmatize() method instead.");
     }
 
-    this.config = {
-      language: options.language ?? DEFAULT_YAKE_OPTIONS.language,
-      n: options.n ?? DEFAULT_YAKE_OPTIONS.n,
-      dedupLim: options.dedupLim ?? DEFAULT_YAKE_OPTIONS.dedupLim,
-      dedupFunc: options.dedupFunc ?? DEFAULT_YAKE_OPTIONS.dedupFunc,
-      windowSize: options.windowSize ?? DEFAULT_YAKE_OPTIONS.windowSize,
-      top: options.top ?? DEFAULT_YAKE_OPTIONS.top,
-      features: options.features ?? DEFAULT_YAKE_OPTIONS.features,
-    };
+    this.config = parsedConfig.value;
 
     this.textProcessor = composeTextProcessor(options.textProcessor, options.sentenceSplitter, options.tokenizer);
     this.lemmatizer = options.lemmatizer ?? null;
@@ -236,13 +192,7 @@ export class KeywordExtractor {
   }
 
   private getDedupFunction(funcName: string): DedupFunction {
-    const lower = funcName.toLowerCase();
-    if (!VALID_DEDUP_FUNC_NAMES.has(lower)) {
-      throw new TypeError(
-        `Unknown dedupFunc "${funcName}"; expected one of "seqm", "levs", "jaro".`,
-      );
-    }
-    switch (lower) {
+    switch (funcName) {
       case "jaro":
         return this.jaro.bind(this);
       case "seqm":
