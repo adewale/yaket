@@ -20,14 +20,9 @@ export class ComposedWord {
   /**
    * Creates a composed-word candidate from token-tag-term tuples.
    */
-  constructor(terms: NormalizedCandidateTerm[] | null) {
-    if (terms == null) {
-      this.kw = "";
-      this.uniqueKw = "";
-      this.size = 0;
-      this.terms = [];
-      this.startOrEndStopwords = true;
-      return;
+  constructor(terms: NormalizedCandidateTerm[]) {
+    if (terms.length === 0 || !terms.some(([, , term]) => term != null)) {
+      throw new TypeError("ComposedWord requires at least one candidate term that exists in the document term index");
     }
 
     this.tags.add(terms.map(([tag]) => tag).join(""));

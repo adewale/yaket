@@ -5,7 +5,7 @@ Verified to contain no Node built-ins from the shared forbidden list (`scripts/b
 
 | Entry | Minified | Bytes | Gzipped |
 |---|---|---:|---:|
-| `src/index.ts` | yes | 152.5 KiB | 43.8 KiB |
-| `src/index.ts` | no | 190.0 KiB | 48.6 KiB |
+| `src/index.ts` | yes | 152.7 KiB | 43.9 KiB |
+| `src/index.ts` | no | 190.5 KiB | 48.7 KiB |
 
 These numbers include the 34-language bundled stopword set. The bundled stopword text is the dominant contributor; if a consumer needs a smaller edge payload they can ship a single-language `StopwordProvider` and tree-shake the rest.

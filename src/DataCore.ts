@@ -76,6 +76,19 @@ export class DataCore {
    * Builds a composed-word candidate from raw text.
    */
   buildCandidate(candidateString: string): ComposedWord {
+    const candidate = this.tryBuildCandidate(candidateString);
+    if (candidate == null) {
+      throw new TypeError("Cannot build a candidate that has no terms in the document term index");
+    }
+
+    return candidate;
+  }
+
+  /**
+   * Builds a composed-word candidate from raw text, or returns null when the
+   * raw text has no terms that exist in this document's term index.
+   */
+  tryBuildCandidate(candidateString: string): ComposedWord | null {
     const tokenizedWords = this.textProcessor.tokenizeWords(candidateString)
       .filter((token) => !((token.startsWith("'") || token.startsWith("’")) && token.length > 1) && token.length > 0);
 
@@ -93,7 +106,7 @@ export class DataCore {
     }
 
     if (!candidateTerms.some(([, , term]) => term != null)) {
-      return new ComposedWord(null);
+      return null;
     }
 
     return new ComposedWord(candidateTerms);

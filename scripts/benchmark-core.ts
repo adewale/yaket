@@ -1,6 +1,6 @@
 import { performance } from "node:perf_hooks";
 
-import { extractKeywordDetails } from "../src/index.js";
+import { DataCore, extractKeywordDetails, loadStopwords } from "../src/index.js";
 
 const ITERATIONS = 200;
 const SAMPLE_TEXTS = [
@@ -11,9 +11,14 @@ const SAMPLE_TEXTS = [
 ];
 
 function main(): void {
-  const durations: number[] = [];
+  const extractionDurations: number[] = [];
+  const dataCoreDurations: number[] = [];
+  const singleFeatureDurations: number[] = [];
+  const multiFeatureDurations: number[] = [];
+  const stopwords = loadStopwords("en");
   const heapStart = process.memoryUsage().heapUsed;
   let keywordCount = 0;
+  let candidateCount = 0;
 
   // Warm up V8 and module-level caches before measuring.
   for (const text of SAMPLE_TEXTS) {
@@ -22,19 +27,31 @@ function main(): void {
 
   for (let index = 0; index < ITERATIONS; index += 1) {
     const text = SAMPLE_TEXTS[index % SAMPLE_TEXTS.length]!;
-    const start = performance.now();
+
+    const extractionStart = performance.now();
     keywordCount += extractKeywordDetails(text, { language: "en", n: 3, top: 10 }).length;
-    durations.push(performance.now() - start);
+    extractionDurations.push(performance.now() - extractionStart);
+
+    const dataCoreStart = performance.now();
+    const core = new DataCore(text, stopwords, { language: "en", n: 3, windowSize: 1 });
+    dataCoreDurations.push(performance.now() - dataCoreStart);
+    candidateCount += core.candidates.size;
+
+    const singleStart = performance.now();
+    core.buildSingleTermsFeatures(null);
+    singleFeatureDurations.push(performance.now() - singleStart);
+
+    const multiStart = performance.now();
+    core.buildMultTermsFeatures(null);
+    multiFeatureDurations.push(performance.now() - multiStart);
   }
 
   const heapDeltaKb = Math.max(process.memoryUsage().heapUsed - heapStart, 0) / 1024;
-  durations.sort((left, right) => left - right);
-
-  const totalMs = durations.reduce((sum, value) => sum + value, 0);
-  const averageMs = totalMs / durations.length;
-  const p50Ms = percentile(durations, 0.50);
-  const p95Ms = percentile(durations, 0.95);
-  const docsPerSecond = ITERATIONS / (totalMs / 1000);
+  const extraction = summarize(extractionDurations);
+  const dataCore = summarize(dataCoreDurations);
+  const singleFeatures = summarize(singleFeatureDurations);
+  const multiFeatures = summarize(multiFeatureDurations);
+  const docsPerSecond = ITERATIONS / (extraction.totalMs / 1000);
 
   process.stdout.write([
     "# Core Benchmark",
@@ -43,15 +60,54 @@ function main(): void {
     "",
     `- Iterations: ${ITERATIONS}`,
     `- Sample documents: ${SAMPLE_TEXTS.length}`,
-    `- Total duration (ms): ${totalMs.toFixed(2)}`,
-    `- Average duration (ms): ${averageMs.toFixed(3)}`,
-    `- p50 duration (ms): ${p50Ms.toFixed(3)}`,
-    `- p95 duration (ms): ${p95Ms.toFixed(3)}`,
     `- Documents/sec: ${docsPerSecond.toFixed(2)}`,
     `- Heap delta (KB): ${heapDeltaKb.toFixed(2)}`,
     `- Keywords produced, including warmup: ${keywordCount}`,
+    `- DataCore candidates observed: ${candidateCount}`,
+    "",
+    "## End-to-end extraction",
+    renderSummary(extraction),
+    "",
+    "## Phase timings",
+    "",
+    "| Phase | Total ms | Avg ms | p50 ms | p95 ms |",
+    "|---|---:|---:|---:|---:|",
+    phaseRow("DataCore build", dataCore),
+    phaseRow("Single-term features", singleFeatures),
+    phaseRow("Multi-term features", multiFeatures),
     "",
   ].join("\n"));
+}
+
+interface TimingSummary {
+  readonly totalMs: number;
+  readonly averageMs: number;
+  readonly p50Ms: number;
+  readonly p95Ms: number;
+}
+
+function summarize(values: number[]): TimingSummary {
+  const sorted = [...values].sort((left, right) => left - right);
+  const totalMs = sorted.reduce((sum, value) => sum + value, 0);
+  return {
+    totalMs,
+    averageMs: totalMs / sorted.length,
+    p50Ms: percentile(sorted, 0.50),
+    p95Ms: percentile(sorted, 0.95),
+  };
+}
+
+function renderSummary(summary: TimingSummary): string {
+  return [
+    `- Total duration (ms): ${summary.totalMs.toFixed(2)}`,
+    `- Average duration (ms): ${summary.averageMs.toFixed(3)}`,
+    `- p50 duration (ms): ${summary.p50Ms.toFixed(3)}`,
+    `- p95 duration (ms): ${summary.p95Ms.toFixed(3)}`,
+  ].join("\n");
+}
+
+function phaseRow(label: string, summary: TimingSummary): string {
+  return `| ${label} | ${summary.totalMs.toFixed(2)} | ${summary.averageMs.toFixed(3)} | ${summary.p50Ms.toFixed(3)} | ${summary.p95Ms.toFixed(3)} |`;
 }
 
 function percentile(sorted: readonly number[], quantile: number): number {

@@ -19,6 +19,9 @@ Release hardening and dependency refresh.
 - Benchmark scripts write to stdout by default; tracked benchmark reports are
   refreshed only via explicit `benchmark:write` scripts, which require Python
   YAKE reference output.
+- Started the correctness-by-construction refactor with `parseYakeOptions()` /
+  `YakeConfig`, candidate-construction tests, and a local `benchmark:core`
+  with phase timings.
 
 ### Fixed
 
@@ -27,6 +30,8 @@ Release hardening and dependency refresh.
   `DEFAULT_YAKE_OPTIONS`.
 - Similarity cache keys no longer embed a literal NUL byte in `src/similarity.ts`,
   so text tooling no longer treats the file as binary.
+- Invalid raw candidates no longer produce an empty `ComposedWord` sentinel;
+  `tryBuildCandidate()` returns `null` and `buildCandidate()` throws.
 
 ## 0.6.0 - 2026-04-25
 
