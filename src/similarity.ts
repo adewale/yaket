@@ -327,7 +327,7 @@ function matrixDistance(seq1: string, seq2: string): number {
   return previousRow[seq2.length]!;
 }
 
-function trigrams(chars: string[]): Set<string> {
+export function trigrams(chars: string[]): Set<string> {
   const result = new Set<string>();
 
   for (let index = 0; index <= chars.length - 3; index += 1) {
@@ -337,7 +337,7 @@ function trigrams(chars: string[]): Set<string> {
   return result;
 }
 
-function aggressivePreFilter(cand1: string, cand2: string): boolean {
+export function aggressivePreFilter(cand1: string, cand2: string): boolean {
   if (cand1 === cand2) {
     return true;
   }
@@ -369,7 +369,7 @@ function aggressivePreFilter(cand1: string, cand2: string): boolean {
   return true;
 }
 
-function countSpaces(value: string): number {
+export function countSpaces(value: string): number {
   let count = 0;
   for (const char of value) {
     if (char === " ") {

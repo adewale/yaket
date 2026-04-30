@@ -3,6 +3,32 @@ import { describe, expect, it } from "vitest";
 import { clearSimilarityCaches, createSimilarityCache, extractKeywords, getSimilarityCacheStats, jaroSimilarity, Levenshtein, sequenceSimilarity } from "../src/index.js";
 
 describe("similarity cache diagnostics", () => {
+  it("validates isolated cache size options", () => {
+    expect(() => createSimilarityCache({ maxSize: 0 })).toThrow(/positive integer/);
+    expect(() => createSimilarityCache({ maxSize: 1.5 })).toThrow(/positive integer/);
+    expect(createSimilarityCache({ maxSize: 1 }).maxSize).toBe(1);
+    expect(createSimilarityCache().maxSize).toBe(20_000);
+  });
+
+  it("uses existing cache entries before recomputing similarities", () => {
+    const cache = createSimilarityCache();
+    cache.ratio.set("left\0right", 0.123);
+    cache.distance.set("left\0right", 123);
+    cache.sequence.set("left\0right", 0.456);
+    cache.jaro.set("left\0right", 0.789);
+
+    expect(Levenshtein.ratio("left", "right", cache)).toBe(0.123);
+    expect(Levenshtein.distance("left", "right", cache)).toBe(123);
+    expect(sequenceSimilarity("left", "right", cache)).toBe(0.456);
+    expect(jaroSimilarity("left", "right", cache)).toBe(0.789);
+  });
+
+  it("canonicalizes reversed cache keys", () => {
+    const cache = createSimilarityCache();
+    cache.distance.set("a\0b", 7);
+    expect(Levenshtein.distance("b", "a", cache)).toBe(7);
+  });
+
   it("reports and clears cache usage", () => {
     clearSimilarityCaches();
     expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
@@ -45,6 +71,9 @@ describe("similarity cache diagnostics", () => {
     expect(jaroSimilarity("abc", "xyz")).toBe(0);
     expect(jaroSimilarity("", "abc")).toBe(0);
     expect(jaroSimilarity("abc", "")).toBe(0);
+    expect(jaroSimilarity("", "")).toBe(1);
+    expect(jaroSimilarity("ab", "ac")).toBeCloseTo(2 / 3, 12);
+    expect(jaroSimilarity("CRATE", "TRACE")).toBeCloseTo(0.733333333333, 10);
   });
 
   it("pins sequence prefilter and scoring branch behavior", () => {
@@ -53,10 +82,16 @@ describe("similarity cache diagnostics", () => {
     expect(sequenceSimilarity("abc", "abx")).toBeCloseTo(0.5, 12);
     expect(sequenceSimilarity("abc", "abcd")).toBe(0);
     expect(sequenceSimilarity("abcd", "abxd")).toBeCloseTo(0.6, 12);
+    expect(sequenceSimilarity("abcde", "abxde")).toBeCloseTo(0.43333333333333335, 12);
     expect(sequenceSimilarity("alpha beta", "alpha gamma")).toBeCloseTo(0.5265734265734265, 12);
     expect(sequenceSimilarity("alpha beta", "alpha beta gamma")).toBeCloseTo(2 / 3, 12);
+    expect(sequenceSimilarity("alpha beta", "alpha")).toBeCloseTo(0.5, 12);
+    expect(sequenceSimilarity("alpha", "alpha beta")).toBeCloseTo(0.5, 12);
     expect(sequenceSimilarity("machine learning", "deep learning")).toBe(0);
     expect(sequenceSimilarity("foo  bar", "foo bar")).toBe(1);
+    expect(sequenceSimilarity("foo   bar", "foo bar")).toBe(0);
+    expect(sequenceSimilarity("ab123456z", "abcdefghz")).toBeCloseTo(0.34, 12);
+    expect(sequenceSimilarity("ab123456789z", "ababcdefghiz")).toBe(0);
   });
 
   it("uses unambiguous cache keys for adjacent string pairs", () => {
