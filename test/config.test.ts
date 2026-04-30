@@ -36,4 +36,25 @@ describe("parseYakeOptions", () => {
     expect(parsed.error.message).toMatch(/sequencematcher/);
     expect(parsed.error.message).toMatch(/seqm/);
   });
+
+  it("rejects non-positive or non-integer count options at the config boundary", () => {
+    for (const options of [{ n: 0 }, { n: 1.5 }, { top: 0 }, { windowSize: -1 }]) {
+      const parsed = parseYakeOptions(options);
+      expect(parsed.ok).toBe(false);
+      if (parsed.ok) return;
+      expect(parsed.error.message).toMatch(/positive integer/);
+    }
+  });
+
+  it("rejects invalid dedupLim values at the config boundary while keeping >=1 as the no-dedup mode", () => {
+    for (const dedupLim of [-0.1, NaN, Infinity]) {
+      const parsed = parseYakeOptions({ dedupLim });
+      expect(parsed.ok).toBe(false);
+      if (parsed.ok) return;
+      expect(parsed.error.message).toMatch(/dedupLim/);
+    }
+
+    const noDedup = parseYakeOptions({ dedupLim: 1.5 });
+    expect(noDedup.ok).toBe(true);
+  });
 });

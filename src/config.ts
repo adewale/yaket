@@ -68,15 +68,29 @@ export function parseYakeOptions(options: KeywordExtractorOptions = {}): Result<
     };
   }
 
+  const n = options.n ?? DEFAULT_YAKE_OPTIONS.n;
+  const top = options.top ?? DEFAULT_YAKE_OPTIONS.top;
+  const windowSize = options.windowSize ?? DEFAULT_YAKE_OPTIONS.windowSize;
+  const dedupLim = options.dedupLim ?? DEFAULT_YAKE_OPTIONS.dedupLim;
+
+  const positiveIntegerError = firstPositiveIntegerError({ n, top, windowSize });
+  if (positiveIntegerError != null) {
+    return { ok: false, error: { message: positiveIntegerError } };
+  }
+
+  if (!Number.isFinite(dedupLim) || dedupLim < 0) {
+    return { ok: false, error: { message: `dedupLim must be a finite non-negative number, got ${String(dedupLim)}.` } };
+  }
+
   return {
     ok: true,
     value: {
       language: options.language ?? DEFAULT_YAKE_OPTIONS.language,
-      n: options.n ?? DEFAULT_YAKE_OPTIONS.n,
-      dedupLim: options.dedupLim ?? DEFAULT_YAKE_OPTIONS.dedupLim,
+      n,
+      dedupLim,
       dedupFunc,
-      windowSize: options.windowSize ?? DEFAULT_YAKE_OPTIONS.windowSize,
-      top: options.top ?? DEFAULT_YAKE_OPTIONS.top,
+      windowSize,
+      top,
       features: options.features ?? DEFAULT_YAKE_OPTIONS.features,
     },
   };
@@ -84,4 +98,14 @@ export function parseYakeOptions(options: KeywordExtractorOptions = {}): Result<
 
 function isDedupFunctionName(value: string): value is DedupFunctionName {
   return VALID_DEDUP_FUNC_NAMES.has(value as DedupFunctionName);
+}
+
+function firstPositiveIntegerError(values: Readonly<Record<"n" | "top" | "windowSize", number>>): string | null {
+  for (const [key, value] of Object.entries(values)) {
+    if (!Number.isInteger(value) || value < 1) {
+      return `${key} must be a positive integer, got ${String(value)}.`;
+    }
+  }
+
+  return null;
 }
