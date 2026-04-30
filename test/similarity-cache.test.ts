@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearSimilarityCaches, extractKeywords, getSimilarityCacheStats, jaroSimilarity, Levenshtein, sequenceSimilarity } from "../src/index.js";
+import { clearSimilarityCaches, createSimilarityCache, extractKeywords, getSimilarityCacheStats, jaroSimilarity, Levenshtein, sequenceSimilarity } from "../src/index.js";
 
 describe("similarity cache diagnostics", () => {
   it("reports and clears cache usage", () => {
@@ -43,6 +43,27 @@ describe("similarity cache diagnostics", () => {
     expect(jaroSimilarity("DIXON", "DICKSONX")).toBeCloseTo(0.7666666667, 10);
     expect(jaroSimilarity("JELLYFISH", "SMELLYFISH")).toBeCloseTo(0.8962962963, 10);
     expect(jaroSimilarity("abc", "xyz")).toBe(0);
+    expect(jaroSimilarity("", "abc")).toBe(0);
+    expect(jaroSimilarity("abc", "")).toBe(0);
+  });
+
+  it("pins sequence prefilter and scoring branch behavior", () => {
+    expect(sequenceSimilarity("abc", "abc")).toBe(1);
+    expect(sequenceSimilarity("abc", "def")).toBe(0);
+    expect(sequenceSimilarity("abc", "abx")).toBeCloseTo(0.5, 12);
+    expect(sequenceSimilarity("abc", "abcd")).toBe(0);
+    expect(sequenceSimilarity("abcd", "abxd")).toBeCloseTo(0.6, 12);
+    expect(sequenceSimilarity("alpha beta", "alpha gamma")).toBeCloseTo(0.5265734265734265, 12);
+    expect(sequenceSimilarity("alpha beta", "alpha beta gamma")).toBeCloseTo(2 / 3, 12);
+    expect(sequenceSimilarity("machine learning", "deep learning")).toBe(0);
+    expect(sequenceSimilarity("foo  bar", "foo bar")).toBe(1);
+  });
+
+  it("uses unambiguous cache keys for adjacent string pairs", () => {
+    const cache = createSimilarityCache();
+    expect(Levenshtein.distance("ab", "cd", cache)).toBe(2);
+    expect(Levenshtein.distance("abc", "d", cache)).toBe(3);
+    expect(cache.stats().distance).toBe(2);
   });
 
   it("remains deterministic regardless of cache warmness", () => {
