@@ -10,10 +10,10 @@
 
 | System | Duration (ms) | Heap Delta (KB) | Notes |
 |---|---:|---:|---|
-| Yaket | 42.97 | 9842.05 | ok |
-| Bobbin | 72.43 | 0.00 | ok |
-| TF-IDF | 638.89 | 0.00 | ok |
-| Python YAKE | 257.80 | 157.99 | ok |
+| Yaket | 63.03 | 0.00 | ok |
+| Bobbin | 102.98 | 8951.73 | ok |
+| TF-IDF | 979.07 | 8983.83 | ok |
+| Python YAKE | 233.28 | 151.96 | ok |
 
 ## Top Keywords
 
@@ -21,16 +21,16 @@
 
 | Rank | Keyword | Score |
 |---:|---|---:|
-| 1 | llms | 0.015475 |
-| 2 | human | 0.015598 |
-| 3 | things | 0.017475 |
-| 4 | loop | 0.022636 |
-| 5 | software | 0.022976 |
-| 6 | humans | 0.023397 |
-| 7 | api | 0.025098 |
-| 8 | agent | 0.026647 |
-| 9 | agent swarms | 0.029371 |
-| 10 | agents | 0.029608 |
+| 1 | llms | 0.015585 |
+| 2 | human | 0.015723 |
+| 3 | things | 0.017600 |
+| 4 | api | 0.021370 |
+| 5 | loop | 0.022803 |
+| 6 | software | 0.023133 |
+| 7 | humans | 0.023584 |
+| 8 | agent | 0.026840 |
+| 9 | agent swarms | 0.029799 |
+| 10 | agents | 0.029822 |
 
 ### Bobbin Baseline
 
@@ -55,12 +55,12 @@
 | 2 | fruit | 15.891952 |
 | 3 | human | 15.588311 |
 | 4 | software | 15.588311 |
-| 5 | loop | 15.171703 |
-| 6 | lumber | 14.259797 |
-| 7 | things | 14.000000 |
-| 8 | api | 13.950417 |
-| 9 | surface | 13.873118 |
-| 10 | process | 13.471228 |
+| 5 | api | 15.500463 |
+| 6 | loop | 15.171703 |
+| 7 | intelligence tokens | 14.259797 |
+| 8 | lumber | 14.259797 |
+| 9 | things | 14.000000 |
+| 10 | surface | 13.873118 |
 
 ### Python YAKE
 
