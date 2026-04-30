@@ -283,7 +283,7 @@ function toKeywordResult(candidate: ComposedWord): KeywordResult {
   };
 }
 
-function compareCandidates(left: ComposedWord, right: ComposedWord): number {
+export function compareCandidates(left: ComposedWord, right: ComposedWord): number {
   const scoreDelta = left.h - right.h;
   if (Math.abs(scoreDelta) > 1e-15) {
     return scoreDelta;
@@ -296,7 +296,7 @@ function compareCandidates(left: ComposedWord, right: ComposedWord): number {
   return left.order - right.order;
 }
 
-function isSlidingNgramTie(left: ComposedWord, right: ComposedWord): boolean {
+export function isSlidingNgramTie(left: ComposedWord, right: ComposedWord): boolean {
   if (left.size !== right.size || left.size < 3) {
     return false;
   }
