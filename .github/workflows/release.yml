@@ -1,4 +1,4 @@
-name: Release
+name: Release Validation
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - "v*.*.*"
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   verify-release:
@@ -30,46 +30,3 @@ jobs:
       - run: npm ci
       - run: npm run verify
       - run: npm run benchmark
-
-  github-release:
-    needs: verify-release
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - name: Create GitHub release
-        uses: softprops/action-gh-release@v2
-        with:
-          tag_name: ${{ github.ref_name }}
-          generate_release_notes: true
-
-  npm-publish:
-    needs: verify-release
-    runs-on: ubuntu-latest
-    permissions:
-      contents: read
-    steps:
-      - uses: actions/checkout@v6
-        with:
-          fetch-depth: 0
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: npm
-          registry-url: https://registry.npmjs.org
-      - name: Detect npm token
-        run: |
-          if [ -n "$NPM_TOKEN" ]; then
-            echo "HAS_NPM_TOKEN=true" >> "$GITHUB_ENV"
-          else
-            echo "HAS_NPM_TOKEN=false" >> "$GITHUB_ENV"
-          fi
-        env:
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
-      - run: npm ci
-        if: ${{ env.HAS_NPM_TOKEN == 'true' }}
-      - run: npm publish --access public
-        if: ${{ env.HAS_NPM_TOKEN == 'true' }}
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

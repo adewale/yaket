@@ -4,6 +4,30 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+## 0.6.1 - 2026-04-29
+
+Release hardening and dependency refresh.
+
+### Changed
+
+- Updated development dependencies across Vitest, Cloudflare Workers tooling,
+  Stryker, tsx, publint, fast-check, and Wrangler within the supported Node 20
+  toolchain.
+- Release automation now follows an npm-first manual model: GitHub Actions
+  validates release tags only, while `npm run release:manual -- X.Y.Z`
+  publishes npm before pushing the tag or creating the GitHub release.
+- Benchmark scripts write to stdout by default; tracked benchmark reports are
+  refreshed only via explicit `benchmark:write` scripts, which require Python
+  YAKE reference output.
+
+### Fixed
+
+- `DataCore` now defaults direct usage to `windowSize: 1`, matching
+  `KeywordExtractor` and the public docs. Shared public defaults now live in
+  `DEFAULT_YAKE_OPTIONS`.
+- Similarity cache keys no longer embed a literal NUL byte in `src/similarity.ts`,
+  so text tooling no longer treats the file as binary.
+
 ## 0.6.0 - 2026-04-25
 
 Multilingual parity, alias removal, and pluggable internals.

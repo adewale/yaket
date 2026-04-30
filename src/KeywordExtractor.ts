@@ -1,5 +1,6 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { DataCore } from "./DataCore.js";
+import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
 import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SentenceSplitter, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor, Tokenizer } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity, type SimilarityCache } from "./similarity.js";
@@ -117,13 +118,13 @@ export class KeywordExtractor {
     }
 
     this.config = {
-      language: options.language ?? "en",
-      n: options.n ?? 3,
-      dedupLim: options.dedupLim ?? 0.9,
-      dedupFunc: options.dedupFunc ?? "seqm",
-      windowSize: options.windowSize ?? 1,
-      top: options.top ?? 20,
-      features: options.features ?? null,
+      language: options.language ?? DEFAULT_YAKE_OPTIONS.language,
+      n: options.n ?? DEFAULT_YAKE_OPTIONS.n,
+      dedupLim: options.dedupLim ?? DEFAULT_YAKE_OPTIONS.dedupLim,
+      dedupFunc: options.dedupFunc ?? DEFAULT_YAKE_OPTIONS.dedupFunc,
+      windowSize: options.windowSize ?? DEFAULT_YAKE_OPTIONS.windowSize,
+      top: options.top ?? DEFAULT_YAKE_OPTIONS.top,
+      features: options.features ?? DEFAULT_YAKE_OPTIONS.features,
     };
 
     this.textProcessor = composeTextProcessor(options.textProcessor, options.sentenceSplitter, options.tokenizer);

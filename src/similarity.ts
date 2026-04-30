@@ -1,4 +1,5 @@
 const DEFAULT_MAX_CACHE_SIZE = 20_000;
+const CACHE_KEY_SEPARATOR = "\u0000";
 
 export interface SimilarityCacheStats {
   distance: number;
@@ -287,7 +288,7 @@ function computeJaro(first: string, second: string): number {
 }
 
 function cacheKey(first: string, second: string): string {
-  return first <= second ? `${first} ${second}` : `${second} ${first}`;
+  return first <= second ? `${first}${CACHE_KEY_SEPARATOR}${second}` : `${second}${CACHE_KEY_SEPARATOR}${first}`;
 }
 
 function simpleDistance(seq1: string, seq2: string): number {

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { clearSimilarityCaches, extractKeywords, getSimilarityCacheStats, Levenshtein, sequenceSimilarity } from "../src/index.js";
+import { clearSimilarityCaches, extractKeywords, getSimilarityCacheStats, jaroSimilarity, Levenshtein, sequenceSimilarity } from "../src/index.js";
 
 describe("similarity cache diagnostics", () => {
   it("reports and clears cache usage", () => {
@@ -36,6 +36,13 @@ describe("similarity cache diagnostics", () => {
     const stats = getSimilarityCacheStats();
     expect(stats.distance).toBeLessThanOrEqual(20_000);
     expect(stats.ratio).toBeLessThanOrEqual(20_000);
+  });
+
+  it("matches canonical Jaro examples", () => {
+    expect(jaroSimilarity("MARTHA", "MARHTA")).toBeCloseTo(0.9444444444, 10);
+    expect(jaroSimilarity("DIXON", "DICKSONX")).toBeCloseTo(0.7666666667, 10);
+    expect(jaroSimilarity("JELLYFISH", "SMELLYFISH")).toBeCloseTo(0.8962962963, 10);
+    expect(jaroSimilarity("abc", "xyz")).toBe(0);
   });
 
   it("remains deterministic regardless of cache warmness", () => {

@@ -2,6 +2,8 @@
 
 This document describes the release process for Yaket and the rules that keep GitHub and npm aligned.
 
+Yaket uses a manual npm-first release model. GitHub Actions validates release tags, but it does not hold npm credentials, publish npm packages, or create official GitHub releases.
+
 ## Release Invariants
 
 For a release `X.Y.Z`, all of the following should match:
@@ -9,22 +11,38 @@ For a release `X.Y.Z`, all of the following should match:
 1. `package.json` version: `X.Y.Z`
 2. `package-lock.json` root version: `X.Y.Z`
 3. git tag: `vX.Y.Z`
-4. GitHub release tag: `vX.Y.Z`
-5. npm package version: `X.Y.Z`
+4. npm package version: `X.Y.Z`
+5. GitHub release tag: `vX.Y.Z`
 
-The release should come from the exact tagged commit.
+The npm package and GitHub release should come from the exact tagged commit.
 
 ## Recommended Flow
 
-1. Update `CHANGELOG.md`
-2. Bump the package version
-3. Run release verification locally
-4. Commit the release changes
-5. Create and push the release tag
-6. Let the tag-based GitHub release workflow verify the tag and create the GitHub release
-7. Publish the npm package from the same tagged commit, ideally through CI
+First prepare and merge/commit the release changes (`package.json`, `package-lock.json`, `CHANGELOG.md`, and any code/docs changes). Then use the single manual release command from a clean `main` that matches `origin/main`:
 
-## Manual Checklist
+```bash
+npm run release:manual -- X.Y.Z
+```
+
+The command performs the publication as one ordered transaction:
+
+1. assert the worktree and index are clean
+2. assert the current branch is `main`
+3. fetch `origin/main` and tags
+4. assert `HEAD` equals `origin/main`
+5. assert `package.json`, `package-lock.json`, and `CHANGELOG.md` all describe `X.Y.Z`
+6. run `npm ci`
+7. run `npm run verify`
+8. create annotated tag `vX.Y.Z` locally
+9. publish to npm from that exact commit
+10. push `main` and `vX.Y.Z`
+11. create the GitHub release with `gh release create --verify-tag`
+
+If npm publish fails, the command does not push the tag and does not create a GitHub release.
+
+## Manual Fallback Checklist
+
+Use this only if `npm run release:manual -- X.Y.Z` cannot be used.
 
 ### 1. Update release metadata
 
@@ -39,9 +57,17 @@ Then update:
 ### 2. Verify locally
 
 ```bash
+npm ci
 npm run verify
 npm run benchmark
 npm run benchmark:multilingual   # if Python YAKE is available locally
+```
+
+Use the write variants only when the reference dependencies are installed and you intentionally want to refresh tracked benchmark reports:
+
+```bash
+npm run benchmark:write
+npm run benchmark:multilingual:write
 ```
 
 For a major-version bump that changes the public API surface (such as the
@@ -53,21 +79,32 @@ For a major-version bump that changes the public API surface (such as the
 - `docs/api-reference.md` and `README.md` no longer document the removed
   surface as supported.
 
-### 3. Commit the release
+### 3. Commit and tag locally
 
 ```bash
 git add package.json package-lock.json CHANGELOG.md
 git commit -m "Release Yaket X.Y.Z"
+git tag -a vX.Y.Z -m "Release Yaket X.Y.Z"
 ```
 
-### 4. Create and push the tag
+### 4. Publish npm before pushing the tag
 
 ```bash
-git tag vX.Y.Z
-git push origin main --tags
+npm publish --access public
+npm view @ade_oshineye/yaket version
 ```
 
-## Automated GitHub Release Workflow
+The registry must report `X.Y.Z` before the tag is pushed or the GitHub release is created.
+
+### 5. Push and create the GitHub release
+
+```bash
+git push origin main
+git push origin vX.Y.Z
+gh release create vX.Y.Z --generate-notes --verify-tag
+```
+
+## Automated GitHub Release Validation
 
 The repository includes `.github/workflows/release.yml`.
 
@@ -77,42 +114,29 @@ On every tag push matching `v*.*.*`, it will:
 2. run `npm ci`
 3. run `npm run verify`
 4. run `npm run benchmark`
-5. create a GitHub release for the tag
 
-## npm Publishing
+It intentionally does not publish npm and does not create GitHub releases. This keeps npm credentials out of GitHub and makes npm publish the explicit point of no return.
 
-The release workflow includes an npm publish path, but publishing only happens when `NPM_TOKEN` is configured in GitHub Actions secrets.
+## npm Authentication
 
-That means there are two supported modes:
+Do not add `NPM_TOKEN` to GitHub for this release model.
 
-### Mode A: automated npm publish from CI
-
-Requirements:
-
-1. add `NPM_TOKEN` to the repository secrets
-2. push a version tag after updating the version and changelog
-
-Then the workflow will publish the same version that was tagged.
-
-### Mode B: manual npm publish
-
-If `NPM_TOKEN` is not configured, the workflow still verifies the tag and creates the GitHub release, but the npm publish steps are skipped and publishing must be done manually.
-
-In that case, publish from the exact tagged commit:
+Authenticate locally instead:
 
 ```bash
-git checkout vX.Y.Z
-npm ci
-npm run verify
+npm login
+npm whoami
 npm publish --access public
 ```
 
+Alternatively, keep an npm automation token in your local password manager and configure it only in your local npm environment for the publish command.
+
 ## Verification After Release
 
-After publishing:
+After publishing and creating the GitHub release:
 
-1. confirm the GitHub release exists for `vX.Y.Z`
-2. confirm npm reports version `X.Y.Z`
+1. confirm npm reports version `X.Y.Z`
+2. confirm the GitHub release exists for `vX.Y.Z`
 3. confirm install works:
 
 ```bash
@@ -125,9 +149,10 @@ npm install @ade_oshineye/yaket
 1. tag/version mismatch
 2. stale `package-lock.json`
 3. CI-only floating-point fixture differences
-4. publishing a version locally before the GitHub tag exists
-5. creating a GitHub release from a commit that differs from the npm publish commit
+4. pushing a tag before npm publish succeeds
+5. creating a GitHub release before npm publish succeeds
+6. creating a GitHub release from a commit that differs from the npm publish commit
 
 The safest rule is simple:
 
-> Always release from an exact version tag, and never publish npm from an untagged or dirty worktree.
+> Publish npm first from the exact local release commit, then push the tag and create the GitHub release.

@@ -43,9 +43,16 @@ async function main(): Promise<void> {
     python,
   });
 
-  const outputPath = resolve(process.cwd(), "docs/benchmarks/komoroske-2026-04-06.md");
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, report);
+  if (process.argv.includes("--write")) {
+    if (python.error != null) {
+      throw new Error(`Refusing to write benchmark report because Python YAKE is unavailable: ${python.error}`);
+    }
+
+    const outputPath = resolve(process.cwd(), "docs/benchmarks/komoroske-2026-04-06.md");
+    mkdirSync(dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, report);
+  }
+
   process.stdout.write(`${report}\n`);
 }
 

@@ -1,6 +1,7 @@
 export { ComposedWord } from "./ComposedWord.js";
 export { extractYakeKeywords, type BobbinYakeResult } from "./bobbin.js";
 export { DataCore } from "./DataCore.js";
+export { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
 export {
   estimateSerializedBytes,
   extractFromDocument,

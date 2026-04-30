@@ -1,6 +1,6 @@
 {
   "name": "@ade_oshineye/yaket",
-  "version": "0.6.0",
+  "version": "0.6.1",
   "description": "TypeScript port of the YAKE keyword extraction core pipeline",
   "repository": {
     "type": "git",
@@ -42,11 +42,14 @@
   "scripts": {
     "build": "tsc -p tsconfig.json",
     "benchmark": "tsx scripts/benchmark.ts",
+    "benchmark:write": "tsx scripts/benchmark.ts --write",
     "benchmark:datasets": "tsx scripts/benchmark-datasets.ts",
     "benchmark:multilingual": "tsx scripts/benchmark-multilingual.ts",
+    "benchmark:multilingual:write": "tsx scripts/benchmark-multilingual.ts --write",
     "bundle-size": "tsx scripts/bundle-size.ts",
     "check:package": "npm pack --dry-run && publint",
     "prepack": "npm run build",
+    "release:manual": "tsx scripts/release-manual.ts",
     "test:cli:coverage": "vitest run --config vitest.cli-coverage.config.ts",
     "test": "vitest run",
     "test:cloudflare": "vitest run --config vitest.cloudflare.config.ts",
@@ -64,19 +67,19 @@
   ],
   "license": "MIT",
   "devDependencies": {
-    "@stryker-mutator/core": "^9.3.0",
-    "@stryker-mutator/typescript-checker": "^9.3.0",
-    "@stryker-mutator/vitest-runner": "^9.3.0",
-    "@cloudflare/vitest-pool-workers": "^0.14.1",
-    "@cloudflare/workers-types": "^4.20260405.1",
-    "@types/node": "^24.5.2",
-    "@vitest/coverage-v8": "^4.1.4",
-    "fast-check": "^4.3.0",
+    "@cloudflare/vitest-pool-workers": "^0.15.1",
+    "@cloudflare/workers-types": "^4.20260430.1",
+    "@stryker-mutator/core": "^9.6.1",
+    "@stryker-mutator/typescript-checker": "^9.6.1",
+    "@stryker-mutator/vitest-runner": "^9.6.1",
+    "@types/node": "^24.12.2",
+    "@vitest/coverage-v8": "^4.1.5",
     "esbuild": "^0.28.0",
-    "publint": "^0.3.15",
-    "tsx": "^4.20.6",
+    "fast-check": "^4.7.0",
+    "publint": "^0.3.18",
+    "tsx": "^4.21.0",
     "typescript": "^5.9.3",
-    "vitest": "^4.1.2",
-    "wrangler": "^4.80.0"
+    "vitest": "^4.1.5",
+    "wrangler": "^4.86.0"
   }
 }

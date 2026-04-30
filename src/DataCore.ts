@@ -1,4 +1,5 @@
 import { ComposedWord, type CandidateTerm, type NormalizedCandidateTerm } from "./ComposedWord.js";
+import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
 import { DirectedGraph } from "./graph.js";
 import { SingleWord } from "./SingleWord.js";
 import type { CandidateNormalizer, Lemmatizer, MultiWordScorer, SingleWordScorer, TextProcessor } from "./strategies.js";
@@ -46,7 +47,7 @@ export class DataCore {
    * Builds document state used by the YAKE scoring pipeline.
    */
   constructor(text: string, stopwordSet: Set<string>, config: DataCoreConfig = {}) {
-    const n = config.n ?? 3;
+    const n = config.n ?? DEFAULT_YAKE_OPTIONS.n;
     this.exclude = config.exclude ?? DEFAULT_EXCLUDE;
     this.tagsToDiscard = config.tagsToDiscard ?? new Set(["u", "d"]);
     this.stopwordSet = stopwordSet;
@@ -55,13 +56,13 @@ export class DataCore {
     this.candidateNormalizer = config.candidateNormalizer ?? null;
     this.singleWordScorer = config.singleWordScorer ?? null;
     this.multiWordScorer = config.multiWordScorer ?? null;
-    this.language = config.language ?? "en";
+    this.language = config.language ?? DEFAULT_YAKE_OPTIONS.language;
 
     for (let index = 1; index <= n; index += 1) {
       this.freqNs[index] = 0;
     }
 
-    this.build(text, config.windowSize ?? 2, n);
+    this.build(text, config.windowSize ?? DEFAULT_YAKE_OPTIONS.windowSize, n);
   }
 
   /**

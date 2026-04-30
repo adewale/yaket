@@ -77,9 +77,17 @@ async function main(): Promise<void> {
   const results: LanguageResult[] = SAMPLES.map(runForLanguage);
   const report = renderReport(results);
 
-  const outputPath = resolve(process.cwd(), "docs/benchmarks/multilingual.md");
-  mkdirSync(dirname(outputPath), { recursive: true });
-  writeFileSync(outputPath, report);
+  if (process.argv.includes("--write")) {
+    const missingPython = results.find((result) => result.pythonKeywords == null);
+    if (missingPython != null) {
+      throw new Error(`Refusing to write multilingual benchmark report because Python YAKE is unavailable for ${missingPython.language}: ${missingPython.pythonError ?? "unknown error"}`);
+    }
+
+    const outputPath = resolve(process.cwd(), "docs/benchmarks/multilingual.md");
+    mkdirSync(dirname(outputPath), { recursive: true });
+    writeFileSync(outputPath, report);
+  }
+
   process.stdout.write(`${report}\n`);
 }
 

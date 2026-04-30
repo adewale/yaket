@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { KeywordExtractor, extractKeywords } from "../src/index.js";
+import { DataCore, KeywordExtractor, extractKeywords } from "../src/index.js";
 
 describe("KeywordExtractor default option values", () => {
   it("defaults language to 'en' when no language is supplied", () => {
@@ -31,6 +31,17 @@ describe("KeywordExtractor default option values", () => {
   it("defaults windowSize to 1", () => {
     const extractor = new KeywordExtractor();
     expect(extractor.config.windowSize).toBe(1);
+  });
+
+  it("DataCore also defaults windowSize to 1 when used directly", () => {
+    const core = new DataCore("alpha beta gamma", new Set());
+    const alpha = core.terms.get("alpha")!;
+    const beta = core.terms.get("beta")!;
+    const gamma = core.terms.get("gamma")!;
+
+    expect(core.g.hasEdge(alpha.id, beta.id)).toBe(true);
+    expect(core.g.hasEdge(beta.id, gamma.id)).toBe(true);
+    expect(core.g.hasEdge(alpha.id, gamma.id)).toBe(false);
   });
 
   it("defaults features to null (compute every YAKE feature)", () => {
