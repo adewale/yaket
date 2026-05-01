@@ -27,8 +27,8 @@ describe("stopword exports", () => {
   });
 
   it("exposes bundled stopword text for extension use cases", () => {
-    expect(bundledStopwordTexts.en).toContain("the");
-    expect(STOPWORDS.en).toBe(bundledStopwordTexts.en);
+    expect(bundledStopwordTexts["en"]).toContain("the");
+    expect(STOPWORDS["en"]).toBe(bundledStopwordTexts["en"]);
     expect(Object.isFrozen(bundledStopwordTexts)).toBe(true);
   });
 

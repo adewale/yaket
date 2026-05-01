@@ -1,5 +1,5 @@
 const CAPITAL_LETTER_PATTERN = /^(\s*([A-Z]))/;
-const TOKEN_PATTERN = /\p{L}[\p{L}\p{M}\p{Nd}]*(?:(?:[.'’\-]+|…+)[\p{L}\p{M}\p{Nd}]+)*|\p{Nd}+(?:[.,]\p{Nd}+)*|[^\s]/gu;
+const TOKEN_PATTERN = /\p{L}[\p{L}\p{M}\p{Nd}]*(?:(?:[.'’-]+|…+)[\p{L}\p{M}\p{Nd}]+)*|\p{Nd}+(?:[.,]\p{Nd}+)*|[^\s]/gu;
 const ASCII_PUNCTUATION = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 const COMMON_ABBREVIATIONS = new Set([
   "dr",

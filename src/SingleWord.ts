@@ -1,4 +1,4 @@
-import { featureEnabled } from "./features.js";
+import { featureEnabled, type FeatureName } from "./features.js";
 import { DirectedGraph } from "./graph.js";
 
 interface GraphMetrics {
@@ -58,11 +58,13 @@ export class SingleWord {
    * Records an occurrence of this term.
    */
   addOccur(tag: string, sentenceId: number, posSent: number, posText: number): void {
-    if (!this.occurs.has(sentenceId)) {
-      this.occurs.set(sentenceId, []);
+    let occurrences = this.occurs.get(sentenceId);
+    if (occurrences == null) {
+      occurrences = [];
+      this.occurs.set(sentenceId, occurrences);
     }
 
-    this.occurs.get(sentenceId)?.push([posSent, posText]);
+    occurrences.push([posSent, posText]);
     this.tf += 1;
 
     if (tag === "a") {
@@ -77,7 +79,7 @@ export class SingleWord {
   /**
    * Computes the final YAKE single-word score.
    */
-  updateH(stats: WordStats, features?: string[] | null): void {
+  updateH(stats: WordStats, features?: readonly FeatureName[] | null): void {
     const graphMetrics = this.getGraphMetrics();
 
     if (featureEnabled(features, "wrel")) {

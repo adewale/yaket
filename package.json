@@ -48,6 +48,7 @@
     "benchmark:multilingual": "tsx scripts/benchmark-multilingual.ts",
     "benchmark:multilingual:write": "tsx scripts/benchmark-multilingual.ts --write",
     "bundle-size": "tsx scripts/bundle-size.ts",
+    "lint": "eslint .",
     "check:package": "npm pack --dry-run && publint",
     "prepack": "npm run build",
     "release:manual": "tsx scripts/release-manual.ts",
@@ -58,7 +59,7 @@
     "test:mutation": "stryker run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tooling.json",
-    "verify": "npm run typecheck && npm test && npm run test:cloudflare && npm run build && npm run check:package"
+    "verify": "npm run typecheck && npm run lint && npm test && npm run test:cloudflare && npm run build && npm run check:package"
   },
   "keywords": [
     "yake",
@@ -70,16 +71,19 @@
   "devDependencies": {
     "@cloudflare/vitest-pool-workers": "^0.15.1",
     "@cloudflare/workers-types": "^4.20260430.1",
+    "@eslint/js": "^10.0.1",
     "@stryker-mutator/core": "^9.6.1",
     "@stryker-mutator/typescript-checker": "^9.6.1",
     "@stryker-mutator/vitest-runner": "^9.6.1",
     "@types/node": "^24.12.2",
     "@vitest/coverage-v8": "^4.1.5",
     "esbuild": "^0.28.0",
+    "eslint": "^10.2.1",
     "fast-check": "^4.7.0",
     "publint": "^0.3.18",
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.1",
     "vitest": "^4.1.5",
     "wrangler": "^4.86.0"
   }

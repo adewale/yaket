@@ -16,6 +16,7 @@ export {
   type DocumentTextHookContext,
   type InputDocument,
 } from "./document.js";
+export { type FeatureName } from "./features.js";
 export { TextHighlighter, type TextHighlighterOptions } from "./highlight.js";
 export { KeywordExtractor, createKeywordExtractor, extract, extractKeywordDetails, extractKeywords, type KeywordExtractorOptions, type KeywordScore, type YakeOptions, Levenshtein } from "./KeywordExtractor.js";
 export { SingleWord } from "./SingleWord.js";

@@ -96,7 +96,7 @@ export class Levenshtein {
     }
 
     let len1 = seq1.length;
-    let len2 = seq2.length;
+    const len2 = seq2.length;
 
     if (len1 === 0) {
       setBoundedCache(cache.distance, key, len2, cache.maxSize);
@@ -110,7 +110,7 @@ export class Levenshtein {
 
     if (len1 > len2) {
       [seq1, seq2] = [seq2, seq1];
-      [len1, len2] = [len2, len1];
+      len1 = seq1.length;
     }
 
     const result = len1 <= 3 ? simpleDistance(seq1, seq2) : matrixDistance(seq1, seq2);
@@ -156,11 +156,6 @@ export function sequenceSimilarity(cand1: string, cand2: string, cache: Similari
   const cand1Chars = [...cand1];
   const cand2Chars = [...cand2];
   const maxLength = Math.max(cand1Chars.length, cand2Chars.length);
-  if (maxLength === 0) {
-    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
-    return 0;
-  }
-
   const lengthRatio = Math.min(cand1Chars.length, cand2Chars.length) / maxLength;
   if (lengthRatio < 0.3) {
     setBoundedCache(cache.sequence, key, 0, cache.maxSize);
@@ -170,11 +165,6 @@ export function sequenceSimilarity(cand1: string, cand2: string, cache: Similari
   const s1 = cand1.toLowerCase();
   const s2 = cand2.toLowerCase();
   const charUnion = new Set([...s1, ...s2]);
-  if (charUnion.size === 0) {
-    setBoundedCache(cache.sequence, key, 0, cache.maxSize);
-    return 0;
-  }
-
   const overlap = [...new Set(s1)].filter((char) => s2.includes(char)).length / charUnion.size;
   if (overlap < 0.2) {
     setBoundedCache(cache.sequence, key, 0, cache.maxSize);
@@ -327,6 +317,7 @@ function matrixDistance(seq1: string, seq2: string): number {
   return previousRow[seq2.length]!;
 }
 
+/** @internal */
 export function trigrams(chars: string[]): Set<string> {
   const result = new Set<string>();
 
@@ -337,6 +328,7 @@ export function trigrams(chars: string[]): Set<string> {
   return result;
 }
 
+/** @internal */
 export function aggressivePreFilter(cand1: string, cand2: string): boolean {
   if (cand1 === cand2) {
     return true;
@@ -369,6 +361,7 @@ export function aggressivePreFilter(cand1: string, cand2: string): boolean {
   return true;
 }
 
+/** @internal */
 export function countSpaces(value: string): number {
   let count = 0;
   for (const char of value) {

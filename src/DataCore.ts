@@ -1,5 +1,6 @@
-import { ComposedWord, type CandidateTerm, type NormalizedCandidateTerm } from "./ComposedWord.js";
+import { ComposedWord, type NormalizedCandidateTerm } from "./ComposedWord.js";
 import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
+import type { FeatureName } from "./features.js";
 import { DirectedGraph } from "./graph.js";
 import { SingleWord } from "./SingleWord.js";
 import type { CandidateNormalizer, Lemmatizer, MultiWordScorer, SingleWordScorer, TextProcessor } from "./strategies.js";
@@ -13,7 +14,7 @@ interface DataCoreConfig {
   n?: number;
   tagsToDiscard?: Set<string>;
   exclude?: ReadonlySet<string>;
-  textProcessor?: TextProcessor;
+  textProcessor?: TextProcessor | undefined;
   lemmatizer?: Lemmatizer | null;
   candidateNormalizer?: CandidateNormalizer | null;
   singleWordScorer?: SingleWordScorer | null;
@@ -115,7 +116,7 @@ export class DataCore {
   /**
    * Computes single-word YAKE features.
    */
-  buildSingleTermsFeatures(features?: string[] | null): void {
+  buildSingleTermsFeatures(features?: readonly FeatureName[] | null): void {
     const validTerms = [...this.terms.values()].filter((term) => !term.stopword);
     if (validTerms.length === 0) {
       return;
@@ -126,7 +127,9 @@ export class DataCore {
     const stdTf = Math.sqrt(validTfs.reduce((sum, value) => sum + ((value - avgTf) ** 2), 0) / validTfs.length);
     const maxTf = Math.max(...[...this.terms.values()].map((term) => term.tf));
 
-    const context = { maxTf, avgTf, stdTf, numberOfSentences: this.numberOfSentences, features };
+    const context = features === undefined
+      ? { maxTf, avgTf, stdTf, numberOfSentences: this.numberOfSentences }
+      : { maxTf, avgTf, stdTf, numberOfSentences: this.numberOfSentences, features };
 
     for (const term of this.terms.values()) {
       if (this.singleWordScorer == null) {
@@ -140,13 +143,13 @@ export class DataCore {
   /**
    * Computes multi-word YAKE features.
    */
-  buildMultTermsFeatures(features?: string[] | null): void {
+  buildMultTermsFeatures(features?: readonly FeatureName[] | null): void {
     for (const candidate of this.candidates.values()) {
       if (candidate.isValid()) {
         if (this.multiWordScorer == null) {
           candidate.updateH(features);
         } else {
-          candidate.h = this.multiWordScorer.score(candidate, { features });
+          candidate.h = this.multiWordScorer.score(candidate, features === undefined ? {} : { features });
         }
       }
     }
@@ -202,7 +205,11 @@ export class DataCore {
       existing.updateCand(candidate);
     }
 
-    this.candidates.get(candidate.uniqueKw)!.tf += 1;
+    const stored = this.candidates.get(candidate.uniqueKw);
+    if (stored == null) {
+      throw new TypeError(`Candidate "${candidate.uniqueKw}" was not stored before frequency update`);
+    }
+    stored.tf += 1;
   }
 
   private build(text: string, windowSize: number, n: number): void {

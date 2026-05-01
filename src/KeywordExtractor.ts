@@ -1,6 +1,7 @@
 import { ComposedWord } from "./ComposedWord.js";
 import { parseYakeOptions, type YakeConfig } from "./config.js";
 import { DataCore } from "./DataCore.js";
+import type { FeatureName } from "./features.js";
 import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SentenceSplitter, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor, Tokenizer } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity, type SimilarityCache } from "./similarity.js";
@@ -22,7 +23,7 @@ export interface YakeOptions {
   dedupFunc?: string;
   windowSize?: number;
   top?: number;
-  features?: string[] | null;
+  features?: readonly FeatureName[] | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
   sentenceSplitter?: SentenceSplitter;
@@ -58,13 +59,13 @@ export type KeywordScore = [keyword: string, score: number];
 export class KeywordExtractor {
   readonly config: YakeConfig;
   readonly stopwordSet: Set<string>;
-  readonly textProcessor?: TextProcessor;
+  readonly textProcessor: TextProcessor | undefined;
   readonly lemmatizer: Lemmatizer | null;
   readonly candidateNormalizer: CandidateNormalizer | null;
   readonly singleWordScorer: SingleWordScorer | null;
   readonly multiWordScorer: MultiWordScorer | null;
   readonly keywordScorer: ((candidates: KeywordResult[]) => KeywordResult[]) | null;
-  readonly candidateFilter?: (candidate: CandidateFilterInput) => boolean;
+  readonly candidateFilter: ((candidate: CandidateFilterInput) => boolean) | undefined;
   readonly similarityCache: SimilarityCache | null;
   private readonly dedupFunction: DedupFunction;
 
@@ -103,27 +104,21 @@ export class KeywordExtractor {
    * Levenshtein-based dedup similarity.
    */
   levs(cand1: string, cand2: string): number {
-    return this.similarityCache == null
-      ? levenshteinSimilarity(cand1, cand2)
-      : levenshteinSimilarity(cand1, cand2, this.similarityCache);
+    return this.runWithSimilarityCache(levenshteinSimilarity, cand1, cand2);
   }
 
   /**
    * Sequence-style dedup similarity that approximates upstream YAKE's optimized path.
    */
   seqm(cand1: string, cand2: string): number {
-    return this.similarityCache == null
-      ? sequenceSimilarity(cand1, cand2)
-      : sequenceSimilarity(cand1, cand2, this.similarityCache);
+    return this.runWithSimilarityCache(sequenceSimilarity, cand1, cand2);
   }
 
   /**
    * Jaro-based dedup similarity.
    */
   jaro(cand1: string, cand2: string): number {
-    return this.similarityCache == null
-      ? jaroSimilarity(cand1, cand2)
-      : jaroSimilarity(cand1, cand2, this.similarityCache);
+    return this.runWithSimilarityCache(jaroSimilarity, cand1, cand2);
   }
 
   /**
@@ -189,6 +184,12 @@ export class KeywordExtractor {
     }
 
     return resultSet;
+  }
+
+  private runWithSimilarityCache(helper: (cand1: string, cand2: string, cache?: SimilarityCache) => number, cand1: string, cand2: string): number {
+    return this.similarityCache == null
+      ? helper(cand1, cand2)
+      : helper(cand1, cand2, this.similarityCache);
   }
 
   private getDedupFunction(funcName: string): DedupFunction {
@@ -283,7 +284,15 @@ function toKeywordResult(candidate: ComposedWord): KeywordResult {
   };
 }
 
-export function compareCandidates(left: ComposedWord, right: ComposedWord): number {
+interface ComparableCandidate {
+  readonly uniqueKw: string;
+  readonly size: number;
+  readonly h: number;
+  readonly order: number;
+}
+
+/** @internal */
+export function compareCandidates(left: ComparableCandidate, right: ComparableCandidate): number {
   const scoreDelta = left.h - right.h;
   if (Math.abs(scoreDelta) > 1e-15) {
     return scoreDelta;
@@ -296,7 +305,8 @@ export function compareCandidates(left: ComposedWord, right: ComposedWord): numb
   return left.order - right.order;
 }
 
-export function isSlidingNgramTie(left: ComposedWord, right: ComposedWord): boolean {
+/** @internal */
+export function isSlidingNgramTie(left: ComparableCandidate, right: ComparableCandidate): boolean {
   if (left.size !== right.size || left.size < 3) {
     return false;
   }

@@ -28,6 +28,16 @@ describe("parseYakeOptions", () => {
     expect(parsed.error.message).toMatch(/language/);
   });
 
+  it("rejects unknown feature names at the config boundary", () => {
+    expect(parseYakeOptions({ features: ["wfreq", "KPF"] }).ok).toBe(true);
+
+    const parsed = parseYakeOptions({ features: ["not-a-feature"] as never });
+    expect(parsed.ok).toBe(false);
+    if (parsed.ok) return;
+
+    expect(parsed.error.message).toMatch(/Unknown feature/);
+  });
+
   it("rejects unknown dedup functions at the config boundary", () => {
     const parsed = parseYakeOptions({ dedupFunc: "sequencematcher" });
     expect(parsed.ok).toBe(false);

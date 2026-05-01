@@ -38,13 +38,11 @@ describe("canonical-only options surface (no Bobbin/Python aliases)", () => {
   it("exposes config.language instead of config.lan", () => {
     const extractor = new KeywordExtractor({ language: "pt" });
     expect(extractor.config.language).toBe("pt");
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
     expect((extractor.config as any).lan).toBeUndefined();
   });
 
   it("removes the snake_case extract_keywords method alias", () => {
     const extractor = new KeywordExtractor({ language: "en" });
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
     expect((extractor as any).extract_keywords).toBeUndefined();
   });
 
@@ -84,8 +82,7 @@ describe("canonical-only options surface (no Bobbin/Python aliases)", () => {
       ["window_size", 2],
     ];
     for (const [key, value] of legacyKeys) {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
-      expect(() => new KeywordExtractor({ [key]: value } as any)).toThrow(new RegExp(key));
+        expect(() => new KeywordExtractor({ [key]: value } as any)).toThrow(new RegExp(key));
     }
   });
 
@@ -95,15 +92,12 @@ describe("canonical-only options surface (no Bobbin/Python aliases)", () => {
     // not just own properties.
     const inheritedLegacy = Object.create({ lan: "pt" });
     inheritedLegacy.language = "en";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
     expect(() => new KeywordExtractor(inheritedLegacy as any)).toThrow(/lan/);
 
     class LegacyOptions {
       language = "en";
     }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
     (LegacyOptions.prototype as any).dedup_func = "seqm";
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any -- intentional shape probe
     expect(() => new KeywordExtractor(new LegacyOptions() as any)).toThrow(/dedup_func/);
   });
 

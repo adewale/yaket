@@ -65,13 +65,7 @@ export function extractFromDocument<TMetadata = Record<string, unknown>>(
   const text = prepareDocumentText(document, options, language);
   const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
 
-  return {
-    id: document.id,
-    language: extractor.config.language,
-    title: document.title,
-    metadata: document.metadata,
-    keywords,
-  };
+  return buildDocumentKeywordResult(document, extractor.config.language, keywords);
 }
 
 /**
@@ -92,13 +86,7 @@ export function extractFromDocuments<TMetadata = Record<string, unknown>>(
     const text = prepareDocumentText(document, options, language);
     const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
 
-    return {
-      id: document.id,
-      language: extractor.config.language,
-      title: document.title,
-      metadata: document.metadata,
-      keywords,
-    };
+    return buildDocumentKeywordResult(document, extractor.config.language, keywords);
   });
 }
 
@@ -120,13 +108,7 @@ export async function* extractFromDocumentStream<TMetadata = Record<string, unkn
     const text = prepareDocumentText(document, options, language);
     const keywords = finalizeDocumentKeywords(extractor.extractKeywordDetails(text), document, text, options, language);
 
-    yield {
-      id: document.id,
-      language: extractor.config.language,
-      title: document.title,
-      metadata: document.metadata,
-      keywords,
-    };
+    yield buildDocumentKeywordResult(document, extractor.config.language, keywords);
   }
 }
 
@@ -149,6 +131,24 @@ export function serializeDocumentKeywordResults<TMetadata = Record<string, unkno
  */
 export function estimateSerializedBytes(value: unknown): number {
   return new TextEncoder().encode(stableStringify(value)).length;
+}
+
+function buildDocumentKeywordResult<TMetadata>(document: InputDocument<TMetadata>, language: string, keywords: KeywordResult[]): DocumentKeywordResult<TMetadata> {
+  const result: DocumentKeywordResult<TMetadata> = {
+    id: document.id,
+    language,
+    keywords,
+  };
+
+  if (document.title !== undefined) {
+    result.title = document.title;
+  }
+
+  if (document.metadata !== undefined) {
+    result.metadata = document.metadata;
+  }
+
+  return result;
 }
 
 function buildDocumentText<TMetadata>(document: InputDocument<TMetadata>, includeTitleInText: boolean): string {

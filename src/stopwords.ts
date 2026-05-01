@@ -18,7 +18,7 @@ export const STOPWORDS = bundledStopwordTexts;
  */
 export function getStopwordText(language: string): string {
   const key = language.slice(0, 2).toLowerCase();
-  return stopwordsByLanguage[key] ?? stopwordsByLanguage.noLang;
+  return stopwordsByLanguage[key] ?? stopwordsByLanguage["noLang"];
 }
 
 /**
@@ -75,7 +75,7 @@ export function createStaticStopwordProvider(input: Record<string, string | Iter
   return {
     load(language: string): Set<string> {
       const key = language.slice(0, 2).toLowerCase();
-      const text = normalized[key] ?? normalized.noLang ?? "";
+      const text = normalized[key] ?? normalized["noLang"] ?? "";
       return new Set(text.split("\n").map((value) => value.trim().toLowerCase()).filter(Boolean));
     },
   };

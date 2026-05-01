@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
-import type { ComposedWord } from "../src/ComposedWord.js";
 import { compareCandidates, isSlidingNgramTie } from "../src/KeywordExtractor.js";
 
-function candidate(uniqueKw: string, size: number, h: number, order: number): ComposedWord {
-  return { uniqueKw, size, h, order } as ComposedWord;
+function candidate(uniqueKw: string, size: number, h: number, order: number) {
+  return { uniqueKw, size, h, order };
 }
 
 describe("candidate ordering helpers", () => {

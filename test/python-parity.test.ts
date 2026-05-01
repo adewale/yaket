@@ -5,8 +5,9 @@ import { describe, expect, it } from "vitest";
 
 import { KeywordExtractor } from "../src/index.js";
 import { referenceCases } from "./fixtures/reference.js";
+import { parseNamedPythonKeywordResult } from "./helpers/python-output.js";
 
-const pythonPath = process.env.YAKET_PYTHONPATH ?? "/tmp/yake";
+const pythonPath = process.env["YAKET_PYTHONPATH"] ?? "/tmp/yake";
 const hasPythonReference = existsSync(pythonPath);
 
 describe.skipIf(!hasPythonReference)("python parity", () => {
@@ -51,7 +52,7 @@ describe.skipIf(!hasPythonReference)("python parity", () => {
 
     const pythonResults = new Map<string, Array<[string, number]>>();
     for (const line of execution.stdout.trim().split("\n").filter(Boolean)) {
-      const parsed = JSON.parse(line) as { name: string; result: Array<[string, number]> };
+      const parsed = parseNamedPythonKeywordResult(line);
       pythonResults.set(parsed.name, parsed.result);
     }
 

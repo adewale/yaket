@@ -1,4 +1,5 @@
 import type { ComposedWord } from "./ComposedWord.js";
+import type { FeatureName } from "./features.js";
 import type { SingleWord } from "./SingleWord.js";
 import { loadStopwords } from "./stopwords.js";
 import { splitSentences, tokenizeWords } from "./utils.js";
@@ -88,7 +89,7 @@ export interface SingleWordScoreContext {
   readonly avgTf: number;
   readonly stdTf: number;
   readonly numberOfSentences: number;
-  readonly features?: string[] | null;
+  readonly features?: readonly FeatureName[] | null;
 }
 
 /**
@@ -102,7 +103,7 @@ export interface SingleWordScorer {
  * Context passed to multi-word scorers.
  */
 export interface MultiWordScoreContext {
-  readonly features?: string[] | null;
+  readonly features?: readonly FeatureName[] | null;
 }
 
 /**

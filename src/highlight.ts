@@ -40,6 +40,9 @@ export class TextHighlighter {
       for (const match of text.matchAll(pattern)) {
         const fullMatch = match[0];
         const phrase = match[2];
+        if (phrase == null) {
+          continue;
+        }
         const start = (match.index ?? 0) + fullMatch.indexOf(phrase);
         const end = start + phrase.length;
 

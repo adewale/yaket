@@ -174,17 +174,33 @@ export function runCli(argv: string[], deps: Partial<CliDeps> = {}): number {
     return 1;
   }
 
-  const keywords = runtime.extract(text, {
-    language: args.language,
-    n: args.ngramSize,
-    dedupFunc: args.dedupFunc,
-    dedupLim: args.dedupLim,
-    windowSize: args.windowSize,
-    top: args.top,
-  });
+  const keywords = runtime.extract(text, cliOptions(args));
 
   runtime.stdout(formatCliOutput(keywords, args.verbose));
   return 0;
+}
+
+function cliOptions(args: CliArgs): KeywordExtractorOptions {
+  const options: KeywordExtractorOptions = {};
+  if (args.language !== undefined) {
+    options.language = args.language;
+  }
+  if (args.ngramSize !== undefined) {
+    options.n = args.ngramSize;
+  }
+  if (args.dedupFunc !== undefined) {
+    options.dedupFunc = args.dedupFunc;
+  }
+  if (args.dedupLim !== undefined) {
+    options.dedupLim = args.dedupLim;
+  }
+  if (args.windowSize !== undefined) {
+    options.windowSize = args.windowSize;
+  }
+  if (args.top !== undefined) {
+    options.top = args.top;
+  }
+  return options;
 }
 
 function assignNumberArg(args: CliArgs, flag: string, next: string | undefined, key: "ngramSize" | "dedupLim" | "windowSize" | "top"): number {

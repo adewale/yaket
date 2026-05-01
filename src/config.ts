@@ -1,4 +1,5 @@
 import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
+import { isFeatureName, type FeatureName } from "./features.js";
 import type { KeywordExtractorOptions } from "./KeywordExtractor.js";
 
 export type PositiveInt = number & { readonly __brand: "PositiveInt" };
@@ -20,7 +21,7 @@ export interface YakeConfig {
   readonly dedupFunc: DedupFunctionName;
   readonly windowSize: number;
   readonly top: number;
-  readonly features: string[] | null;
+  readonly features: readonly FeatureName[] | null;
 }
 
 const VALID_DEDUP_FUNC_NAMES = new Set<DedupFunctionName>(["seqm", "levs", "jaro"]);
@@ -82,6 +83,14 @@ export function parseYakeOptions(options: KeywordExtractorOptions = {}): Result<
     return { ok: false, error: { message: `dedupLim must be a finite non-negative number, got ${String(dedupLim)}.` } };
   }
 
+  const features = options.features ?? DEFAULT_YAKE_OPTIONS.features;
+  if (features != null) {
+    const invalidFeature = features.find((feature) => !isFeatureName(feature));
+    if (invalidFeature != null) {
+      return { ok: false, error: { message: `Unknown feature "${invalidFeature}"; expected one of "wrel", "wfreq", "wspread", "wcase", "wpos", "KPF".` } };
+    }
+  }
+
   return {
     ok: true,
     value: {
@@ -91,7 +100,7 @@ export function parseYakeOptions(options: KeywordExtractorOptions = {}): Result<
       dedupFunc,
       windowSize,
       top,
-      features: options.features ?? DEFAULT_YAKE_OPTIONS.features,
+      features,
     },
   };
 }

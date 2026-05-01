@@ -53,8 +53,8 @@ describe("documentation-code sync", () => {
     expect(derivedStopwords.has("yaket")).toBe(true);
     expect(derivedStopwords.has("the")).toBe(true);
     expect(provider.load("en")).toEqual(new Set(["alpha", "beta"]));
-    expect(STOPWORDS.en).toContain("the");
-    expect(STOPWORDS.en).toContain("a");
+    expect(STOPWORDS["en"]).toContain("the");
+    expect(STOPWORDS["en"]).toContain("a");
   });
 
   it("keeps documented exports and CLI flags in sync", () => {
@@ -66,7 +66,7 @@ describe("documentation-code sync", () => {
     const cliSource = readFileSync(join(process.cwd(), "src/cli.ts"), "utf8");
 
     expect(Object.keys(packageJson.exports)).toEqual(expect.arrayContaining([".", "./browser", "./worker"]));
-    expect(packageJson.bin.yaket).toBe("dist/cli.js");
+    expect(packageJson.bin["yaket"]).toBe("dist/cli.js");
 
     for (const flag of ["--text-input", "--input-file", "--language", "--ngram-size", "--dedup-func", "--dedup-lim", "--window-size", "--top", "--verbose", "--help"]) {
       expect(cliSource).toContain(flag);

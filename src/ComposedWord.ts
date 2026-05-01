@@ -1,3 +1,4 @@
+import { featureEnabled, type FeatureName } from "./features.js";
 import { SingleWord } from "./SingleWord.js";
 import { STOPWORD_WEIGHT } from "./utils.js";
 
@@ -30,7 +31,7 @@ export class ComposedWord {
     this.uniqueKw = terms.map(([, word, , normalizedWord]) => normalizedWord ?? word.toLowerCase()).join(" ");
     this.size = terms.length;
     this.terms = terms.map(([, , term]) => term).filter((term): term is SingleWord => term != null);
-    this.startOrEndStopwords = this.terms.length === 0 || this.terms[0]!.stopword || this.terms[this.terms.length - 1]!.stopword;
+    this.startOrEndStopwords = this.terms[0]!.stopword || this.terms[this.terms.length - 1]!.stopword;
   }
 
   /**
@@ -58,7 +59,7 @@ export class ComposedWord {
   /**
    * Computes the final YAKE multi-word score.
    */
-  updateH(features?: string[] | null, isVirtual = false): void {
+  updateH(features?: readonly FeatureName[] | null, isVirtual = false): void {
     let sumH = 0;
     let prodH = 1;
 
@@ -89,7 +90,7 @@ export class ComposedWord {
     }
 
     let tfUsed = 1;
-    if (features == null || features.includes("KPF")) {
+    if (featureEnabled(features, "KPF")) {
       tfUsed = this.tf;
     }
 

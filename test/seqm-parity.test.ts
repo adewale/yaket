@@ -4,8 +4,9 @@ import { spawnSync } from "node:child_process";
 import { describe, expect, it } from "vitest";
 
 import { createKeywordExtractor } from "../src/index.js";
+import { parsePythonNumber } from "./helpers/python-output.js";
 
-const pythonPath = process.env.YAKET_PYTHONPATH ?? "/tmp/yake";
+const pythonPath = process.env["YAKET_PYTHONPATH"] ?? "/tmp/yake";
 const hasPythonReference = existsSync(pythonPath);
 
 describe("seqm parity examples", () => {
@@ -46,7 +47,7 @@ describe("seqm parity examples", () => {
       throw new Error(execution.stderr || "Python seqm parity run failed");
     }
 
-    const pythonScores = execution.stdout.trim().split("\n").filter(Boolean).map((line) => JSON.parse(line) as number);
+    const pythonScores = execution.stdout.trim().split("\n").filter(Boolean).map((line) => parsePythonNumber(line));
     expect(pythonScores).toHaveLength(pairs.length);
 
     for (let index = 0; index < pairs.length; index += 1) {
