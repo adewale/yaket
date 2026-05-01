@@ -1,3 +1,4 @@
+import { featureEnabled } from "./features.js";
 import { DirectedGraph } from "./graph.js";
 
 interface GraphMetrics {
@@ -61,7 +62,7 @@ export class SingleWord {
       this.occurs.set(sentenceId, []);
     }
 
-    this.occurs.get(sentenceId)!.push([posSent, posText]);
+    this.occurs.get(sentenceId)?.push([posSent, posText]);
     this.tf += 1;
 
     if (tag === "a") {
@@ -79,25 +80,25 @@ export class SingleWord {
   updateH(stats: WordStats, features?: string[] | null): void {
     const graphMetrics = this.getGraphMetrics();
 
-    if (features == null || features.includes("wrel")) {
+    if (featureEnabled(features, "wrel")) {
       this.pl = graphMetrics.wdl / stats.maxTf;
       this.pr = graphMetrics.wdr / stats.maxTf;
       this.wrel = (0.5 + (graphMetrics.pwl * (this.tf / stats.maxTf))) + (0.5 + (graphMetrics.pwr * (this.tf / stats.maxTf)));
     }
 
-    if (features == null || features.includes("wfreq")) {
+    if (featureEnabled(features, "wfreq")) {
       this.wfreq = this.tf / (stats.avgTf + stats.stdTf);
     }
 
-    if (features == null || features.includes("wspread")) {
+    if (featureEnabled(features, "wspread")) {
       this.wspread = this.occurs.size / stats.numberOfSentences;
     }
 
-    if (features == null || features.includes("wcase")) {
+    if (featureEnabled(features, "wcase")) {
       this.wcase = Math.max(this.tfA, this.tfN) / (1 + Math.log(this.tf));
     }
 
-    if (features == null || features.includes("wpos")) {
+    if (featureEnabled(features, "wpos")) {
       const sentenceIds = [...this.occurs.keys()].sort((a, b) => a - b);
       this.wpos = Math.log(Math.log(3 + median(sentenceIds)));
     }
