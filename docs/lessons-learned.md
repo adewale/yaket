@@ -195,9 +195,21 @@ Lesson: either omit absent optional properties or type them as `T | undefined` i
 
 ### 23. Test casts are signals for missing narrower types
 
-`candidate-ordering.test.ts` casts partial objects to `ComposedWord` to test comparators.
+`candidate-ordering.test.ts` once cast partial objects to `ComposedWord` to test comparators.
 
 Lesson: if tests only need a structural subset, the production function may also only need that subset. Introduce narrower types instead of forcing full-class casts.
+
+### 24. TypeScript audits do not replace design audits
+
+The TypeScript best-practices audit correctly found stricter compiler gaps, unsafe test parsing, stringly typed feature names, missing linting, and internal export discipline. It did not fully surface local design weirdness such as repeated similarity dispatch, unreachable defensive branches, muddled similarity-test grouping, `DataCore` breadth, or intentionally mutable scoring objects.
+
+Lesson: split audits by lens. Compiler/type health, architecture/design, testing quality, and runtime/package behavior answer different questions. A codebase can be TypeScript-safe while still having awkward seams or accumulated test-design debt.
+
+### 25. Audit findings should distinguish fixed, deferred, and accepted debt
+
+The non-idiomatic-code remediation fixed most small and medium TypeScript/design issues, but deliberately deferred similarity-test reorganization and `DataCore` decomposition, while accepting mutable scoring objects as a parity/performance tradeoff.
+
+Lesson: an audit is more useful when each finding has an explicit disposition: fixed now, deferred with reason, or accepted intentionally.
 
 ## Process Lessons for Future Work
 
@@ -210,18 +222,15 @@ Lesson: if tests only need a structural subset, the production function may also
 7. Verify package, worker/browser, bundle, benchmark, and mutation budgets before release.
 8. Avoid publishing automation that depends on unavailable or undesired secrets.
 9. Commit audits/docs alongside code so future history is interpretable.
+10. Run future code-health audits in four explicit passes:
+    - TypeScript/compiler audit: strict flags, unsafe assertions, public types, linting.
+    - Design/architecture audit: god objects, hidden invariants, repeated dispatch, unreachable branches, internal API leakage.
+    - Testing audit: duplication, fixture quality, mutation survivors, public-vs-internal test balance.
+    - Runtime/package audit: bundle size, worker compatibility, cache ownership, benchmarks, dependency/package surface.
 
 ## Current Follow-Up Queue Informed by These Lessons
 
-- Finish the TypeScript best-practices remediation slice:
-  - exact optional property cleanup,
-  - index-safety cleanup,
-  - lint layer,
-  - internal export annotations,
-  - narrower comparator types,
-  - runtime JSON guards where useful,
-  - feature-name abstraction.
 - Consolidate similarity-cache tests by behavior.
 - Add shared test builders for scoring fixtures.
-- Document or simplify unreachable defensive branches in `sequenceSimilarity()`.
+- Plan a dedicated `DataCore` decomposition only with parity, mutation, bundle, and benchmark gates.
 - Keep mutation target enforced and consider scheduled/manual mutation runs before releases.

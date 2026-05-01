@@ -58,7 +58,7 @@ type YakeOptions = {
   dedupLim?: number;
   dedupFunc?: string;
   windowSize?: number;
-  features?: string[] | null;
+  features?: readonly FeatureName[] | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
   sentenceSplitter?: SentenceSplitter;
