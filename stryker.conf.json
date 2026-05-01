@@ -12,9 +12,9 @@
   "coverageAnalysis": "perTest",
   "concurrency": 4,
   "thresholds": {
-    "high": 80,
-    "low": 65,
-    "break": 60
+    "high": 90,
+    "low": 85,
+    "break": 85
   },
   "vitest": {
     "configFile": "vitest.config.ts"
