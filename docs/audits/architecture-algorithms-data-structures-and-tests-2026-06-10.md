@@ -189,7 +189,40 @@ correctness but did affect coverage.
 covering directional weight accumulation, idempotent `addNode`,
 in/out symmetry, and decrement semantics. Added a 9th test in the same
 file that asserts `SingleWord.invalidateGraphCache()` actually causes a
-recompute on the next `updateH` call.
+recompute on the next `updateH` call. Stryker re-run after this pass
+returned 100 % on `src/graph.ts`.
+
+### `src/lemma.ts` mutation coverage
+
+The first Stryker run after introducing `src/lemma.ts` came back at
+60 % (24 survivors). The survivors clustered in eight buckets:
+empty-input early return, group-collision append path, sort-step
+correctness, multi-token lemma split/join, the `<` vs `<=` boundary
+inside the `min` reduction, the `>` vs `>=` boundary inside `max`,
+the harmonic-zero fallback to arithmetic mean, and the lemmatizer
+call-context shape.
+
+A focused unit-test file (14 new tests inside
+`test/lemma-aggregation.test.ts` under the
+`aggregateKeywordsByLemma — focused unit tests` describe block)
+exercises each cluster directly. The follow-up Stryker run landed at
+**95.38 %** for `src/lemma.ts` with three remaining survivors. Each of
+the three is an equivalent mutant:
+
+1. `if (results.length === 0) { return []; }` — removing the early
+   return leaves the same observable behaviour because the rest of the
+   function is empty-safe (`for ... of []` is a no-op,
+   `Array.prototype.sort` on `[]` returns `[]`).
+2. `if (results.length === 0)` condition mutated to `false` — same
+   reason; the dead-code path is exercised correctly by the empty
+   fall-through.
+3. `.toLowerCase()` mutated to `.toUpperCase()` — the lemma key is only
+   used as a private `Map` lookup; it is never returned to the caller.
+   Both case-folds are stable, idempotent, and produce the same
+   externally-observable grouping.
+
+These are tracked here rather than papered over with contrived
+assertions.
 
 ### SimilarityCache
 

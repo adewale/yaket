@@ -289,16 +289,19 @@ describe("aggregateKeywordsByLemma — focused unit tests", () => {
     ]);
   });
 
-  it("lower-cases the lemmatized fragments so case-only variants share a group", () => {
-    const upperish: Lemmatizer = { lemmatize: (token) => token.toUpperCase() };
-    // Two distinct surface forms whose lemmatized output differs only in case
-    // must end up in the same group (because the helper lowercases the
-    // resulting lemma).
-    const input = [makeKeyword("alpha", 0.4), makeKeyword("ALPHA", 0.2)];
-    const out = aggregateKeywordsByLemma(input, upperish, "en", "min");
+  it("case-folds lemma fragments so mixed-case lemmatizer outputs share a group", () => {
+    // The lemmatizer returns "Cat" for one input and "CAT" for the other.
+    // The helper case-folds before grouping so both end up in one group.
+    // (Whether the canonicalization is `.toLowerCase()` or `.toUpperCase()`
+    // is not externally observable — both are stable idempotent folds —
+    // so a `toUpperCase()` mutation is an equivalent mutant.)
+    const mixedCase: Lemmatizer = {
+      lemmatize: (token) => (token === "kittens" ? "Cat" : "CAT"),
+    };
+    const input = [makeKeyword("kittens", 0.4), makeKeyword("cats", 0.2)];
+    const out = aggregateKeywordsByLemma(input, mixedCase, "en", "min");
     expect(out).toHaveLength(1);
-    // min picks the better-scoring "ALPHA".
-    expect(out[0]!.keyword).toBe("ALPHA");
+    expect(out[0]!.keyword).toBe("cats");
   });
 
   it("splits multi-word normalized keywords on every whitespace run", () => {
