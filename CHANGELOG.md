@@ -18,6 +18,14 @@ All notable changes to this project will be documented in this file.
   `LemmaAggregationName` exports.
 - New `test/graph.test.ts` covering `DirectedGraph` directly (in-/out-
   degree symmetry, weight accumulation, decrement, auto-create).
+- New `test/data-core.test.ts` pinning `DataCore` direct-construction
+  behavior: shared defaults, term-index plural-trim and stopword
+  marking, document statistics, and window-skip co-occurrence semantics
+  validated against upstream Python YAKE.
+- `SimilarityCache` eviction is now genuinely least-recently-used:
+  every cache hit refreshes the entry's recency, so hot keys are no
+  longer evicted before colder, later-inserted ones. Previously the
+  documented "LRU" behavior was first-in-first-out.
 - New audit doc at
   `docs/audits/architecture-algorithms-data-structures-and-tests-2026-06-10.md`.
 

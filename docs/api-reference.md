@@ -192,12 +192,14 @@ the bounded module-level default cache.
 
 Returns a `SimilarityCache` with isolated `distance`, `ratio`, `sequence`,
 and `jaro` `Map`s plus `stats()` and `clear()` methods. Pass `{ maxSize }`
-to set the bounded LRU eviction threshold per map (default `20000`).
-`maxSize` must be a positive integer; `0`, negatives, `NaN`, `Infinity`,
-and non-integers throw a `RangeError`. Use this for long-running edge
-workers, per-request cache scopes, tests that must not leak into the
-module-level default, or benchmarks that need to reset state between
-runs.
+to set the bounded eviction threshold per map (default `20000`).
+Eviction is least-recently-used: every cache hit refreshes the entry's
+recency, so a hot key inserted early is never evicted before a colder key
+inserted later. `maxSize` must be a positive integer; `0`, negatives,
+`NaN`, `Infinity`, and non-integers throw a `RangeError`. Use this for
+long-running edge workers, per-request cache scopes, tests that must not
+leak into the module-level default, or benchmarks that need to reset
+state between runs.
 
 ### `getSimilarityCacheStats`
 ### `clearSimilarityCaches`

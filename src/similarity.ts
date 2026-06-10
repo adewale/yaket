@@ -72,8 +72,8 @@ export class Levenshtein {
    */
   static ratio(seq1: string, seq2: string, cache: SimilarityCache = defaultCache): number {
     const key = cacheKey(seq1, seq2);
-    const cached = cache.ratio.get(key);
-    if (cached != null) {
+    const cached = readBoundedCache(cache.ratio, key);
+    if (cached !== undefined) {
       return cached;
     }
 
@@ -90,8 +90,8 @@ export class Levenshtein {
    */
   static distance(seq1: string, seq2: string, cache: SimilarityCache = defaultCache): number {
     const key = cacheKey(seq1, seq2);
-    const cached = cache.distance.get(key);
-    if (cached != null) {
+    const cached = readBoundedCache(cache.distance, key);
+    if (cached !== undefined) {
       return cached;
     }
 
@@ -138,8 +138,8 @@ export function levenshteinSimilarity(cand1: string, cand2: string, cache: Simil
  */
 export function sequenceSimilarity(cand1: string, cand2: string, cache: SimilarityCache = defaultCache): number {
   const key = cacheKey(cand1, cand2);
-  const cached = cache.sequence.get(key);
-  if (cached != null) {
+  const cached = readBoundedCache(cache.sequence, key);
+  if (cached !== undefined) {
     return cached;
   }
 
@@ -209,8 +209,8 @@ export function sequenceSimilarity(cand1: string, cand2: string, cache: Similari
  */
 export function jaroSimilarity(first: string, second: string, cache: SimilarityCache = defaultCache): number {
   const key = cacheKey(first, second);
-  const cached = cache.jaro.get(key);
-  if (cached != null) {
+  const cached = readBoundedCache(cache.jaro, key);
+  if (cached !== undefined) {
     return cached;
   }
 
@@ -374,13 +374,33 @@ export function countSpaces(value: string): number {
 
 function setBoundedCache(cache: Map<string, number>, key: string, value: number, maxSize: number): void {
   if (!cache.has(key) && cache.size >= maxSize) {
-    const oldestKey = cache.keys().next().value;
-    if (oldestKey != null) {
-      cache.delete(oldestKey);
+    // `Map` preserves insertion order and `readBoundedCache` re-inserts on
+    // every hit, so the first key is always the least-recently-used entry.
+    const leastRecentlyUsedKey = cache.keys().next().value;
+    if (leastRecentlyUsedKey != null) {
+      cache.delete(leastRecentlyUsedKey);
     }
   }
 
   cache.set(key, value);
+}
+
+/**
+ * Cache read that refreshes recency: a hit re-inserts the key so it moves to
+ * the end of the `Map`'s insertion order, making `setBoundedCache`'s eviction
+ * least-recently-used rather than first-in-first-out.
+ *
+ * `undefined` is "miss"; `0` is a legitimate cached similarity score.
+ */
+function readBoundedCache(cache: Map<string, number>, key: string): number | undefined {
+  const value = cache.get(key);
+  if (value === undefined) {
+    return undefined;
+  }
+
+  cache.delete(key);
+  cache.set(key, value);
+  return value;
 }
 
 /**

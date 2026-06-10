@@ -141,3 +141,48 @@ describe("configurable similarity caches", () => {
     expect(jaroThrough).toBe(jaroBaseline);
   });
 });
+
+describe("LRU eviction (reads refresh recency)", () => {
+  // Each tuple drives one of the four cache read paths. The map getter
+  // returns the bucket each helper memoizes into so the test can observe
+  // which keys survived eviction.
+  const paths: ReadonlyArray<[
+    name: string,
+    run: (a: string, b: string, cache: ReturnType<typeof createSimilarityCache>) => number,
+    bucket: (cache: ReturnType<typeof createSimilarityCache>) => Map<string, number>,
+  ]> = [
+    ["sequenceSimilarity", (a, b, cache) => sequenceSimilarity(a, b, cache), (cache) => cache.sequence],
+    ["Levenshtein.distance", (a, b, cache) => Levenshtein.distance(a, b, cache), (cache) => cache.distance],
+    ["Levenshtein.ratio", (a, b, cache) => Levenshtein.ratio(a, b, cache), (cache) => cache.ratio],
+    ["jaroSimilarity", (a, b, cache) => jaroSimilarity(a, b, cache), (cache) => cache.jaro],
+  ];
+
+  for (const [name, run, bucket] of paths) {
+    it(`${name}: a recently-read entry survives eviction while the stale one is evicted`, () => {
+      const cache = createSimilarityCache({ maxSize: 2 });
+
+      const alphaValue = run("alpha one", "alpha two", cache); // insert alpha
+      run("beta one", "beta two", cache); // insert beta — cache is now full
+      expect(bucket(cache).size).toBe(2);
+
+      // Cache hit on alpha refreshes its recency: beta becomes the LRU entry.
+      expect(run("alpha one", "alpha two", cache)).toBe(alphaValue);
+
+      run("gamma one", "gamma two", cache); // insert gamma — must evict beta
+      const keys = [...bucket(cache).keys()];
+      expect(bucket(cache).size).toBe(2);
+      expect(keys.some((key) => key.includes("alpha")), `alpha evicted by ${name}; keys=${JSON.stringify(keys)}`).toBe(true);
+      expect(keys.some((key) => key.includes("beta")), `beta survived in ${name}; keys=${JSON.stringify(keys)}`).toBe(false);
+      expect(keys.some((key) => key.includes("gamma")), `gamma missing in ${name}; keys=${JSON.stringify(keys)}`).toBe(true);
+    });
+  }
+
+  it("a cache hit does not change the entry count", () => {
+    const cache = createSimilarityCache({ maxSize: 5 });
+    sequenceSimilarity("one fish", "two fish", cache);
+    const before = cache.sequence.size;
+    sequenceSimilarity("one fish", "two fish", cache);
+    sequenceSimilarity("one fish", "two fish", cache);
+    expect(cache.sequence.size).toBe(before);
+  });
+});

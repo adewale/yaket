@@ -61,8 +61,10 @@ The same architecture rendered for environments without Mermaid support.
 ┌─────────────────────────────────────────────────────────────────────────────────┐
 │                EXTRACTION CORE (edge-safe — no fs/path/child_process)           │
 │                                                                                 │
-│   src/KeywordExtractor.ts  ── option normalization, runtime guards,             │
-│   ┌──────────────────┐         result shaping, dedup orchestration,             │
+│   src/config.ts ── parseYakeOptions() boundary validation → YakeConfig          │
+│   src/defaults.ts ── DEFAULT_YAKE_OPTIONS (single source of defaults)           │
+│   src/KeywordExtractor.ts  ── orchestration, result shaping,                    │
+│   ┌──────────────────┐         dedup, lemma aggregation,                        │
 │   │ KeywordExtractor │         extension-hook wiring                            │
 │   └────────┬─────────┘                                                          │
 │            ▼                                                                    │
@@ -121,6 +123,7 @@ The same architecture rendered for environments without Mermaid support.
 │  SimilarityStrategy     compare(a,b) → number                                   │
 │  CandidateNormalizer    casing / plural / punctuation policy                    │
 │  Lemmatizer             hook only (no bundled spacy/nltk backends)              │
+│  lemmaAggregation       post-rank lemma grouping: min/mean/max/harmonic         │
 │  SingleWordScorer       replace internal YAKE unigram score                     │
 │  MultiWordScorer        replace internal YAKE n-gram score                      │
 │  KeywordScorer          override final ranking score                            │
@@ -156,11 +159,15 @@ Runtime boundary key:
 | Module | Responsibility |
 |---|---|
 | `src/KeywordExtractor.ts` | Public extraction API, result shaping, dedup, extension hooks |
+| `src/config.ts` | `parseYakeOptions()` boundary validation, `YakeConfig`, branded types, `Result` |
+| `src/defaults.ts` | `DEFAULT_YAKE_OPTIONS` — single source of public defaults |
+| `src/features.ts` | `FeatureName` guard + `featureEnabled` helper |
+| `src/lemma.ts` | `lemmaAggregation` policies (`min`/`mean`/`max`/`harmonic`) and `aggregateKeywordsByLemma` |
 | `src/DataCore.ts` | Document state, candidate generation, co-occurrence graph, feature preparation |
 | `src/SingleWord.ts` | Single-word feature accumulation and scoring |
 | `src/ComposedWord.ts` | Multi-word candidate validation and scoring |
 | `src/utils.ts` | Pre-filtering, sentence splitting, tokenization, YAKE tag logic |
-| `src/similarity.ts` | Levenshtein, sequence, Jaro similarity, configurable `SimilarityCache` |
+| `src/similarity.ts` | Levenshtein, sequence, Jaro similarity, configurable LRU `SimilarityCache` |
 | `src/stopwords.ts` | Bundled stopword loading |
 | `src/strategies.ts` | Pluggable strategy and result interfaces (incl. `SentenceSplitter` and `Tokenizer`) |
 | `src/document.ts` | Document-oriented pipeline helpers |
@@ -176,14 +183,18 @@ Runtime boundary key:
 
 ## Extraction Flow
 
-1. `KeywordExtractor` normalizes options and loads stopwords.
-2. `DataCore` preprocesses text and builds sentence/token blocks.
-3. Tokens become `SingleWord` terms stored in an adjacency-backed graph.
-4. Candidate phrases become `ComposedWord` values.
-5. YAKE single-word and multi-word scores are computed.
-6. Results are converted into typed `KeywordResult` records.
-7. Dedup and result truncation are applied.
-8. Optional adapters reshape output for Bobbin or document pipelines.
+1. `parseYakeOptions()` validates the public options into a `YakeConfig`
+   (rejecting removed aliases and out-of-range values with typed errors).
+2. `KeywordExtractor` loads stopwords and assembles the strategy hooks.
+3. `DataCore` preprocesses text and builds sentence/token blocks.
+4. Tokens become `SingleWord` terms stored in an adjacency-backed graph.
+5. Candidate phrases become `ComposedWord` values.
+6. YAKE single-word and multi-word scores are computed.
+7. Results are converted into typed `KeywordResult` records.
+8. Dedup and result truncation are applied.
+9. When `lemmaAggregation` is set, the final list is grouped by lemma and
+   each group's scores are combined with the configured policy.
+10. Optional adapters reshape output for Bobbin or document pipelines.
 
 ## Runtime Boundaries
 
@@ -215,9 +226,10 @@ These remain optional and separate from the published extraction core:
 - `Tokenizer` (just tokenize, override one half independently)
 - `StopwordProvider`
 - `SimilarityStrategy`
-- `SimilarityCache` (configurable bounded cache for the `seqm`, `levs`, and `jaro` paths — `distance`, `ratio`, `sequence`, and `jaro` maps)
+- `SimilarityCache` (configurable bounded LRU cache for the `seqm`, `levs`, and `jaro` paths — `distance`, `ratio`, `sequence`, and `jaro` maps)
 - `CandidateNormalizer`
 - `Lemmatizer`
+- `lemmaAggregation` (post-rank lemma grouping: `min`, `mean`, `max`, `harmonic`)
 - `SingleWordScorer`
 - `MultiWordScorer`
 - `KeywordScorer`

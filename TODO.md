@@ -53,15 +53,18 @@ Deferred items tracked here intentionally remain outside the current implementat
    position delta. Substantial change with regression risk on the
    existing tokenizer-parity corpus.
 
-8. **`SimilarityCache` eviction is FIFO, doc says LRU.** The eviction
-   function evicts `cache.keys().next().value` and `Map.set` on an
-   existing key does not bump insertion order. Pick one: relax the doc
-   wording, or implement true LRU with `set`-on-hit.
+8. ~~**`SimilarityCache` eviction is FIFO, doc says LRU.**~~ **Resolved
+   2026-06-10:** implemented true LRU — every cache hit re-inserts the
+   key (`readBoundedCache`), so eviction removes the least-recently-used
+   entry. Four per-path regression tests in
+   `test/similarity-cache-isolation.test.ts` pin the behavior.
 
-9. **`docs/architecture.md` is pre-0.6.1.** The Module Map and ASCII
-   diagram still describe the surface before `config.ts`, `defaults.ts`,
-   `features.ts`, and `lemma.ts` existed. Next docs refresh.
+9. ~~**`docs/architecture.md` is pre-0.6.1.**~~ **Resolved 2026-06-10:**
+   Module Map, ASCII diagram, Extraction Flow, and Extension Points now
+   describe `config.ts`, `defaults.ts`, `features.ts`, and `lemma.ts`.
 
-10. **Dedicated `data-core.test.ts`.** Direct-construction edge cases
-    for `DataCore` are covered through several files. A dedicated test
-    file would promote regression visibility.
+10. ~~**Dedicated `data-core.test.ts`.**~~ **Resolved 2026-06-10:** new
+    `test/data-core.test.ts` pins constructor defaults, term-index
+    semantics (plural-trim, stopword marking, saveNonSeen), document
+    statistics, window-skip co-occurrence behavior (validated against
+    upstream Python YAKE), and composed-word frequency counting.
