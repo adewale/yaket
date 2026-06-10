@@ -21,9 +21,13 @@ describe("mutation-style fuzzing over known-good fixtures", () => {
           const second = extractKeywords(mutated, { language: "en", n: 3, top: 10 });
 
           expect(second).toEqual(first);
-          // Output must remain ascending by score.
+          // Output must remain ascending by score modulo the comparator's
+          // tie-break tolerance: scores within 1e-15 of each other are tied
+          // and may be reordered by the sliding-n-gram tie-break to match
+          // upstream Python YAKE's insertion-order behavior.
+          const tieTolerance = 1e-15;
           for (let index = 1; index < first.length; index += 1) {
-            expect(first[index]![1]).toBeGreaterThanOrEqual(first[index - 1]![1]);
+            expect(first[index]![1]).toBeGreaterThanOrEqual(first[index - 1]![1] - tieTolerance);
           }
           // Keywords are unique, trimmed, and have finite positive scores.
           const keywords = first.map(([keyword]) => keyword);

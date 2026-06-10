@@ -8,10 +8,13 @@ describe("Bobbin validation corpus", () => {
   it("keeps the top newsletter keywords stable", () => {
     const keywords = extractYakeKeywords(NEWSLETTER_CHUNK, 5, 3);
 
+    // Scores reflect the 2026-06-10 numpy-compatible pairwise summation for
+    // `stdTf`; the previous values used naive accumulation and were 1 ULP
+    // off upstream Python YAKE on a few terms. Candidate set is unchanged.
     expect(keywords).toEqual([
       { keyword: "vertical", score: 0.17777439245462645 },
-      { keyword: "gizmo and dreamer", score: 0.18107633969826237 },
-      { keyword: "platforms", score: 0.18904181613756502 },
+      { keyword: "gizmo and dreamer", score: 0.1810763396982624 },
+      { keyword: "platforms", score: 0.18904181613756504 },
       { keyword: "absorbed", score: 0.226396901979683 },
       { keyword: "consumer", score: 0.2597043637758384 },
     ]);

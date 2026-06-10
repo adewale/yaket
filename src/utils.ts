@@ -221,6 +221,14 @@ function isSentenceTerminal(char: string): boolean {
 }
 
 function shouldSplitSentence(text: string, sentenceStart: number, punctuationIndex: number, nextIndex: number): boolean {
+  // segtok's `_abbreviation_joiner` joins across any terminal whose preceding
+  // span ends with whitespace — that is, the terminal floats between tokens
+  // (e.g. "Arquivo.pt . Nesta"). Treat it as stray punctuation and keep the
+  // sentence open across all terminals (".", "!", "?"), matching segtok.
+  if (punctuationIndex > 0 && isWhitespace(text[punctuationIndex - 1]!)) {
+    return false;
+  }
+
   if (nextIndex >= text.length) {
     return true;
   }
@@ -282,10 +290,14 @@ function isWordChar(char: string): boolean {
 
 function skipWhitespace(text: string, index: number): number {
   let cursor = index;
-  while (cursor < text.length && /\s/u.test(text[cursor]!)) {
+  while (cursor < text.length && isWhitespace(text[cursor]!)) {
     cursor += 1;
   }
   return cursor;
+}
+
+function isWhitespace(char: string): boolean {
+  return /\s/u.test(char);
 }
 
 function pushSentence(sentences: string[], sentence: string): void {

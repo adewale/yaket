@@ -2,6 +2,7 @@ import { ComposedWord, type NormalizedCandidateTerm } from "./ComposedWord.js";
 import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
 import type { FeatureName } from "./features.js";
 import { DirectedGraph } from "./graph.js";
+import { numpyPairwiseSum } from "./numerics.js";
 import { SingleWord } from "./SingleWord.js";
 import type { CandidateNormalizer, Lemmatizer, MultiWordScorer, SingleWordScorer, TextProcessor } from "./strategies.js";
 import { defaultTextProcessor } from "./strategies.js";
@@ -123,8 +124,9 @@ export class DataCore {
     }
 
     const validTfs = validTerms.map((term) => term.tf);
-    const avgTf = validTfs.reduce((sum, value) => sum + value, 0) / validTfs.length;
-    const stdTf = Math.sqrt(validTfs.reduce((sum, value) => sum + ((value - avgTf) ** 2), 0) / validTfs.length);
+    const avgTf = numpyPairwiseSum(validTfs) / validTfs.length;
+    const squaredDeltas = validTfs.map((value) => (value - avgTf) ** 2);
+    const stdTf = Math.sqrt(numpyPairwiseSum(squaredDeltas) / validTfs.length);
     const maxTf = Math.max(...[...this.terms.values()].map((term) => term.tf));
 
     const context = features === undefined

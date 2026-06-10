@@ -316,36 +316,20 @@ interface ComparableCandidate {
   readonly order: number;
 }
 
-/** @internal */
+/**
+ * Stable score-first comparator. Score ties fall back to insertion order to
+ * mirror upstream Python YAKE's `sorted(candidates, key=lambda c: c.h)`
+ * (Python's sort is stable). A 1e-15 absolute tolerance treats float-precision
+ * residuals (e.g. V8 vs glibc `Math.log` 1-ULP drift) as exact ties so the
+ * insertion-order fallback governs them uniformly.
+ *
+ * @internal
+ */
 export function compareCandidates(left: ComparableCandidate, right: ComparableCandidate): number {
   const scoreDelta = left.h - right.h;
   if (Math.abs(scoreDelta) > 1e-15) {
     return scoreDelta;
   }
 
-  if (isSlidingNgramTie(left, right)) {
-    return right.order - left.order;
-  }
-
   return left.order - right.order;
-}
-
-/** @internal */
-export function isSlidingNgramTie(left: ComparableCandidate, right: ComparableCandidate): boolean {
-  if (left.size !== right.size || left.size < 3) {
-    return false;
-  }
-
-  const leftWords = left.uniqueKw.split(" ");
-  const rightWords = right.uniqueKw.split(" ");
-  if (leftWords.length !== rightWords.length || leftWords.length < 3) {
-    return false;
-  }
-
-  const leftTail = leftWords.slice(1).join(" ");
-  const rightHead = rightWords.slice(0, -1).join(" ");
-  const rightTail = rightWords.slice(1).join(" ");
-  const leftHead = leftWords.slice(0, -1).join(" ");
-
-  return leftTail === rightHead || rightTail === leftHead;
 }

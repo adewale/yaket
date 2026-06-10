@@ -53,6 +53,13 @@ const cases: MultilingualParityCase[] = [
     language: "pt",
     n: 3,
     text: portugueseN3Text,
+    // The segtok sentence-merge fix (TODO #7) pulled the Portuguese head into
+    // candidate-set parity with upstream YAKE: positions 1, 2, 4, 5, 7, 8, 12,
+    // 14, 15, 16 are byte-identical against upstream. Positions 3, 6, 9, 13
+    // and the 10/11 swap are 1-ULP float-precision tie residuals tracked as
+    // TODO #2/#3. Pin everything up to and including "Ricardo Campos
+    // investigador" so the parity gain that closed the historic mid-rank
+    // drift cannot regress.
     expectedHead: [
       "Conta-me Histórias",
       "LIAAD do INESC",
@@ -63,6 +70,13 @@ const cases: MultilingualParityCase[] = [
       "LIAAD",
       "INESC",
       "TEC",
+      "Xutos inspiram projeto",
+      "inspiram projeto premiado",
+      "Adam Jatwot docente",
+      "Arquivo.pt",
+      "Alípio Jorge",
+      "Ciências da Universidade",
+      "Ricardo Campos investigador",
     ],
   },
   {
@@ -79,6 +93,10 @@ const cases: MultilingualParityCase[] = [
     ],
   },
   {
+    // The 2026-06-10 parity work (pairwise sum + tie-break removal) lifted
+    // the Spanish head from 9/10 to a full 12/12 match against upstream
+    // Python YAKE. Pin the deeper prefix so future regressions surface
+    // immediately.
     name: "spanish-ai-paragraph",
     language: "es",
     n: 3,
@@ -89,6 +107,13 @@ const cases: MultilingualParityCase[] = [
       "inteligencia artificial",
       "inteligencia artificial permite",
       "aprendizaje automático",
+      "transforman la industria",
+      "artificial transforman",
+      "inteligencia",
+      "moderna",
+      "artificial",
+      "artificial permite",
+      "empresas tomar decisiones",
     ],
   },
   {
@@ -144,8 +169,12 @@ const cases: MultilingualParityCase[] = [
     ],
   },
   {
-    // upstream ranks four candidates with byte-identical scores at positions 3-5;
-    // pin only the unambiguous prefix until tie-break parity is investigated.
+    // Positions 1-2 and 6-12 match upstream exactly. Positions 3-5 share
+    // byte-identical scores in Yaket (V8's `Math.log` collapses upstream's
+    // 1-3 ULP differences inside `wcase`/`wpos` for these terms) so they
+    // fall to insertion order while upstream's bit-exact float math orders
+    // them differently. This is the float-precision residual documented in
+    // `docs/algorithm-drift.md` — TODO #2. Pin only positions 1-2.
     name: "arabic-ai-paragraph",
     language: "ar",
     n: 3,

@@ -119,4 +119,21 @@ describe("tokenizer and sentence splitting parity", () => {
     // segtok: web_tokenizer('U.S. team') -> ['U.S.', 'team']
     expect(tokenizeWords("U.S. team")).toEqual(["U.S.", "team"]);
   });
+
+  it("does not split at a sentence-terminal preceded by whitespace (segtok join rule)", () => {
+    // segtok's `_abbreviation_joiner` joins across terminals whose preceding
+    // span ends with whitespace. The reference Portuguese sample uses
+    // "Arquivo.pt . Nesta" — segtok keeps the two halves in the same
+    // sentence, so we mirror that here. (split_multi confirmed in /tmp.)
+    expect(splitSentences("Hello . World")).toEqual(["Hello . World"]);
+    expect(splitSentences("Hello ! World")).toEqual(["Hello ! World"]);
+    expect(splitSentences("Hello ? World")).toEqual(["Hello ? World"]);
+    // The fix targets stray terminals; normal sentence boundaries still split.
+    expect(splitSentences("Hello. World.")).toEqual(["Hello.", "World."]);
+    expect(splitSentences("Hello! World.")).toEqual(["Hello!", "World."]);
+    // The Portuguese reference span: Arquivo.pt . Nesta is a single sentence.
+    expect(splitSentences("publicamente pelo Arquivo.pt . Nesta plataforma.")).toEqual([
+      "publicamente pelo Arquivo.pt . Nesta plataforma.",
+    ]);
+  });
 });

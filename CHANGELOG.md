@@ -26,15 +26,41 @@ All notable changes to this project will be documented in this file.
   every cache hit refreshes the entry's recency, so hot keys are no
   longer evicted before colder, later-inserted ones. Previously the
   documented "LRU" behavior was first-in-first-out.
+- New `src/numerics.ts` ports numpy's unrolled 8-accumulator pairwise
+  summation kernel. `DataCore.buildSingleTermsFeatures` now uses it
+  for `avgTf` and the sum-of-squared-deltas inside `stdTf`, closing the
+  3-ULP drift the naive accumulator introduced against upstream
+  Python YAKE on the Portuguese parity sample. New `test/numerics.test.ts`
+  pins the kernel against numpy-captured reference values on inputs
+  that exercise the naive, unrolled, and recursive-split paths.
 - New audit doc at
   `docs/audits/architecture-algorithms-data-structures-and-tests-2026-06-10.md`.
 
 ### Changed
 
+- `splitSentences` now applies segtok's `_abbreviation_joiner` join
+  rule: when a sentence-terminal (`.`, `!`, `?`) is preceded by
+  whitespace, the terminal is stray punctuation and does not split.
+  This lifts the Portuguese parity head from 9/9 to 16/16 candidates
+  (TODO #7). Six new regression tests in
+  `test/tokenizer-parity.test.ts` cover the rule and the
+  `Arquivo.pt . Nesta plataforma` reference span.
+- `compareCandidates` no longer reverses insertion order for sliding-
+  trigram ties. The reversal was a heuristic that helped one synthetic
+  four-word example but regressed three multilingual parity samples.
+  Removing it lifts Spanish from 9/10 to a full 12/12 match with
+  upstream and brings the Portuguese 10/11 swap into the
+  upstream-correct order. `isSlidingNgramTie` is no longer exported.
 - Stryker mutation testing now includes `src/config.ts`, `src/graph.ts`,
-  and `src/lemma.ts` in addition to the scoring and dedup modules.
+  `src/lemma.ts`, and `src/numerics.ts` in addition to the scoring and
+  dedup modules. The `mutation` CI job now runs on a weekly cron
+  (`0 6 * * 0`) in addition to `workflow_dispatch`, so survivors cannot
+  pile up between manual runs (TODO #4).
 - ESLint config now ignores the transient `.stryker-tmp/**` sandbox so
   `npm run verify` does not break when a Stryker run was interrupted.
+- `docs/integrations/bobbin.md` now documents the three-layer Bobbin
+  re-validation cadence (per-push adapter shape, per-push golden,
+  Bobbin-side topic suite on releases — TODO #6).
 
 ### Fixed
 
@@ -44,6 +70,12 @@ All notable changes to this project will be documented in this file.
   preserve segtok's "only attach when glued" behavior. This lifts the
   Portuguese mid-rank `Arquivo.pt` candidate back into the top-12
   (Python YAKE has it at 13).
+- Portuguese top-20 now matches upstream Python YAKE by candidate name
+  for every position. Residual 1-ULP score drift is bounded by V8 vs
+  glibc `Math.log` precision and stays below the comparator's tie-break
+  tolerance.
+- Bobbin newsletter golden scores are now bit-exact against upstream
+  Python YAKE thanks to the pairwise summation port.
 
 ## 0.6.1 - 2026-04-29
 

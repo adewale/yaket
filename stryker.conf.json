@@ -10,7 +10,8 @@
     "src/KeywordExtractor.ts",
     "src/config.ts",
     "src/graph.ts",
-    "src/lemma.ts"
+    "src/lemma.ts",
+    "src/numerics.ts"
   ],
   "coverageAnalysis": "perTest",
   "concurrency": 4,

@@ -108,16 +108,27 @@ Python الاصطناعي h=0.4760358540047955
 
 ### Compare candidates
 
-`compareCandidates` keeps the `1e-15` epsilon and the
-`isSlidingNgramTie` reversal that was needed to match upstream tie-break
-on adjacent sliding 3-grams. This is correct for the cases it solves
-(English near-tie ordering, the Komoroske benchmark) but does interact
-badly with the Arabic 1e-17 ULP differences in mid-rank ties.
+`compareCandidates` keeps the `1e-15` epsilon and used to also flip
+insertion order for sliding-3-gram ties (`isSlidingNgramTie`). The
+reversal helped the synthetic "Google Kaggle data science" near-tie but
+reversed the multilingual Portuguese/Spanish/Arabic samples whose
+sliding-trigram triples happen to tie at byte-identical scores in Yaket.
 
-**Finding 3 — tie-break depends on float math.** Leaving as-is per
-`docs/algorithm-drift.md`. The change would be a candidate-order
-restructuring, not a parameter tweak, and it would risk regressions on
-the English near-tie tests.
+**Finding 3 — tie-break depends on float math (resolved).** The
+reversal was removed in this pass; ties uniformly fall to insertion
+order, mirroring Python's `sorted(...)` stable behavior. Net result:
+Portuguese 10/11 order now matches upstream, Spanish head extends from
+9/10 to 12/12, Arabic 3-5 remain insertion-ordered (no positional
+heuristic can match upstream's bit-exact ordering without a glibc-
+compatible `Math.log` port; documented in `docs/algorithm-drift.md`).
+The Google synthetic test was updated to expect insertion order and
+documents the trade.
+
+In the same pass, `DataCore.buildSingleTermsFeatures` switched from
+naive accumulation to a port of numpy's unrolled 8-accumulator
+pairwise summation kernel (`src/numerics.ts`). That closed the 3-ULP
+drift on `stdTf` for the 69-element Portuguese sample and made the
+Bobbin newsletter golden bit-exact against upstream Python YAKE.
 
 ### Tokenizer (segtok parity)
 
@@ -162,11 +173,16 @@ standalone `.` is not a strong boundary). Yaket's `splitSentences`
 splits there. This is the residual cause of the wspread/wpos delta on
 "Ricardo Campos investigador".
 
-**Finding 4 — segtok sentence-merge behavior.** Fixing this would
-mean replicating segtok's abbreviation-aware sentence merge inside
-`splitSentences`. That is a substantial change and risks regressions on
-the existing tokenizer-parity corpus. Tracked in TODO for a future
-audit.
+**Finding 4 — segtok sentence-merge behavior (resolved).**
+`splitSentences` now applies segtok's `_abbreviation_joiner` rule
+directly: a sentence-terminal (`.`, `!`, `?`) preceded by whitespace is
+treated as stray punctuation and does not split. This is the minimal
+slice of segtok's join logic that closes the `Arquivo.pt . Nesta`
+case (and the equivalent `.pt . ` patterns generally) without porting
+the rest of segtok's abbreviation-aware merge machinery. Six new
+regression tests in `test/tokenizer-parity.test.ts` cover the rule and
+the original Portuguese reference span. The Portuguese parity head
+extended from 9/9 to 16/16 candidates as a result.
 
 ## Data structures
 

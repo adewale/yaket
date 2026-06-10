@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
   workflow_dispatch:
+  schedule:
+    # Mutation testing runs every Sunday at 06:00 UTC. The `mutation` job
+    # below gates itself on `schedule` so the cron only triggers the slow
+    # job; regular pushes/PRs continue to skip it.
+    - cron: '0 6 * * 0'
 
 jobs:
   verify:
@@ -48,7 +53,12 @@ jobs:
       - run: npm run test:cli:coverage
 
   mutation:
-    if: github.event_name == 'workflow_dispatch'
+    # Mutation testing is expensive (multi-minute). Run it on demand and
+    # automatically every Sunday so survivors do not pile up between manual
+    # invocations. The Stryker `break` threshold (85%) fails the job if any
+    # tracked file falls below it, so a weekly green run is the cadence
+    # guarantee TODO #4 used to track manually.
+    if: github.event_name == 'workflow_dispatch' || github.event_name == 'schedule'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6

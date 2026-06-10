@@ -65,7 +65,22 @@ Recommended adoption sequence:
 
 Yaket has now been run through Bobbin's YAKE, topic-extractor, topic-system, and extraction-quality tests in the Bobbin reference checkout via the Bobbin adapter path.
 
-Remaining follow-up: keep that validation current as Bobbin evolves.
+## Re-validation cadence
+
+Keep Bobbin's integration validation current as Bobbin evolves. The Yaket
+side has two layers that already exercise the contract on every commit
+and one layer that runs out-of-band.
+
+| Layer | Lives in | Cadence |
+|---|---|---|
+| `extractYakeKeywords` shape (return type, lowercase, descending-by-score) | `test/bobbin-adapter.test.ts` | Every push / PR |
+| Frozen 5-keyword Bobbin newsletter golden | `test/bobbin-validation.test.ts` | Every push / PR |
+| Running Bobbin's own `topic-extractor` / `topic-system` / `extraction-quality` suites with Yaket swapped in for the bundled adapter | Bobbin's repository | Re-run when Bobbin releases, or when Yaket changes anything in the scoring / dedup / tokenizer paths |
+
+When the third row trips on a Bobbin upgrade, refresh
+`test/bobbin-validation.test.ts` with the new golden and add a
+note in `CHANGELOG.md` so downstream Bobbin consumers see the change.
+This is the operational version of the long-running TODO #6 follow-up.
 
 ## Example integration
 

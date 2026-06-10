@@ -174,6 +174,7 @@ Runtime boundary key:
 | `src/bobbin.ts` | Bobbin-compatible adapter output |
 | `src/highlight.ts` | Keyword highlighting utility |
 | `src/graph.ts` | Adjacency-backed co-occurrence graph |
+| `src/numerics.ts` | numpy-compatible pairwise summation kernel (bit-exact `avgTf`/`stdTf` parity) |
 | `src/cli.ts` | Optional Node CLI entry point |
 | `scripts/benchmark.ts` | Komoroske corpus benchmark harness (Node-only) |
 | `scripts/benchmark-multilingual.ts` | Per-language Yaket-vs-Python YAKE parity benchmark (Node-only) |

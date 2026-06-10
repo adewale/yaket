@@ -5,32 +5,47 @@ Deferred items tracked here intentionally remain outside the current implementat
 ## Parity drift (low priority, headline drift is fixed)
 
 1. ~~Investigate the remaining mid-rank Portuguese drift around `plataforma`,
-   `Arquivo.pt`, `Ricardo Campos investigador`~~. **Partially addressed
-   in 2026-06-10:** `Arquivo.pt` is now surfaced by the tokenizer-parity
-   fix (see `docs/audits/architecture-algorithms-data-structures-and-tests-2026-06-10.md`,
-   finding 4). The remaining "Ricardo Campos investigador" position
-   delta is rooted in segtok's sentence-merge behavior on `.pt .`
-   patterns; tracked as item 7.
-2. Investigate the upstream tie-break ordering used when several candidates
-   share byte-identical scores (visible on the Arabic AI sample at positions
-   3-5; the `test/multilingual-parity.test.ts` Arabic head is intentionally
-   trimmed to top-2 to avoid this until it is resolved). Root cause is
-   1-3 ULP feature-score deltas captured in
-   `docs/algorithm-drift.md`; needs upstream-bit-exact float math.
-3. Investigate the Spanish 9/10 multilingual benchmark head (one position
-   inside the upstream top-10 differs); the regression test pins what we
-   reproduce today so a fix shows up as a parity gain.
+   `Arquivo.pt`, `Ricardo Campos investigador`~~. **Resolved 2026-06-10:**
+   the segtok sentence-merge port (item 7) + the `isSlidingNgramTie`
+   removal + the numpy-compatible pairwise sum for `stdTf` pulled the
+   Portuguese top-20 to exact-name parity with upstream. `Arquivo.pt`,
+   `Ricardo Campos investigador`, and the previously-misplaced
+   `plataforma` candidate are now all in the upstream-matching positions
+   (see `test/multilingual-parity.test.ts` and
+   `docs/algorithm-drift.md`).
+2. Investigate the upstream tie-break ordering used when several
+   candidates share byte-identical scores (visible on the Arabic AI
+   sample at positions 3-5; the `test/multilingual-parity.test.ts`
+   Arabic head is intentionally trimmed to top-2). **Diagnosis sharpened
+   2026-06-10:** the residual is `Math.log` precision drift between V8
+   and glibc — V8's `Math.log(3)` differs from Python's by 1 ULP, which
+   propagates through `wcase` / `wpos` and lands inside the comparator's
+   tie-break tolerance for these three trigrams. Closing this requires
+   porting glibc's `e_log.c` into the scoring path. Documented in
+   `docs/algorithm-drift.md`; deferred until a real adopter needs
+   byte-exact ordering past the tracked heads.
+3. ~~Investigate the Spanish 9/10 multilingual benchmark head (one
+   position inside the upstream top-10 differs); the regression test
+   pins what we reproduce today so a fix shows up as a parity gain.~~
+   **Resolved 2026-06-10:** the `isSlidingNgramTie` removal lifted the
+   Spanish head from 9/10 to a full 12/12 match. The expected fixture
+   in `test/multilingual-parity.test.ts` is now the full top-12.
 
 ## Coverage / verification breadth
 
-4. Run `npm run test:mutation` periodically. As of 2026-06-10 the Stryker
-   `mutate` list spans `src/similarity.ts`, `src/SingleWord.ts`,
+4. ~~Run `npm run test:mutation` periodically. As of 2026-06-10 the
+   Stryker `mutate` list spans `src/similarity.ts`, `src/SingleWord.ts`,
    `src/ComposedWord.ts`, `src/KeywordExtractor.ts`, `src/config.ts`,
    `src/graph.ts`, and `src/lemma.ts`; the configured break threshold is
    85%. Most remaining `src/similarity.ts` survivors are equivalent
    mutants (cache-hit short-circuits, length-symmetric Levenshtein swap,
-   simple-vs-matrix threshold). Future work is scheduling and triage, not
-   infrastructure.
+   simple-vs-matrix threshold). Future work is scheduling and triage,
+   not infrastructure.~~ **Resolved 2026-06-10:** the `mutation` job in
+   `.github/workflows/ci.yml` now runs on `workflow_dispatch` and on a
+   weekly schedule (`cron: '0 6 * * 0'`). The Stryker `break` threshold
+   (85%) makes the scheduled job fail loudly if any tracked file falls
+   below it, so survivors cannot pile up between manual runs. Triage
+   remains a manual review activity tracked through the audit cadence.
 
 ## Pluggable surface follow-ups
 
@@ -41,17 +56,30 @@ Deferred items tracked here intentionally remain outside the current implementat
 
 ## Adoption track
 
-6. Keep Bobbin's integration validation current as Bobbin evolves. The 0.6
-   release dropped the snake_case aliases; consumers still on 0.5.x should
-   follow `docs/migration-bobbin-0.6.md` before upgrading.
+6. Keep Bobbin's integration validation current as Bobbin evolves. The
+   0.6 release dropped the snake_case aliases; consumers still on 0.5.x
+   should follow `docs/migration-bobbin-0.6.md` before upgrading.
+   **Cadence documented 2026-06-10:** the three-layer re-validation
+   protocol (per-push adapter shape, per-push 5-keyword golden,
+   Bobbin-side topic-suite re-run on Bobbin or Yaket releases) is now
+   captured in `docs/integrations/bobbin.md#re-validation-cadence`.
+   Refreshing the golden lives in
+   `test/bobbin-validation.test.ts`.
 
 ## Deferred follow-ups discovered in the 2026-06-10 audit
 
-7. **Segtok sentence-merge parity.** `splitSentences` does not implement
-   segtok's behavior of folding `.pt . Nesta` into one sentence. This is
-   the residual cause of the Portuguese "Ricardo Campos investigador"
-   position delta. Substantial change with regression risk on the
-   existing tokenizer-parity corpus.
+7. ~~**Segtok sentence-merge parity.** `splitSentences` does not
+   implement segtok's behavior of folding `.pt . Nesta` into one
+   sentence. This is the residual cause of the Portuguese "Ricardo
+   Campos investigador" position delta. Substantial change with
+   regression risk on the existing tokenizer-parity corpus.~~ **Resolved
+   2026-06-10:** `splitSentences` now applies segtok's
+   `_abbreviation_joiner` rule (terminals preceded by whitespace are
+   stray punctuation and do not split). Six new regression tests in
+   `test/tokenizer-parity.test.ts` cover `Hello . World`, `Hello ! World`,
+   `Hello ? World`, normal boundaries, and the actual `Arquivo.pt .
+   Nesta plataforma` reference span. The Portuguese parity head extended
+   from 9/9 to 16/16 candidates as a result.
 
 8. ~~**`SimilarityCache` eviction is FIFO, doc says LRU.**~~ **Resolved
    2026-06-10:** implemented true LRU — every cache hit re-inserts the
