@@ -1,6 +1,28 @@
 import { describe, expect, it } from "vitest";
 
-import { extractKeywordDetails, extractKeywords, parseYakeOptions, type Lemmatizer } from "../src/index.js";
+import {
+  aggregateKeywordsByLemma,
+  extractKeywordDetails,
+  extractKeywords,
+  LEMMA_AGGREGATION_NAMES,
+  parseYakeOptions,
+  type KeywordResult,
+  type Lemmatizer,
+} from "../src/index.js";
+
+const identityLemmatizer: Lemmatizer = { lemmatize: (token) => token };
+const collapseAllLemmatizer: Lemmatizer = { lemmatize: () => "g" };
+
+function makeKeyword(keyword: string, score: number, sentenceIds: number[] = [0]): KeywordResult {
+  return {
+    keyword,
+    normalizedKeyword: keyword.toLowerCase(),
+    score,
+    ngramSize: keyword.split(/\s+/u).length,
+    occurrences: 1,
+    sentenceIds,
+  };
+}
 
 const singularLemmatizer: Lemmatizer = {
   lemmatize(token) {
@@ -158,5 +180,152 @@ describe("lemmaAggregation policies (upstream lemma_aggregation parity)", () => 
     const aggregatedEntries = details.filter((item) => item.normalizedKeyword === "model");
     expect(aggregatedEntries).toHaveLength(1);
     expect(aggregatedEntries[0]!.occurrences).toBe(3);
+  });
+});
+
+/**
+ * Direct unit tests for `aggregateKeywordsByLemma`. Targeted at the
+ * boundary cases the through-the-extractor path doesn't reach (empty
+ * input, exact-tied scores, multi-word lemma keys, harmonic-zero
+ * fallback, single-item groups, lemmatizer call shape).
+ */
+describe("aggregateKeywordsByLemma — focused unit tests", () => {
+  it("returns an empty array when the input is empty (early return)", () => {
+    expect(aggregateKeywordsByLemma([], identityLemmatizer, "en", "min")).toEqual([]);
+    // Also check the other policies on empty input — none of them should crash.
+    for (const policy of LEMMA_AGGREGATION_NAMES) {
+      expect(aggregateKeywordsByLemma([], identityLemmatizer, "en", policy)).toEqual([]);
+    }
+  });
+
+  it("creates one group per distinct lemma when called with distinct lemmas", () => {
+    const input = [makeKeyword("alpha", 0.1), makeKeyword("beta", 0.2), makeKeyword("gamma", 0.3)];
+    const out = aggregateKeywordsByLemma(input, identityLemmatizer, "en", "min");
+    expect(out.map((entry) => entry.normalizedKeyword)).toEqual(["alpha", "beta", "gamma"]);
+    expect(out.map((entry) => entry.score)).toEqual([0.1, 0.2, 0.3]);
+  });
+
+  it("appends to an existing group on lemma collision rather than overwriting it", () => {
+    // collapseAllLemmatizer maps every token to "g" — every entry lands in
+    // one group. The aggregated score must reflect all three inputs.
+    const input = [makeKeyword("alpha", 0.1), makeKeyword("beta", 0.5), makeKeyword("gamma", 0.9)];
+    expect(aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "min")[0]!.score).toBe(0.1);
+    expect(aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "max")[0]!.score).toBe(0.9);
+    expect(aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "mean")[0]!.score).toBeCloseTo((0.1 + 0.5 + 0.9) / 3, 12);
+    // 3 / (1/0.1 + 1/0.5 + 1/0.9) = 0.2348...
+    expect(aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "harmonic")[0]!.score).toBeCloseTo(3 / (1 / 0.1 + 1 / 0.5 + 1 / 0.9), 12);
+  });
+
+  it("sorts the final list by ascending score even when groups are produced out of order", () => {
+    // Input is intentionally NOT sorted by score — output must re-sort.
+    const input = [makeKeyword("alpha", 0.9), makeKeyword("beta", 0.1), makeKeyword("gamma", 0.5)];
+    const out = aggregateKeywordsByLemma(input, identityLemmatizer, "en", "min");
+    expect(out.map((entry) => entry.score)).toEqual([0.1, 0.5, 0.9]);
+  });
+
+  it("min uses strict `<` so the first-seen variant wins on exact ties", () => {
+    // Two entries with the exact same score: min must keep the first-seen
+    // one. (Equality flip from `<` to `<=` would keep the second.)
+    const input = [makeKeyword("first", 0.5), makeKeyword("second", 0.5)];
+    const out = aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "min");
+    expect(out).toHaveLength(1);
+    expect(out[0]!.keyword).toBe("first");
+  });
+
+  it("max uses strict `>` so the first-seen variant wins on exact ties", () => {
+    const input = [makeKeyword("first", 0.5), makeKeyword("second", 0.5)];
+    const out = aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "max");
+    expect(out).toHaveLength(1);
+    expect(out[0]!.keyword).toBe("first");
+  });
+
+  it("mean keeps the first variant in the group (best-ranked surface form)", () => {
+    const input = [makeKeyword("first", 0.1), makeKeyword("second", 0.9)];
+    const out = aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "mean");
+    expect(out[0]!.keyword).toBe("first");
+    expect(out[0]!.score).toBeCloseTo(0.5, 12);
+  });
+
+  it("harmonic falls back to the arithmetic mean when any score is zero", () => {
+    const input = [makeKeyword("alpha", 0), makeKeyword("beta", 0.6)];
+    const harmonic = aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "harmonic");
+    const meanFallback = aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "mean");
+    expect(harmonic[0]!.score).toBeCloseTo(meanFallback[0]!.score, 12);
+    expect(harmonic[0]!.keyword).toBe("alpha");
+  });
+
+  it("harmonic uses the harmonic mean (NOT arithmetic) when every score is positive", () => {
+    // 2 / (1/0.2 + 1/0.6) = 0.3 ; arithmetic mean would be 0.4. Strict <.
+    const input = [makeKeyword("a", 0.2), makeKeyword("b", 0.6)];
+    const out = aggregateKeywordsByLemma(input, collapseAllLemmatizer, "en", "harmonic");
+    expect(out[0]!.score).toBeCloseTo(0.3, 12);
+    expect(out[0]!.score).toBeLessThan(0.4);
+  });
+
+  it("treats a single-item group as identity for every policy", () => {
+    const single = [makeKeyword("alpha", 0.42, [2, 5])];
+    for (const policy of LEMMA_AGGREGATION_NAMES) {
+      const out = aggregateKeywordsByLemma(single, identityLemmatizer, "en", policy);
+      expect(out).toHaveLength(1);
+      expect(out[0]!.score).toBe(0.42);
+      expect(out[0]!.keyword).toBe("alpha");
+      expect(out[0]!.sentenceIds).toEqual([2, 5]);
+    }
+  });
+
+  it("uses the lemmatizer output with the SAME language as the call argument", () => {
+    const seen: Array<{ token: string; original: string; language: string }> = [];
+    const recording: Lemmatizer = {
+      lemmatize(token, ctx) {
+        seen.push({ token, original: ctx.original, language: ctx.language });
+        return token;
+      },
+    };
+    aggregateKeywordsByLemma([makeKeyword("hello world", 0.5)], recording, "pt", "min");
+    // Each token of the normalized keyword is lemmatized separately.
+    expect(seen).toEqual([
+      { token: "hello", original: "hello", language: "pt" },
+      { token: "world", original: "world", language: "pt" },
+    ]);
+  });
+
+  it("lower-cases the lemmatized fragments so case-only variants share a group", () => {
+    const upperish: Lemmatizer = { lemmatize: (token) => token.toUpperCase() };
+    // Two distinct surface forms whose lemmatized output differs only in case
+    // must end up in the same group (because the helper lowercases the
+    // resulting lemma).
+    const input = [makeKeyword("alpha", 0.4), makeKeyword("ALPHA", 0.2)];
+    const out = aggregateKeywordsByLemma(input, upperish, "en", "min");
+    expect(out).toHaveLength(1);
+    // min picks the better-scoring "ALPHA".
+    expect(out[0]!.keyword).toBe("ALPHA");
+  });
+
+  it("splits multi-word normalized keywords on every whitespace run", () => {
+    // The split is `/\s+/u`. Mutating it to `/\s/u` would split each
+    // whitespace character separately and produce extra blank tokens.
+    // To detect that the multi-token path is actually exercised, use a
+    // lemmatizer that records the token shape.
+    const seen: string[] = [];
+    const recording: Lemmatizer = {
+      lemmatize(token) {
+        seen.push(token);
+        return token;
+      },
+    };
+    aggregateKeywordsByLemma([makeKeyword("two   words", 0.3)], recording, "en", "min");
+    expect(seen).toEqual(["two", "words"]);
+  });
+
+  it("joins multi-token lemmas with a single space so multi-word groups stay distinct", () => {
+    // If the join is mutated to "" the keys "hello world" and "helloworld"
+    // collide; assert they do NOT.
+    const fakeLemma: Lemmatizer = { lemmatize: (token) => token };
+    const input = [
+      makeKeyword("hello world", 0.4),
+      makeKeyword("helloworld", 0.6),
+    ];
+    const out = aggregateKeywordsByLemma(input, fakeLemma, "en", "min");
+    expect(out).toHaveLength(2);
   });
 });
