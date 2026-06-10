@@ -88,14 +88,23 @@ Earlier headline fix that closed the major Portuguese drift before any of those:
 
 ### Float-precision residuals (Arabic positions 3-5)
 
-The only remaining tracked drift is on `ar` positions 3-5. This is **not**
-an algorithm bug. The three trigrams (`الآلي والذكاء الاصطناعي`,
-`والذكاء الاصطناعي يحولان`, `الاصطناعي يحولان الصناعة`) share
-byte-identical `h` in Yaket (and identical scores `0.030304526071711916`).
-Upstream Python computes 1-3 ULP-different floats for the three
-candidates and stable sort then orders them as 9, 12, 6 in insertion
-order — an ordering no positional heuristic can reproduce without
-bit-exact float math.
+The Arabic top-12 contains the same 12 candidates as upstream Python
+YAKE, in the same order at every position except 3-5. There the three
+trigrams (`الآلي والذكاء الاصطناعي`, `والذكاء الاصطناعي يحولان`,
+`الاصطناعي يحولان الصناعة`) score byte-identically in Yaket
+(`0.030304526071711916`) while upstream computes 1-3 ULP-different
+floats and stable-sorts them in a non-positional order. No positional
+heuristic can reproduce upstream's ordering without bit-exact float
+math.
+
+Practically, this is **not** an algorithm bug — Yaket's parity
+guarantee at the tied positions is "same candidates, ordering within
+the tie is implementation-defined". The multilingual parity test asserts
+exactly that: positions 3-5 are pinned as a `tiedBuckets` range whose
+set must equal upstream's, while every other position is asserted in
+exact upstream order. Failures still surface immediately if the
+candidate set ever diverges; spurious ordering noise from V8 ↔ glibc
+log drift no longer trips the test.
 
 The single remaining source of bit drift is `Math.log`. V8 and glibc both
 ship fdlibm-derived log implementations but use different polynomial

@@ -13,17 +13,23 @@ Deferred items tracked here intentionally remain outside the current implementat
    `plataforma` candidate are now all in the upstream-matching positions
    (see `test/multilingual-parity.test.ts` and
    `docs/algorithm-drift.md`).
-2. Investigate the upstream tie-break ordering used when several
+2. ~~Investigate the upstream tie-break ordering used when several
    candidates share byte-identical scores (visible on the Arabic AI
    sample at positions 3-5; the `test/multilingual-parity.test.ts`
-   Arabic head is intentionally trimmed to top-2). **Diagnosis sharpened
-   2026-06-10:** the residual is `Math.log` precision drift between V8
-   and glibc — V8's `Math.log(3)` differs from Python's by 1 ULP, which
-   propagates through `wcase` / `wpos` and lands inside the comparator's
-   tie-break tolerance for these three trigrams. Closing this requires
-   porting glibc's `e_log.c` into the scoring path. Documented in
-   `docs/algorithm-drift.md`; deferred until a real adopter needs
-   byte-exact ordering past the tracked heads.
+   Arabic head is intentionally trimmed to top-2).~~ **Resolved
+   2026-06-10:** the underlying drift cannot be fixed without porting
+   glibc's `e_log.c` into the hot scoring path (V8 vs glibc `Math.log`
+   differ by 1 ULP for some inputs), which would tax every extraction
+   to fix one synthetic test case. Instead the multilingual parity
+   fixture grew a `tiedBuckets` field that asserts set equality on
+   position ranges where Yaket and upstream return the same candidates
+   in different orders because the candidates score byte-identically
+   in our float math. Arabic is now pinned at the full top-12 with
+   positions 3-5 declared as a tied bucket. This is the parity
+   guarantee Yaket actually delivers (same candidates, ordering within
+   a tie is implementation-defined), so the test no longer trims to
+   avoid the question. Diagnosis kept in `docs/algorithm-drift.md` for
+   reference if a future adopter ever needs byte-exact ordering.
 3. ~~Investigate the Spanish 9/10 multilingual benchmark head (one
    position inside the upstream top-10 differs); the regression test
    pins what we reproduce today so a fix shows up as a parity gain.~~

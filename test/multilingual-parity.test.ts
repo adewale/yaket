@@ -18,6 +18,16 @@ interface MultilingualParityCase {
   readonly n: number;
   readonly text: string;
   readonly expectedHead: readonly string[];
+  /**
+   * Position ranges (inclusive, 1-indexed for readability) where upstream
+   * Python YAKE and Yaket produce the same candidate set but in different
+   * order because the candidates score byte-identically inside Yaket's
+   * float math. The assertion treats these ranges as set equality so a
+   * legitimate float-precision tie (TODO #2 — V8 vs glibc `Math.log`
+   * residual) does not look like a parity drift. Positions outside the
+   * ranges are still asserted in exact upstream order.
+   */
+  readonly tiedBuckets?: ReadonlyArray<readonly [start: number, end: number]>;
 }
 
 const portugueseN3Text = `
@@ -169,12 +179,14 @@ const cases: MultilingualParityCase[] = [
     ],
   },
   {
-    // Positions 1-2 and 6-12 match upstream exactly. Positions 3-5 share
-    // byte-identical scores in Yaket (V8's `Math.log` collapses upstream's
-    // 1-3 ULP differences inside `wcase`/`wpos` for these terms) so they
-    // fall to insertion order while upstream's bit-exact float math orders
-    // them differently. This is the float-precision residual documented in
-    // `docs/algorithm-drift.md` — TODO #2. Pin only positions 1-2.
+    // Yaket and upstream Python YAKE return the same 12-candidate top-12
+    // here. Positions 1-2 and 6-12 are in exact upstream order. Positions
+    // 3-5 share byte-identical scores in Yaket (V8's `Math.log` collapses
+    // upstream's 1-3 ULP differences inside `wcase`/`wpos` for these
+    // terms), so they form a tied bucket. We assert the bucket as a set,
+    // which is what the parity guarantee actually is — same candidates at
+    // those positions, order undefined within the tie. See
+    // `docs/algorithm-drift.md` for the V8-vs-glibc residual.
     name: "arabic-ai-paragraph",
     language: "ar",
     n: 3,
@@ -182,9 +194,53 @@ const cases: MultilingualParityCase[] = [
     expectedHead: [
       "التعلم الآلي والذكاء",
       "يحولان الصناعة الحديثة",
+      "والذكاء الاصطناعي يحولان",
+      "الاصطناعي يحولان الصناعة",
+      "الآلي والذكاء الاصطناعي",
+      "التعلم الآلي",
+      "الصناعة الحديثة",
+      "الآلي والذكاء",
+      "يحولان الصناعة",
+      "والذكاء الاصطناعي",
+      "الاصطناعي يحولان",
+      "الذكاء الاصطناعي يساعد",
     ],
+    tiedBuckets: [[3, 5]],
   },
 ];
+
+function assertHeadMatchesFixture(actual: readonly string[], fixture: MultilingualParityCase): void {
+  const expected = fixture.expectedHead;
+
+  if (fixture.tiedBuckets == null || fixture.tiedBuckets.length === 0) {
+    expect(actual).toEqual([...expected]);
+    return;
+  }
+
+  // The fixture is in `expectedHead` order with one or more "tied bucket"
+  // ranges. For each tied range we assert set equality (any permutation
+  // of the expected candidates is acceptable, because the bucket scores
+  // byte-identically in Yaket's float math). Every other position is
+  // asserted in exact upstream order.
+  const isInsideBucket = new Array<boolean>(expected.length).fill(false);
+  for (const [start, end] of fixture.tiedBuckets) {
+    for (let position = start; position <= end; position += 1) {
+      isInsideBucket[position - 1] = true;
+    }
+  }
+
+  for (let index = 0; index < expected.length; index += 1) {
+    if (!isInsideBucket[index]) {
+      expect(actual[index], `position ${index + 1}`).toBe(expected[index]);
+    }
+  }
+
+  for (const [start, end] of fixture.tiedBuckets) {
+    const actualBucket = actual.slice(start - 1, end).sort();
+    const expectedBucket = expected.slice(start - 1, end).slice().sort();
+    expect(actualBucket, `tied bucket ${start}-${end}`).toEqual(expectedBucket);
+  }
+}
 
 describe("multilingual parity", () => {
   for (const fixture of cases) {
@@ -199,7 +255,7 @@ describe("multilingual parity", () => {
         .slice(0, fixture.expectedHead.length)
         .map(([keyword]) => keyword);
 
-      expect(head).toEqual([...fixture.expectedHead]);
+      assertHeadMatchesFixture(head, fixture);
     });
   }
 });
