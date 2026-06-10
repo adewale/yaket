@@ -247,6 +247,10 @@ bundled (or `textProcessor`-supplied) behavior.
 
 `lemmatizer` stays hook-based in Yaket. Upstream-style string backends such as `"spacy"` or `"nltk"` are intentionally not implemented in the extraction core.
 
+Pair the `lemmatizer` hook with `lemmaAggregation: "min" | "mean" | "max" | "harmonic"` to mirror upstream Python YAKE's
+`lemma_aggregation` post-extraction grouping. With `lemmaAggregation` unset (the default), the lemmatizer pre-merges
+variants inside `DataCore` as before. See `docs/api-reference.md` for the full table and edge cases.
+
 Yaket also exports:
 
 - `YakeResult`

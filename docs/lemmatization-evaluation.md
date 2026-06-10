@@ -54,9 +54,12 @@ A fuller bundled implementation is **not** justified today.
 ### What we will do instead
 
 1. Keep documenting the `Lemmatizer` hook as the supported integration path.
-2. Track a small follow-up: if a real consumer asks for `mean`/`max`/`harmonic`
-   aggregation, expose a `lemmaAggregation` option that operates on the
-   already-aggregated normalized-term set without needing dictionary data.
+2. **(0.6.2 update)** The `lemmaAggregation` option is now shipped and matches
+   upstream YAKE's `lemma_aggregation` policies (`min`, `mean`, `max`,
+   `harmonic`). It operates on the final ranked list (post-dedup, post-top)
+   and does not depend on any dictionary backend — the existing
+   `Lemmatizer` hook is the grouping key. See `docs/api-reference.md` →
+   "Lemma Aggregation" for the public contract.
 3. Keep upstream's string-backend rejection in place, since accepting
    `"spacy"` / `"nltk"` would silently couple the core to Node-only or
    native dependencies.

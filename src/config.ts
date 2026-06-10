@@ -1,6 +1,7 @@
 import { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
 import { isFeatureName, type FeatureName } from "./features.js";
 import type { KeywordExtractorOptions } from "./KeywordExtractor.js";
+import { isLemmaAggregationName, LEMMA_AGGREGATION_NAMES, type LemmaAggregationName } from "./lemma.js";
 
 export type PositiveInt = number & { readonly __brand: "PositiveInt" };
 export type Similarity01 = number & { readonly __brand: "Similarity01" };
@@ -22,6 +23,7 @@ export interface YakeConfig {
   readonly windowSize: number;
   readonly top: number;
   readonly features: readonly FeatureName[] | null;
+  readonly lemmaAggregation: LemmaAggregationName | null;
 }
 
 const VALID_DEDUP_FUNC_NAMES = new Set<DedupFunctionName>(["seqm", "levs", "jaro"]);
@@ -91,6 +93,16 @@ export function parseYakeOptions(options: KeywordExtractorOptions = {}): Result<
     }
   }
 
+  const lemmaAggregation = options.lemmaAggregation ?? DEFAULT_YAKE_OPTIONS.lemmaAggregation;
+  if (lemmaAggregation != null) {
+    if (typeof lemmaAggregation !== "string" || !isLemmaAggregationName(lemmaAggregation)) {
+      return { ok: false, error: { message: `Unknown lemmaAggregation "${String(lemmaAggregation)}"; expected one of ${LEMMA_AGGREGATION_NAMES.map((name) => `"${name}"`).join(", ")}.` } };
+    }
+    if (options.lemmatizer == null) {
+      return { ok: false, error: { message: `lemmaAggregation requires a lemmatizer hook; supply one or omit lemmaAggregation.` } };
+    }
+  }
+
   return {
     ok: true,
     value: {
@@ -101,6 +113,7 @@ export function parseYakeOptions(options: KeywordExtractorOptions = {}): Result<
       windowSize,
       top,
       features,
+      lemmaAggregation,
     },
   };
 }

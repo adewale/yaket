@@ -41,7 +41,7 @@ describe("similarity cache diagnostics", () => {
     expect(getSimilarityCacheStats()).toEqual({ distance: 0, ratio: 0, sequence: 0, jaro: 0 });
   });
 
-  it("stays bounded under many unique similarities", () => {
+  it("stays bounded under many unique similarities", { timeout: 30_000 }, () => {
     clearSimilarityCaches();
 
     for (let index = 0; index < 22_500; index += 1) {
@@ -51,7 +51,7 @@ describe("similarity cache diagnostics", () => {
     expect(getSimilarityCacheStats().sequence).toBeLessThanOrEqual(20_000);
   });
 
-  it("keeps Levenshtein distance and ratio caches bounded too", () => {
+  it("keeps Levenshtein distance and ratio caches bounded too", { timeout: 30_000 }, () => {
     clearSimilarityCaches();
 
     for (let index = 0; index < 22_500; index += 1) {

@@ -3,6 +3,7 @@ export { extractYakeKeywords, type BobbinYakeResult } from "./bobbin.js";
 export { DataCore } from "./DataCore.js";
 export { parseYakeOptions, type DedupFunctionName, type OptionError, type PositiveInt, type Result, type Similarity01, type YakeConfig } from "./config.js";
 export { DEFAULT_YAKE_OPTIONS } from "./defaults.js";
+export { aggregateKeywordsByLemma, LEMMA_AGGREGATION_NAMES, type LemmaAggregationName } from "./lemma.js";
 export {
   estimateSerializedBytes,
   extractFromDocument,

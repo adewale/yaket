@@ -14,4 +14,5 @@ export const DEFAULT_YAKE_OPTIONS = {
   windowSize: 1,
   top: 20,
   features: null,
-} as const satisfies Required<Pick<YakeOptions, "language" | "n" | "dedupLim" | "dedupFunc" | "windowSize" | "top" | "features">>;
+  lemmaAggregation: null,
+} as const satisfies Required<Pick<YakeOptions, "language" | "n" | "dedupLim" | "dedupFunc" | "windowSize" | "top" | "features" | "lemmaAggregation">>;

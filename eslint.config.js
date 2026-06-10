@@ -3,7 +3,7 @@ import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   {
-    ignores: ["dist/**", "coverage/**", "reports/**", "node_modules/**", "test/fixtures/expected/**", "src/stopwords.generated.ts"],
+    ignores: ["dist/**", "coverage/**", "reports/**", ".stryker-tmp/**", "node_modules/**", "test/fixtures/expected/**", "src/stopwords.generated.ts"],
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,

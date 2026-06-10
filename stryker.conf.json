@@ -7,7 +7,10 @@
     "src/similarity.ts",
     "src/SingleWord.ts",
     "src/ComposedWord.ts",
-    "src/KeywordExtractor.ts"
+    "src/KeywordExtractor.ts",
+    "src/config.ts",
+    "src/graph.ts",
+    "src/lemma.ts"
   ],
   "coverageAnalysis": "perTest",
   "concurrency": 4,

@@ -67,6 +67,7 @@ type YakeOptions = {
   dedupStrategy?: SimilarityStrategy | ((a: string, b: string) => number);
   similarityCache?: SimilarityCache;
   lemmatizer?: Lemmatizer;
+  lemmaAggregation?: "min" | "mean" | "max" | "harmonic" | null;
   candidateNormalizer?: CandidateNormalizer;
   singleWordScorer?: SingleWordScorer;
   multiWordScorer?: MultiWordScorer;
@@ -235,6 +236,30 @@ for the half they cover. The other half falls back to whichever of
 `textProcessor` or the bundled default is available.
 
 Lemmatization remains hook-only. Yaket does not implement upstream-style string backend selectors such as `"spacy"` or `"nltk"` inside the extraction core. See `docs/lemmatization-evaluation.md` for the rationale.
+
+## Lemma Aggregation
+
+`lemmaAggregation` mirrors upstream Python YAKE's `lemma_aggregation`
+behavior. When set, the final ranked list is grouped by the
+`Lemmatizer` hook's output and each group's scores are combined with the
+named policy:
+
+| Policy | Effect |
+|---|---|
+| `"min"` | Keep the best-scoring (lowest) variant and its score. |
+| `"mean"` | Keep the first (best-ranked) variant with the arithmetic mean of the group's scores. |
+| `"max"` | Keep the worst-scoring (highest) variant and its score. |
+| `"harmonic"` | Keep the first variant with the harmonic mean when every score is positive; falls back to the arithmetic mean otherwise. |
+
+Aggregation runs **after** dedup and `top` truncation, so the returned
+list can be shorter than `top`. Setting `lemmaAggregation` without a
+`lemmatizer` is rejected at the public boundary with a `TypeError`.
+
+When `lemmaAggregation` is set the lemmatizer is reserved for the
+post-ranking grouping step, so distinct surface forms (`"trees"` vs.
+`"tree"`) survive long enough to be grouped explicitly. With
+`lemmaAggregation` unset, the lemmatizer pre-merges variants inside
+`DataCore` (the pre-0.7 behavior).
 
 ## Choosing an API
 

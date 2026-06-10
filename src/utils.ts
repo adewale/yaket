@@ -54,7 +54,12 @@ export function tokenizeSentences(text: string): string[][] {
  * Splits text into YAKE-style tokens.
  */
 export function tokenizeWords(text: string): string[] {
-  const tokens = text.match(TOKEN_PATTERN) ?? [];
+  const tokens: string[] = [];
+  const tokenEnds: number[] = [];
+  for (const match of text.matchAll(TOKEN_PATTERN)) {
+    tokens.push(match[0]);
+    tokenEnds.push((match.index ?? 0) + match[0].length);
+  }
   const expanded: string[] = [];
 
   for (let index = 0; index < tokens.length; index += 1) {
@@ -78,7 +83,16 @@ export function tokenizeWords(text: string): string[] {
       continue;
     }
 
-    if (nextToken === "." && shouldAttachTrailingPeriod(token, nextNextToken, tokenAfterCloser)) {
+    // segtok keeps a trailing `.` attached to a token only when the `.` is
+    // glued (no whitespace) immediately after the previous token in the
+    // source. `text.slice(tokenEnds[index], tokenEnds[index] + 1)` looks at
+    // the character right after the token: if it's a `.`, the tokenizer saw
+    // them as contiguous (e.g. "U.S. team", "Arquivo.pt. next"). If anything
+    // else (a space, comma, etc.) sits between them, the `.` is its own
+    // sentence-end token (e.g. "Arquivo.pt . Nesta", "Arquivo.pt, next").
+    const trailingPeriodIsGlued = text.charAt(tokenEnds[index]!) === ".";
+
+    if (nextToken === "." && trailingPeriodIsGlued && shouldAttachTrailingPeriod(token, nextNextToken, tokenAfterCloser)) {
       expanded.push(...splitContractions(`${token}.`));
       index += 1;
       continue;

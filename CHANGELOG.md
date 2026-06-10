@@ -4,6 +4,39 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Added
+
+- `lemmaAggregation` option on `KeywordExtractor` for grouping the
+  final ranked list by lemma and combining scores with one of `min`,
+  `mean`, `max`, or `harmonic`. Matches upstream Python YAKE's
+  `lemma_aggregation` behavior. Requires a `lemmatizer` hook; setting
+  `lemmaAggregation` without one is rejected at the public boundary
+  with a `TypeError`. When `lemmaAggregation` is set the lemmatizer is
+  reserved for the post-ranking grouping step so distinct surface
+  forms survive long enough to be grouped explicitly.
+- New `aggregateKeywordsByLemma`, `LEMMA_AGGREGATION_NAMES`, and
+  `LemmaAggregationName` exports.
+- New `test/graph.test.ts` covering `DirectedGraph` directly (in-/out-
+  degree symmetry, weight accumulation, decrement, auto-create).
+- New audit doc at
+  `docs/audits/architecture-algorithms-data-structures-and-tests-2026-06-10.md`.
+
+### Changed
+
+- Stryker mutation testing now includes `src/config.ts`, `src/graph.ts`,
+  and `src/lemma.ts` in addition to the scoring and dedup modules.
+- ESLint config now ignores the transient `.stryker-tmp/**` sandbox so
+  `npm run verify` does not break when a Stryker run was interrupted.
+
+### Fixed
+
+- `tokenizeWords` was attaching a trailing period to dotted tokens like
+  `Arquivo.pt` even when the source had whitespace between the token
+  and the period. The tokenizer now uses regex-match positions to
+  preserve segtok's "only attach when glued" behavior. This lifts the
+  Portuguese mid-rank `Arquivo.pt` candidate back into the top-12
+  (Python YAKE has it at 13).
+
 ## 0.6.1 - 2026-04-29
 
 Release hardening and dependency refresh.

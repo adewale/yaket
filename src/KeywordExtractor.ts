@@ -2,6 +2,7 @@ import { ComposedWord } from "./ComposedWord.js";
 import { parseYakeOptions, type YakeConfig } from "./config.js";
 import { DataCore } from "./DataCore.js";
 import type { FeatureName } from "./features.js";
+import { aggregateKeywordsByLemma, type LemmaAggregationName } from "./lemma.js";
 import type { CandidateFilterInput, CandidateNormalizer, KeywordResult, KeywordScorer, Lemmatizer, MultiWordScorer, SentenceSplitter, SimilarityStrategy, SingleWordScorer, StopwordProvider, TextProcessor, Tokenizer } from "./strategies.js";
 import { defaultStopwordProvider } from "./strategies.js";
 import { jaroSimilarity, Levenshtein, levenshteinSimilarity, sequenceSimilarity, type SimilarityCache } from "./similarity.js";
@@ -24,6 +25,13 @@ export interface YakeOptions {
   windowSize?: number;
   top?: number;
   features?: readonly FeatureName[] | null;
+  /**
+   * Post-extraction lemma aggregation policy. When set, the final ranked list
+   * is grouped by `lemmatizer(token)` and each group's scores are combined
+   * with the named policy, mirroring upstream Python YAKE's
+   * `lemma_aggregation` behavior. Requires a `lemmatizer` hook.
+   */
+  lemmaAggregation?: LemmaAggregationName | null;
   stopwords?: Iterable<string>;
   textProcessor?: TextProcessor;
   sentenceSplitter?: SentenceSplitter;
@@ -136,11 +144,16 @@ export class KeywordExtractor {
       return [];
     }
 
+    // When lemmaAggregation is set the lemmatizer is reserved for the
+    // post-ranking grouping step. Skip the pre-merge inside DataCore so
+    // distinct surface forms survive long enough to be grouped explicitly.
+    const dataCoreLemmatizer = this.config.lemmaAggregation == null ? this.lemmatizer : null;
+
     const core = new DataCore(text, this.stopwordSet, {
       windowSize: this.config.windowSize,
       n: this.config.n,
       textProcessor: this.textProcessor,
-      lemmatizer: this.lemmatizer,
+      lemmatizer: dataCoreLemmatizer,
       candidateNormalizer: this.candidateNormalizer,
       singleWordScorer: this.singleWordScorer,
       multiWordScorer: this.multiWordScorer,
@@ -159,12 +172,17 @@ export class KeywordExtractor {
       .filter((candidate) => this.candidateFilter?.(candidate) ?? true);
     const scoredCandidateDetails = this.keywordScorer == null ? candidateDetails : this.keywordScorer(candidateDetails);
 
+    const topResults = this.applyDedupAndTop(scoredCandidateDetails);
+    return this.applyLemmaAggregation(topResults);
+  }
+
+  private applyDedupAndTop(scored: readonly KeywordResult[]): KeywordResult[] {
     if (this.config.dedupLim >= 1) {
-      return scoredCandidateDetails.slice(0, this.config.top);
+      return scored.slice(0, this.config.top);
     }
 
     const resultSet: KeywordResult[] = [];
-    for (const candidate of scoredCandidateDetails) {
+    for (const candidate of scored) {
       let shouldAdd = true;
 
       for (const selected of resultSet) {
@@ -184,6 +202,13 @@ export class KeywordExtractor {
     }
 
     return resultSet;
+  }
+
+  private applyLemmaAggregation(results: readonly KeywordResult[]): KeywordResult[] {
+    if (this.config.lemmaAggregation == null || this.lemmatizer == null) {
+      return [...results];
+    }
+    return aggregateKeywordsByLemma(results, this.lemmatizer, this.config.language, this.config.lemmaAggregation);
   }
 
   private runWithSimilarityCache(helper: (cand1: string, cand2: string, cache?: SimilarityCache) => number, cand1: string, cand2: string): number {

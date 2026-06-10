@@ -105,4 +105,18 @@ describe("tokenizer and sentence splitting parity", () => {
       ".",
     ]);
   });
+
+  it("does not attach a trailing period that is whitespace-separated from a dotted token (segtok parity)", () => {
+    // segtok: web_tokenizer('Arquivo.pt . Nesta') -> ['Arquivo.pt', '.', 'Nesta']
+    expect(tokenizeWords("Arquivo.pt . Nesta")).toEqual(["Arquivo.pt", ".", "Nesta"]);
+    // segtok: web_tokenizer('Arquivo.pt, next') -> ['Arquivo.pt', ',', 'next']
+    expect(tokenizeWords("Arquivo.pt, next")).toEqual(["Arquivo.pt", ",", "next"]);
+  });
+
+  it("still attaches a trailing period when it is glued to a dotted token (segtok parity)", () => {
+    // segtok: web_tokenizer('Arquivo.pt. next') -> ['Arquivo.pt.', 'next']
+    expect(tokenizeWords("Arquivo.pt. next")).toEqual(["Arquivo.pt.", "next"]);
+    // segtok: web_tokenizer('U.S. team') -> ['U.S.', 'team']
+    expect(tokenizeWords("U.S. team")).toEqual(["U.S.", "team"]);
+  });
 });
