@@ -1,5 +1,5 @@
 const CAPITAL_LETTER_PATTERN = /^(\s*([A-Z]))/;
-const TOKEN_PATTERN = /\p{L}[\p{L}\p{M}\p{Nd}]*(?:(?:[.'’-]+|…+)[\p{L}\p{M}\p{Nd}]+)*|\p{Nd}+(?:[.,]\p{Nd}+)*|[^\s]/gu;
+const TOKEN_PATTERN = /\p{L}[\p{L}\p{M}\p{Nd}]*(?:(?:[.'’-]+|…+)[\p{L}\p{M}\p{Nd}]+)*|\p{Nd}+(?:[.,]\p{Nd}+)*|(?:\p{Extended_Pictographic}\uFE0F?)+|[^\s]/gu;
 const ASCII_PUNCTUATION = "!\"#$%&'()*+,-./:;<=>?@[\\]^_`{|}~";
 const COMMON_ABBREVIATIONS = new Set([
   "dr",
@@ -129,7 +129,7 @@ export function splitSentences(text: string): string[] {
     }
 
     const next = skipWhitespace(text, end + 1);
-    if (shouldSplitSentence(text, start, index, next)) {
+    if (shouldSplitSentence(text, start, index, end, next)) {
       pushSentence(sentences, text.slice(start, end + 1));
       start = next;
       index = next;
@@ -206,14 +206,25 @@ function isSentenceTerminal(char: string): boolean {
   return char === "." || char === "!" || char === "?";
 }
 
-function shouldSplitSentence(text: string, sentenceStart: number, punctuationIndex: number, nextIndex: number): boolean {
+function shouldSplitSentence(
+  text: string,
+  sentenceStart: number,
+  punctuationIndex: number,
+  terminalEndIndex: number,
+  nextIndex: number,
+): boolean {
   if (nextIndex >= text.length) {
     return true;
   }
 
+  if (nextIndex === terminalEndIndex + 1) {
+    return false;
+  }
+
   const punctuation = text[punctuationIndex]!;
   if (punctuation !== ".") {
-    return nextIndex > punctuationIndex + 1;
+    const sentencePrefix = text.slice(sentenceStart, punctuationIndex);
+    return /[\p{L}\p{M}\p{Nd}]/u.test(sentencePrefix) && nextIndex > punctuationIndex + 1;
   }
 
   if (isDecimalPoint(text, punctuationIndex) || isInitialism(text, punctuationIndex)) {

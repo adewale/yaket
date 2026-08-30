@@ -21,6 +21,8 @@ jobs:
 
   python-parity:
     runs-on: ubuntu-latest
+    env:
+      YAKE_REFERENCE_SHA: f7944f645106d8c37c6999a1ba66d222f215a151
     steps:
       - uses: actions/checkout@v6
       - uses: actions/setup-node@v6
@@ -31,10 +33,16 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: git clone --depth 1 https://github.com/INESCTEC/yake.git /tmp/yake
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install numpy networkx segtok jellyfish
-      - run: npx vitest run test/python-parity.test.ts
+      - name: Check out pinned Python YAKE reference
+        run: |
+          git init /tmp/yake
+          git -C /tmp/yake remote add origin https://github.com/INESCTEC/yake.git
+          git -C /tmp/yake fetch --depth 1 origin "$YAKE_REFERENCE_SHA"
+          git -C /tmp/yake checkout --detach "$YAKE_REFERENCE_SHA"
+          echo "YAKE reference: $(git -C /tmp/yake rev-parse HEAD)"
+      - name: Install pinned Python oracle dependencies
+        run: python -m pip install numpy==2.2.6 networkx==3.4.2 segtok==1.5.11 jellyfish==1.2.0 regex==2024.11.6
+      - run: npx vitest run test/python-parity.test.ts test/differential-fuzz.test.ts
 
   cli-coverage:
     runs-on: ubuntu-latest

@@ -3,6 +3,24 @@ import { describe, expect, it } from "vitest";
 import { splitSentences, tokenizeWords } from "../src/index.js";
 
 describe("tokenizer and sentence splitting parity", () => {
+  it("keeps adjacent emoji in one token like segtok", () => {
+    expect(tokenizeWords('🙂 🙂🙂 "')).toEqual(["🙂", "🙂🙂", '"']);
+  });
+
+  it("does not split a punctuation-only sentence prefix", () => {
+    expect(splitSentences('First sentence. ?" data science "')).toEqual([
+      "First sentence.",
+      '?" data science "',
+    ]);
+  });
+
+  it("does not split terminal punctuation from an adjacent suffix", () => {
+    expect(splitSentences('First sentence. data science !"-')).toEqual([
+      "First sentence.",
+      'data science !"-',
+    ]);
+  });
+
   it("keeps trailing periods attached to abbreviations and initialisms", () => {
     expect(tokenizeWords("Dr. Smith met the U.S. team.")).toEqual([
       "Dr.",

@@ -162,7 +162,7 @@ export class DataCore {
     let uniqueTerm = normalized ? strWord.toLowerCase() : this.normalizeTerm(strWord);
     const simpleStopword = this.stopwordSet.has(uniqueTerm);
 
-    if (uniqueTerm.endsWith("s") && uniqueTerm.length > 3) {
+    if (uniqueTerm.endsWith("s") && [...uniqueTerm].length > 3) {
       uniqueTerm = uniqueTerm.slice(0, -1);
     }
 
@@ -176,7 +176,7 @@ export class DataCore {
       simpleUniqueTerm = simpleUniqueTerm.replaceAll(punctuation, "");
     }
 
-    const isStopword = simpleStopword || this.stopwordSet.has(uniqueTerm) || simpleUniqueTerm.length < 3;
+    const isStopword = simpleStopword || this.stopwordSet.has(uniqueTerm) || [...simpleUniqueTerm].length < 3;
     const term = new SingleWord(uniqueTerm, this.terms.size, this.g);
     term.stopword = isStopword;
 
