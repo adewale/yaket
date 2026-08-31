@@ -3,6 +3,13 @@ import { describe, expect, it } from "vitest";
 import { ComposedWord, DataCore } from "../src/index.js";
 
 describe("candidate construction", () => {
+  it("counts Unicode code points when classifying short terms", () => {
+    const core = new DataCore("alpha 🙂🙂 🙂🙂🙂", new Set());
+
+    expect(core.terms.get("🙂🙂")?.stopword).toBe(true);
+    expect(core.terms.get("🙂🙂🙂")?.stopword).toBe(false);
+  });
+
   it("does not represent missing document terms as an empty sentinel candidate", () => {
     const core = new DataCore("alpha beta", new Set());
 
