@@ -31,10 +31,13 @@ jobs:
         with:
           python-version: '3.12'
       - run: npm ci
-      - run: git clone --depth 1 https://github.com/INESCTEC/yake.git /tmp/yake
-      - run: python -m pip install --upgrade pip
-      - run: python -m pip install numpy networkx segtok jellyfish
-      - run: npx vitest run test/python-parity.test.ts
+      # Upstream YAKE at a pinned commit plus pinned Python dependencies.
+      - run: scripts/setup-python-parity.sh
+      # Every Python-gated test file; with the variable set, a missing
+      # reference fails the lane instead of skipping the parity tests.
+      - run: npm run test:python-parity
+        env:
+          YAKET_REQUIRE_PYTHON_REFERENCE: "1"
 
   cli-coverage:
     runs-on: ubuntu-latest
