@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 import fc from "fast-check";
@@ -7,10 +6,8 @@ import { describe, expect, it } from "vitest";
 import { KeywordExtractor } from "../src/index.js";
 import { referenceCases } from "./fixtures/reference.js";
 import { parseNamedPythonKeywordResult } from "./helpers/python-output.js";
+import { hasPythonReference, pythonPath, pythonReferenceSha } from "./helpers/python-reference.js";
 
-const pythonPath = process.env["YAKET_PYTHONPATH"] ?? "/tmp/yake";
-const hasPythonReference = existsSync(pythonPath);
-const pythonReferenceSha = process.env["YAKE_REFERENCE_SHA"] ?? "unreported-local-reference";
 const differentialBaseFixtures = referenceCases.filter(
   (fixture) => fixture.options.language === "en" && fixture.name !== "english-special-characters",
 );
