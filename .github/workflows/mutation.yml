@@ -1,0 +1,23 @@
+name: Mutation Testing
+
+# Stryker's `break: 85` (stryker.conf.json) only means something if the job
+# runs: weekly, and on demand. Too slow to gate every push.
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  mutation:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test:mutation
