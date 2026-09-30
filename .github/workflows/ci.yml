@@ -52,7 +52,8 @@ jobs:
 
   mutation:
     # On demand only (Actions > CI > Run workflow). Stryker's `break: 85`
-    # (stryker.conf.json) applies when it runs; 787 mutants, ~12 min locally.
+    # (stryker.conf.json) applies when it runs. First CI run (36688601182):
+    # 787 mutants, ~6 min, 86.66% counting 18 timeouts (84.37% killed only).
     if: github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     timeout-minutes: 30
