@@ -49,3 +49,18 @@ jobs:
           cache: npm
       - run: npm ci
       - run: npm run test:cli:coverage
+
+  mutation:
+    # On demand only (Actions > CI > Run workflow). Stryker's `break: 85`
+    # (stryker.conf.json) applies when it runs; 787 mutants, ~12 min locally.
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 20
+          cache: npm
+      - run: npm ci
+      - run: npm run test:mutation
