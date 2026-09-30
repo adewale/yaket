@@ -21,6 +21,9 @@ All notable changes to this project will be documented in this file.
   (`npm run smoke:package`, part of `npm run verify`). It had rebuilt `dist/`
   with `tsc` inside a unit test that routinely exceeded Vitest's 5s default
   timeout under load.
+- The Levenshtein cache-bound test uses an isolated 100-entry cache instead of
+  filling the 20,000-entry module cache, so Stryker's initial dry run
+  (`npm run test:mutation`) no longer fails on the 5s test timeout.
 - Stryker mutation testing (`break: 85`) runs weekly (`mutation.yml`) as well
   as on demand; previously it only ran on manual dispatch.
 - The benchmark fetches its input from a pinned bobbin commit and checks its
