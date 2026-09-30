@@ -24,8 +24,6 @@ All notable changes to this project will be documented in this file.
 - The Levenshtein cache-bound test uses an isolated 100-entry cache instead of
   filling the 20,000-entry module cache, so Stryker's initial dry run
   (`npm run test:mutation`) no longer fails on the 5s test timeout.
-- Stryker mutation testing (`break: 85`) runs weekly (`mutation.yml`) as well
-  as on demand; previously it only ran on manual dispatch.
 - The benchmark fetches its input from a pinned bobbin commit and checks its
   SHA-256, instead of reading bobbin's `main` branch.
 
