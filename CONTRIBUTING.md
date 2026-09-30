@@ -20,6 +20,7 @@ npm test
 npm run test:cli:coverage
 npm run test:cloudflare
 npm run build
+npm run smoke:package
 npm run check:package
 ```
 
@@ -31,13 +32,22 @@ npm run benchmark:multilingual   # if Python YAKE is available locally
 npm run bundle-size              # writes docs/benchmarks/bundle-size.md
 ```
 
-The Python-parity tests (`test/python-parity.test.ts`,
-`test/differential-fuzz.test.ts`, `test/multilingual-parity.test.ts`)
-auto-skip when no upstream YAKE checkout is available. To run them
-locally, point `YAKET_PYTHONPATH` at a YAKE checkout (the default is
-`/tmp/yake`) and ensure `python3` can `import yake`. The benchmark
-script falls back to "Python YAKE comparison unavailable" rather than
-failing when the subprocess cannot import the module.
+The Python-gated tests (`test/python-parity.test.ts`,
+`test/differential-fuzz.test.ts`, `test/seqm-parity.test.ts`) auto-skip
+when no upstream YAKE checkout is available. To run them the way CI does:
+
+```bash
+scripts/setup-python-parity.sh   # pinned upstream YAKE in /tmp/yake + pinned deps
+YAKET_REQUIRE_PYTHON_REFERENCE=1 npm run test:python-parity
+```
+
+`YAKET_PYTHONPATH` overrides the checkout location (default `/tmp/yake`).
+With `YAKET_REQUIRE_PYTHON_REFERENCE=1` a missing checkout fails instead of
+skipping. A new test that needs the reference must import
+`test/helpers/python-reference.ts` and be listed in `test:python-parity`;
+`test/python-parity-lane.test.ts` enforces both. The benchmark script falls
+back to "Python YAKE comparison unavailable" rather than failing when the
+subprocess cannot import the module.
 
 ## Contribution Guidelines
 

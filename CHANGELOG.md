@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 
 ## Unreleased
 
+### Changed
+
+- The `python-parity` CI job now runs every Python-gated test file
+  (`npm run test:python-parity`), not just `test/python-parity.test.ts`:
+  `test/differential-fuzz.test.ts` and the randomized case in
+  `test/seqm-parity.test.ts` had never run in any CI lane. The job sets
+  `YAKET_REQUIRE_PYTHON_REFERENCE=1`, so a missing reference fails instead of
+  skipping, and `test/python-parity-lane.test.ts` keeps the lane's file list in
+  step with the gated files.
+- The upstream YAKE reference is pinned to a commit and its Python dependencies
+  to exact versions (`scripts/setup-python-parity.sh`,
+  `scripts/python-parity-requirements.txt`) instead of cloning upstream HEAD.
+- Release validation (`release.yml`) runs the Python parity lane.
+- Package smoke moved out of Vitest into a post-build step
+  (`npm run smoke:package`, part of `npm run verify`). It had rebuilt `dist/`
+  with `tsc` inside a unit test that routinely exceeded Vitest's 5s default
+  timeout under load.
+- The Levenshtein cache-bound test uses an isolated 100-entry cache instead of
+  filling the 20,000-entry module cache, so Stryker's initial dry run
+  (`npm run test:mutation`) no longer fails on the 5s test timeout.
+- The benchmark fetches its input from a pinned bobbin commit and checks its
+  SHA-256, instead of reading bobbin's `main` branch.
+
 ## 0.6.1 - 2026-04-29
 
 Release hardening and dependency refresh.

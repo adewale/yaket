@@ -1,0 +1,8 @@
+# Python dependencies of the upstream YAKE reference used by the parity tests
+# (see scripts/setup-python-parity.sh). Pinned so the oracle cannot drift
+# between runs.
+jellyfish==1.2.1
+networkx==3.6.1
+numpy==2.4.6
+regex==2026.9.10
+segtok==1.5.11
