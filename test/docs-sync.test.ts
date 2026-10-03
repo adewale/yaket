@@ -73,7 +73,8 @@ describe("documentation-code sync", () => {
     // parse identical to an empty argv).
     const helpFlags = [...helpText().matchAll(/--[a-z][a-z-]*/g)].map(([flag]) => flag);
     const readmeFlags = [...readme.matchAll(/^- `(--[a-z][a-z-]*)`$/gm)].map(([, flag]) => flag!);
-    expect(helpFlags.length).toBeGreaterThan(0);
+    // Lower bound: the options of upstream YAKE's CLI that Yaket mirrors.
+    expect(helpFlags).toEqual(expect.arrayContaining(["--text-input", "--input-file", "--language", "--ngram-size", "--dedup-func", "--dedup-lim", "--window-size", "--top", "--verbose", "--help"]));
     expect([...readmeFlags].sort()).toEqual([...helpFlags].sort());
 
     const emptyParse = parseCliArgs([]);
