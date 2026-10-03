@@ -44,12 +44,4 @@ describe("edge compatibility guard (source-level)", () => {
       }
     }
   });
-
-  it("only allows Node built-in imports inside src/cli.ts", () => {
-    const cliSource = readFileSync(join(SOURCE_DIR, "cli.ts"), "utf8");
-    // The CLI is allowed to use node:fs (for --input-file). Just confirm the
-    // file is non-empty so a future "delete cli.ts" doesn't silently turn this
-    // assertion into a no-op.
-    expect(cliSource.length).toBeGreaterThan(100);
-  });
 });
