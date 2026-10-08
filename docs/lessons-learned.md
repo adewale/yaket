@@ -211,6 +211,16 @@ The non-idiomatic-code remediation fixed most small and medium TypeScript/design
 
 Lesson: an audit is more useful when each finding has an explicit disposition: fixed now, deferred with reason, or accepted intentionally.
 
+## Differential Testing Lessons
+
+### 26. A differential test is not a gate until the oracle and invocation are frozen
+
+The suite named `differential-fuzz` originally used only fixed mutations and was skipped unless a local `/tmp/yake` checkout happened to exist. CI installed Python YAKE but ran a different test file. Making the suite generative then exposed real Unicode differences in emoji grouping, sentence boundaries, and JavaScript UTF-16 length versus Python code-point length.
+
+Pinning only the YAKE commit was still insufficient: a transitive `regex` dependency could drift underneath the same source revision and change tokenization. A replayable differential failure therefore needs the generated seed/path, the exact oracle revision, the complete oracle dependency set, and proof that CI invokes the property itself.
+
+**Enforcement:** `.github/workflows/ci.yml` checks out YAKE commit `f7944f645106d8c37c6999a1ba66d222f215a151`, installs the versions from its locked environment (including `regex==2024.11.6`), prints the reference SHA, and runs `test/differential-fuzz.test.ts`. The property includes that SHA in failures and retains fixed regressions alongside shrinkable generated perturbations.
+
 ## Process Lessons for Future Work
 
 1. Start with a spec or audit when changing correctness-critical behavior.
