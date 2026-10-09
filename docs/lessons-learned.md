@@ -219,7 +219,7 @@ The suite named `differential-fuzz` originally used only fixed mutations and was
 
 Pinning only the YAKE commit was still insufficient: a transitive `regex` dependency could drift underneath the same source revision and change tokenization. A replayable differential failure therefore needs the generated seed/path, the exact oracle revision, the complete oracle dependency set, and proof that CI invokes the property itself.
 
-**Enforcement:** `.github/workflows/ci.yml` checks out YAKE commit `f7944f645106d8c37c6999a1ba66d222f215a151`, installs the versions from its locked environment (including `regex==2024.11.6`), prints the reference SHA, and runs `test/differential-fuzz.test.ts`. The property includes that SHA in failures and retains fixed regressions alongside shrinkable generated perturbations.
+**Enforcement:** `scripts/setup-python-parity.sh` is the only place the YAKE commit (`f7944f645106d8c37c6999a1ba66d222f215a151`) is written, and `scripts/python-parity-requirements.txt` the only place the oracle's dependency versions (including `regex==2024.11.6`) are. The `python-parity` jobs in `ci.yml` and `release.yml` run that script and then `npm run test:python-parity` with `YAKET_REQUIRE_PYTHON_REFERENCE=1`, so a missing reference fails instead of skipping. `test/python-parity-lane.test.ts` fails if a Python-gated file is left out of the lane or a workflow carries its own copy of the pin. The property reports the checkout's commit in failures and retains fixed regressions alongside shrinkable generated perturbations.
 
 ## Process Lessons for Future Work
 
