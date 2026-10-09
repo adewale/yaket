@@ -221,6 +221,12 @@ Pinning only the YAKE commit was still insufficient: a transitive `regex` depend
 
 **Enforcement:** `scripts/setup-python-parity.sh` is the only place the YAKE commit (`f7944f645106d8c37c6999a1ba66d222f215a151`) is written, and `scripts/python-parity-requirements.txt` the only place the oracle's dependency versions (including `regex==2024.11.6`) are. The `python-parity` jobs in `ci.yml` and `release.yml` run that script and then `npm run test:python-parity` with `YAKET_REQUIRE_PYTHON_REFERENCE=1`, so a missing reference fails instead of skipping. `test/python-parity-lane.test.ts` fails if a Python-gated file is left out of the lane or a workflow carries its own copy of the pin. The property reports the checkout's commit in failures and retains fixed regressions alongside shrinkable generated perturbations.
 
+### 27. A test that cannot fail is not coverage, and a pinned string is not a demo check
+
+A test audit found assertions that held for any implementation: `length <= top` for the jaro dispatcher, `tight.length <= open.length` on a fixture seqm never dedups, `size <= maxSize` on a cache that could store nothing, and assertions only inside loops over possibly empty results. Other tests grepped `src/cli.ts` or pinned substrings of `demo/index.html`, so the published demo showed Yaket keywords the extractor no longer produced while its test stayed green.
+
+**Enforcement:** `test/demo.test.ts` recomputes each sample's Yaket column with the extractor; `test/docs-sync.test.ts` compares the README to `helpText()` with upstream YAKE's flags as a floor and checks `parseCliArgs` accepts each one; the strengthened tests assert concrete survivors, exact sizes, and non-empty results. Each was confirmed red against a planted bug before landing.
+
 ## Process Lessons for Future Work
 
 1. Start with a spec or audit when changing correctness-critical behavior.
