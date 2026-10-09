@@ -10,6 +10,7 @@ describe("Bobbin adapter", () => {
       3,
     );
 
+    expect(result.length).toBeGreaterThan(0);
     expect(result.length).toBeLessThanOrEqual(5);
 
     for (const item of result) {
@@ -28,9 +29,13 @@ describe("Bobbin adapter", () => {
       1,
     );
 
+    expect(result.map((item) => item.keyword)).toContain("machine");
     for (const item of result) {
       expect(item.keyword.split(/\s+/)).toHaveLength(1);
     }
+
+    const bigrams = extractYakeKeywords("machine learning systems improve machine learning workflows", 10, 2);
+    expect(bigrams.map((item) => item.keyword)).toContain("machine learning");
   });
 
   it("suppresses unigram components of stronger multi-word phrases for Bobbin", () => {

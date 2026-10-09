@@ -15,11 +15,17 @@ describe("dedupLim threshold behavior", () => {
     expect(noDedup.length).toBeGreaterThanOrEqual(5);
   });
 
-  it("dedupLim<1 may drop near-duplicate candidates (boundary-strict comparison)", () => {
-    const tight = extractKeywords(repetitiveText, { language: "en", n: 2, top: 10, dedupLim: 0.5 });
-    const open = extractKeywords(repetitiveText, { language: "en", n: 2, top: 10, dedupLim: 1 });
-    // Tighter dedup must produce a result that is no larger than the no-dedup run.
-    expect(tight.length).toBeLessThanOrEqual(open.length);
+  it("dedupLim<1 drops near-duplicate candidates without reordering the rest", () => {
+    // seqm's pre-filter scores every pair in this fixture as 0, so use levs:
+    // e.g. "deep learning" vs "machine learning" is 1 - 7/16 = 0.5625 > 0.5.
+    // Expected keywords match Python YAKE (INESCTEC/yake f7944f6) for
+    // dedup_func="levs", dedup_lim=0.5.
+    const tight = extractKeywords(repetitiveText, { language: "en", n: 2, top: 10, dedupFunc: "levs", dedupLim: 0.5 });
+    const open = extractKeywords(repetitiveText, { language: "en", n: 2, top: 10, dedupFunc: "levs", dedupLim: 1 });
+
+    expect(tight.map(([keyword]) => keyword)).toEqual(["machine learning", "learning deep", "machine", "deep"]);
+    // Dedup only removes candidates: the survivors keep their no-dedup order and scores.
+    expect(open.filter((entry) => tight.some(([keyword]) => keyword === entry[0]))).toEqual(tight);
   });
 
   it("the dedup comparison is strict-greater (`> dedupLim`), not `>=`", () => {

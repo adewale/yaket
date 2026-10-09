@@ -29,6 +29,7 @@ describe("edge cases", () => {
     const stopwords = loadStopwords("en");
     const result = new KeywordExtractor({ language: "en", n: 2, top: 10 }).extractKeywords("alpha and beta and gamma");
 
+    expect(result.map(([keyword]) => keyword).sort()).toEqual(["alpha", "beta", "gamma"]);
     for (const [keyword] of result) {
       const words = keyword.toLowerCase().split(/\s+/);
       expect(stopwords.has(words[0]!)).toBe(false);

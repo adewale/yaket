@@ -1,4 +1,3 @@
-import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 import { describe, expect, it } from "vitest";
@@ -6,9 +5,7 @@ import { describe, expect, it } from "vitest";
 import { KeywordExtractor } from "../src/index.js";
 import { referenceCases } from "./fixtures/reference.js";
 import { parseNamedPythonKeywordResult } from "./helpers/python-output.js";
-
-const pythonPath = process.env["YAKET_PYTHONPATH"] ?? "/tmp/yake";
-const hasPythonReference = existsSync(pythonPath);
+import { hasPythonReference, pythonPath } from "./helpers/python-reference.js";
 
 describe.skipIf(!hasPythonReference)("python parity", () => {
   it("matches upstream YAKE on frozen samples", () => {
