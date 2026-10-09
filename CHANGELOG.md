@@ -16,7 +16,8 @@ All notable changes to this project will be documented in this file.
 - The upstream YAKE reference is pinned to a commit and its Python dependencies
   to exact versions (`scripts/setup-python-parity.sh`,
   `scripts/python-parity-requirements.txt`) instead of cloning upstream HEAD.
-- Release validation (`release.yml`) runs the Python parity lane.
+- Release validation (`release.yml`) runs the Python parity lane as steps in
+  its existing `verify-release` job (no new job).
 - Package smoke moved out of Vitest into a post-build step
   (`npm run smoke:package`, part of `npm run verify`). It had rebuilt `dist/`
   with `tsc` inside a unit test that routinely exceeded Vitest's 5s default

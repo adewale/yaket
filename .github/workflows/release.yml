@@ -30,21 +30,11 @@ jobs:
       - run: npm ci
       - run: npm run verify
       - run: npm run benchmark
-
-  # Parity with upstream Python YAKE is part of release validation
-  # (docs/audits/testing-best-practices-2026-04-16.md).
-  python-parity:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-node@v6
-        with:
-          node-version: 20
-          cache: npm
+      # Parity with upstream Python YAKE is part of release validation
+      # (docs/audits/testing-best-practices-2026-04-16.md).
       - uses: actions/setup-python@v6
         with:
           python-version: '3.12'
-      - run: npm ci
       - run: scripts/setup-python-parity.sh
       - run: npm run test:python-parity
         env:
