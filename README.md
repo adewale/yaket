@@ -381,7 +381,7 @@ Verification currently includes:
 
 - source guards for extraction modules
 - browser-target bundling smoke tests
-- a real Cloudflare Workers test lane via `@cloudflare/vitest-pool-workers`
+- a real Cloudflare Workers test lane via `@cloudflare/vitest-plugin`
 
 Run it with:
 
