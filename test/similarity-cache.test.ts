@@ -52,16 +52,20 @@ describe("similarity cache diagnostics", () => {
   });
 
   it("keeps Levenshtein distance and ratio caches bounded too", () => {
-    clearSimilarityCaches();
+    // An isolated small cache exercises the same eviction path as the
+    // 20,000-entry module cache without 45,000 Levenshtein computations,
+    // which exceeded the 5s test timeout under Stryker's instrumentation.
+    const cache = createSimilarityCache({ maxSize: 100 });
 
-    for (let index = 0; index < 22_500; index += 1) {
-      Levenshtein.distance(`distance-${index}`, `other-${index}`);
-      Levenshtein.ratio(`ratio-${index}`, `other-${index}`);
+    for (let index = 0; index < 150; index += 1) {
+      Levenshtein.distance(`distance-${index}`, `other-${index}`, cache);
+      Levenshtein.ratio(`ratio-${index}`, `other-${index}`, cache);
     }
 
-    const stats = getSimilarityCacheStats();
-    expect(stats.distance).toBeLessThanOrEqual(20_000);
-    expect(stats.ratio).toBeLessThanOrEqual(20_000);
+    expect(cache.distance.size).toBeGreaterThan(0);
+    expect(cache.distance.size).toBeLessThanOrEqual(100);
+    expect(cache.ratio.size).toBeGreaterThan(0);
+    expect(cache.ratio.size).toBeLessThanOrEqual(100);
   });
 
   it("matches canonical Jaro examples", () => {

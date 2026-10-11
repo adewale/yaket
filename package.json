@@ -55,11 +55,13 @@
     "test:cli:coverage": "vitest run --config vitest.cli-coverage.config.ts",
     "test": "vitest run",
     "test:cloudflare": "vitest run --config vitest.cloudflare.config.ts",
+    "test:python-parity": "vitest run test/python-parity.test.ts test/differential-fuzz.test.ts test/seqm-parity.test.ts test/multilingual-parity.test.ts",
     "test:all": "npm test && npm run test:cloudflare",
     "test:mutation": "stryker run",
     "test:watch": "vitest",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.tooling.json",
-    "verify": "npm run typecheck && npm run lint && npm test && npm run test:cloudflare && npm run build && npm run check:package"
+    "smoke:package": "tsx scripts/package-smoke.ts",
+    "verify": "npm run typecheck && npm run lint && npm test && npm run test:cloudflare && npm run build && npm run smoke:package && npm run check:package"
   },
   "keywords": [
     "yake",

@@ -55,11 +55,13 @@ describe("configurable similarity caches", () => {
       jaroSimilarity(`g-${index}`, `h-${index}`, isolated);
     }
 
+    // Each cache saw 50 distinct keys, so it must be full but not over its
+    // bound: a cache that stored nothing would also be "<= 10".
     const stats = isolated.stats();
-    expect(stats.sequence).toBeLessThanOrEqual(10);
-    expect(stats.distance).toBeLessThanOrEqual(10);
-    expect(stats.ratio).toBeLessThanOrEqual(10);
-    expect(stats.jaro).toBeLessThanOrEqual(10);
+    expect(stats.sequence).toBe(10);
+    expect(stats.distance).toBe(10);
+    expect(stats.ratio).toBe(10);
+    expect(stats.jaro).toBe(10);
   });
 
   it("clear() drains an isolated cache without touching the module-level default", () => {

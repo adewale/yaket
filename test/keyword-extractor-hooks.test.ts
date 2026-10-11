@@ -63,7 +63,16 @@ describe("KeywordExtractor hook boundaries", () => {
   });
 
   it("uses the jaro dedup dispatcher during extraction", () => {
-    const extractor = new KeywordExtractor({ language: "en", n: 1, top: 3, dedupFunc: "jaro", dedupLim: 0.8 });
-    expect(extractor.extractKeywordDetails("alpha alpha alhpa beta").length).toBeLessThanOrEqual(3);
+    // "alpha" vs "alhpa": 5 matches, one transposition, so
+    // Jaro = (5/5 + 5/5 + 4/5) / 3 = 0.933 > 0.8, while Levenshtein
+    // similarity is 1 - 2/5 = 0.6. Only the jaro dispatcher drops "alhpa".
+    const text = "alpha alpha alhpa beta";
+    const keywords = (dedupFunc: string) =>
+      new KeywordExtractor({ language: "en", n: 1, top: 3, dedupFunc, dedupLim: 0.8 })
+        .extractKeywordDetails(text)
+        .map((item) => item.normalizedKeyword);
+
+    expect(keywords("jaro")).toEqual(["beta", "alpha"]);
+    expect(keywords("levs")).toEqual(["beta", "alpha", "alhpa"]);
   });
 });

@@ -1,13 +1,10 @@
-import { existsSync } from "node:fs";
 import { spawnSync } from "node:child_process";
 
 import { describe, expect, it } from "vitest";
 
 import { createKeywordExtractor } from "../src/index.js";
 import { parsePythonNumber } from "./helpers/python-output.js";
-
-const pythonPath = process.env["YAKET_PYTHONPATH"] ?? "/tmp/yake";
-const hasPythonReference = existsSync(pythonPath);
+import { hasPythonReference, pythonPath } from "./helpers/python-reference.js";
 
 describe("seqm parity examples", () => {
   it("matches upstream YAKE examples for representative pairs", () => {

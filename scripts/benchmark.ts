@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { performance } from "node:perf_hooks";
@@ -6,12 +7,21 @@ import { spawnSync } from "node:child_process";
 import { extractKeywordDetails, loadStopwords, splitSentences, tokenizeWords } from "../src/index.js";
 
 const KOMOROSKE_ARCHIVE_ID = "1xRiCqpy3LMAgEsHdX-IA23j6nUISdT5nAJmtKbk9wNA";
-const KOMOROSKE_ARCHIVE_URL = `https://raw.githubusercontent.com/adewale/bobbin/main/data/raw/${KOMOROSKE_ARCHIVE_ID}.html`;
+// Pinned to an immutable bobbin commit (the last one that touched this file)
+// rather than bobbin's main branch, and checked by hash, so a change in
+// another repository cannot silently change the benchmark input.
+const BOBBIN_COMMIT = "6eae3217c4b83cb88567c8fca1d51aae0cf03883";
+const KOMOROSKE_ARCHIVE_URL = `https://raw.githubusercontent.com/adewale/bobbin/${BOBBIN_COMMIT}/data/raw/${KOMOROSKE_ARCHIVE_ID}.html`;
+const KOMOROSKE_ARCHIVE_SHA256 = "1aa9690d3760189b972fad0ac329814c7d9e404baf7b2d8c2c43e1087c776ab9";
 const DEFAULT_TOP = 10;
 const DEFAULT_NGRAM = 3;
 
 async function main(): Promise<void> {
   const html = await fetchText(KOMOROSKE_ARCHIVE_URL);
+  const digest = createHash("sha256").update(html).digest("hex");
+  if (digest !== KOMOROSKE_ARCHIVE_SHA256) {
+    throw new Error(`Benchmark input ${KOMOROSKE_ARCHIVE_URL} has sha256 ${digest}, expected ${KOMOROSKE_ARCHIVE_SHA256}`);
+  }
   const archiveText = htmlToText(html);
   const episodes = splitArchiveEpisodes(archiveText);
 

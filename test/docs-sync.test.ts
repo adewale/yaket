@@ -16,6 +16,7 @@ import {
   extractKeywords,
   extractYakeKeywords,
 } from "../src/index.js";
+import { helpText, parseCliArgs } from "../src/cli.js";
 
 describe("documentation-code sync", () => {
   it("supports the APIs documented in the README and integration guides", () => {
@@ -63,14 +64,22 @@ describe("documentation-code sync", () => {
       exports: Record<string, unknown>;
       bin: Record<string, string>;
     };
-    const cliSource = readFileSync(join(process.cwd(), "src/cli.ts"), "utf8");
 
     expect(Object.keys(packageJson.exports)).toEqual(expect.arrayContaining([".", "./browser", "./worker"]));
     expect(packageJson.bin["yaket"]).toBe("dist/cli.js");
 
-    for (const flag of ["--text-input", "--input-file", "--language", "--ngram-size", "--dedup-func", "--dedup-lim", "--window-size", "--top", "--verbose", "--help"]) {
-      expect(cliSource).toContain(flag);
-      expect(readme).toContain(flag);
+    // The README's CLI flag list and `yaket --help` document the same flags,
+    // and the parser accepts each one (a flag the parser ignores leaves the
+    // parse identical to an empty argv).
+    const helpFlags = [...helpText().matchAll(/--[a-z][a-z-]*/g)].map(([flag]) => flag);
+    const readmeFlags = [...readme.matchAll(/^- `(--[a-z][a-z-]*)`$/gm)].map(([, flag]) => flag!);
+    // Lower bound: the options of upstream YAKE's CLI that Yaket mirrors.
+    expect(helpFlags).toEqual(expect.arrayContaining(["--text-input", "--input-file", "--language", "--ngram-size", "--dedup-func", "--dedup-lim", "--window-size", "--top", "--verbose", "--help"]));
+    expect([...readmeFlags].sort()).toEqual([...helpFlags].sort());
+
+    const emptyParse = parseCliArgs([]);
+    for (const flag of helpFlags) {
+      expect(parseCliArgs([flag, "2"]), `CLI parser ignores documented flag ${flag}`).not.toEqual(emptyParse);
     }
 
     for (const token of ["TextProcessor", "StopwordProvider", "SimilarityStrategy", "CandidateNormalizer", "Lemmatizer", "SingleWordScorer", "MultiWordScorer", "KeywordScorer", "candidateFilter", "supportedLanguages", "STOPWORDS", "YakeResult", "YakeOptions", "extract(", "createStopwordSet", "createStaticStopwordProvider"]) {
