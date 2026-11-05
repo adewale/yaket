@@ -47,9 +47,10 @@ describe("python parity lane", () => {
     expect(text).toContain("scripts/setup-python-parity.sh");
     expect(text).toContain("npm run test:python-parity");
     expect(text).toContain('YAKET_REQUIRE_PYTHON_REFERENCE: "1"');
-    // The pin and the dependency versions live only in the setup script and
-    // its requirements file; a second copy in a workflow could drift.
-    expect(text).not.toMatch(/\b[0-9a-f]{40}\b/);
+    // The Python reference pin belongs in its setup script. Action references
+    // have independent SHA pins and must not be mistaken for a copied YAKE pin.
+    const referenceSetup = text.replace(/^[ \t]*(?:-[ \t]*)?uses:.*$/gm, "");
+    expect(referenceSetup).not.toMatch(/\b[0-9a-f]{40}\b/);
     expect(text).not.toMatch(/pip install [^-\n]*==/);
   });
 
